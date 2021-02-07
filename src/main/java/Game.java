@@ -110,6 +110,8 @@ public class Game {
         proj = new Matrix4f().ortho(0, width, height, 0, 0.0f, 1.0f);
         view = new Matrix4f();
         projView = new Matrix4f(proj).mul(view);
+        this.screenWidth = width;
+        this.screenHeight = height;
     }
 
     private void loop() {
