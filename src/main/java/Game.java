@@ -1,5 +1,4 @@
-import org.joml.Matrix4f;
-import org.joml.Vector4f;
+import org.joml.*;
 import org.lwjgl.*;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
@@ -19,14 +18,23 @@ public class Game {
     private long window;
     private BoxRenderer boxRenderer;
     private TextureRenderer textureRenderer;
+    private TileGridRenderer tileGridRenderer;
     private Texture rocket;
     private Font font;
 
     private int screenWidth = 800, screenHeight = 600;
 
-    private Matrix4f proj;
-    private Matrix4f view;
-    private Matrix4f projView;
+    private Matrix4f proj = new Matrix4f();
+    private Matrix4f projView = new Matrix4f();
+    private Vector2f mousePosition = new Vector2f();
+
+    private Grid.Group grid;
+    private Camera camera;
+
+    /**
+     * The number of seconds since the last frame
+     */
+    private double delta;
 
     public void run() {
         init();
@@ -74,10 +82,11 @@ public class Game {
         // creates the GLCapabilities instance and makes the OpenGL
         // bindings available for use.
         GL.createCapabilities();
-        windowResize(screenWidth, screenHeight);
 
         // Set the background color
-        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+        // Enable blending (properly handling alpha values)
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -96,35 +105,50 @@ public class Game {
             windowResize(w, h);
         });
         glfwSetCharCallback(window, (win, codepoint) -> {
-            System.out.print((char) codepoint);
+//            System.out.print((char) codepoint);
         });
 
         this.boxRenderer = new BoxRenderer();
         this.textureRenderer = new TextureRenderer();
         this.rocket = new Texture("rocket1.png");
         this.font = new Font("font.ttf", 48, 512, 512);
+        this.tileGridRenderer = new TileGridRenderer();
+        this.grid = new Grid.Group();
+        grid.setTile((byte) 1, 0, 0);
+        grid.setTile((byte) 1, 1, 1);
+        grid.setTile((byte) 1, 1, 0);
+        grid.setTile((byte) 1, 2, 0);
+        grid.setTile((byte) 1, 3, 0);
+        grid.setTile((byte) 1, 3, 1);
+        this.tileGridRenderer.build(grid.map.get(new Vector2i(0, 0)));
+        camera = new Camera();
+
+        windowResize(screenWidth, screenHeight);
     }
 
-    public void windowResize(int width, int height) {
+    private void windowResize(int width, int height) {
         glViewport(0, 0, width, height);
+        screenWidth = width;
+        screenHeight = height;
         proj = new Matrix4f().ortho(0, width, height, 0, 0.0f, 1.0f);
-        view = new Matrix4f();
-        projView = new Matrix4f(proj).mul(view);
-        this.screenWidth = width;
-        this.screenHeight = height;
+
+        camera.windowResize(width, height);
+
+        projView = new Matrix4f(proj).mul(camera.getView());
+    }
+
+    private void pollMousePosition() {
+        double[] mx = new double[1], my = new double[1];
+        glfwGetCursorPos(window, mx, my);
+        mousePosition.x = (float) mx[0];
+        mousePosition.y = (float) my[0];
     }
 
     private void loop() {
-
+        // variables for calculating delta
+        // also determines the amount of delta in the first frame
         double currentTime = glfwGetTime();
         double lastTime = currentTime;
-
-        /**
-         * The number of seconds since the last frame
-         */
-        double delta;
-
-        double timer = 0;
 
         // Run the rendering loop until the user has attempted to close
         // the window or has pressed the ESCAPE key.
@@ -133,23 +157,42 @@ public class Game {
             delta = currentTime - lastTime; // almost always 0.01666666666666666
             lastTime = currentTime;
 
+            // Poll for window events. Invokes window callbacks
+            pollMousePosition();
+            glfwPollEvents();
+            camera.move(window, delta);
+
+            if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+                Vector2f worldSpace = camera.screenToWorldSpace(mousePosition);
+                if(grid.getTile(worldSpace.x, worldSpace.y) != 1) {
+                    Grid updateGrid = grid.setTile((byte) 1, worldSpace.x, worldSpace.y);
+                    tileGridRenderer.build(updateGrid);
+                }
+            }
+            else if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+                Vector2f worldSpace = camera.screenToWorldSpace(mousePosition);
+                if(grid.getTile(worldSpace.x, worldSpace.y) != 0) {
+                    Grid updateGrid = grid.setTile((byte) 0, worldSpace.x, worldSpace.y);
+                    tileGridRenderer.build(updateGrid);
+                }
+            }
+            tileGridRenderer.update(delta, window);
+
+            // all updates go here
+
             glClear(GL_COLOR_BUFFER_BIT); // clear the framebuffer
 
             // everything drawing goes here
+            camera.updateView();
+            projView = new Matrix4f(proj).mul(camera.getView());
 
-            rocket.bind();
-//            textureRenderer.draw(new Matrix4f(projView).translate(300, 200, 0).scale(90), new Vector4f(1));
-            timer += delta;
-            textureRenderer.draw(new Matrix4f(projView).translate(200, 200, 0).scale(100), new Vector4f(1));
+            tileGridRenderer.draw(new Matrix4f(projView), new Vector4f(1), camera.getScaleFactor());
+//            rocket.bind();
 
             boxRenderer.draw(new Matrix4f(projView).translate(650, 50, 0).scale(400, 200, 0), new Vector4f(0, 0, 0, 0.5f));
             font.draw("asjdfoiajsdiofajsoi", 500, 100, new Matrix4f(proj), new Vector4f(1));
 
-            glfwSwapBuffers(window); // swap the color buffers
-
-            // Poll for window events. The key callback above will only be
-            // invoked during this call.
-            glfwPollEvents();
+            glfwSwapBuffers(window); // swap the color buffers, rendering what was drawn to the screen
         }
 
         Shaders.checkGLError("End main loop");

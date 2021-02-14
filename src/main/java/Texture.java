@@ -16,9 +16,18 @@ import static org.lwjgl.opengl.GL30.glGenerateMipmap;
 
 public class Texture {
 
+    public static class Settings {
+        public int wrap, filter;
+
+        public Settings(int wrap, int filter) {
+            this.wrap = wrap;
+            this.filter = filter;
+        }
+    }
+
     public int texture;
 
-    public Texture(String path) {
+    public Texture(String path, Settings settings) {
         try(MemoryStack stack = MemoryStack.stackPush()) {
             IntBuffer w = stack.ints(0);
             IntBuffer h = stack.ints(0);
@@ -41,29 +50,32 @@ public class Texture {
             glBindTexture(GL_TEXTURE_2D, texture);
 //            System.out.println(w.get(0) + ", " + h.get(0) + ": " + bpp.get(0));
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w.get(0), h.get(0), 0, GL_RGBA, GL_UNSIGNED_BYTE, bitmap);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, settings.wrap);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, settings.wrap);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, settings.filter);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, settings.filter);
             glGenerateMipmap(GL_TEXTURE_2D);
             Shaders.checkGLError("Load image " + path);
         }
     }
 
-    public Texture(int width, int height, float[] floats) {
+    public Texture(String path) {
+        this(path, new Settings(GL_CLAMP_TO_EDGE, GL_NEAREST));
+    }
+
+    public Texture(int width, int height, float[] floats, Settings settings) {
         texture = glGenTextures();
         glBindTexture(GL_TEXTURE_2D, texture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, floats);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, settings.wrap);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, settings.wrap);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, settings.filter);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, settings.filter);
         glGenerateMipmap(GL_TEXTURE_2D);
         Shaders.checkGLError("Create image " + width + " x " + height);
     }
 
     public void bind() {
-//        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
     }
 

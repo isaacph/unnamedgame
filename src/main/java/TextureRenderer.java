@@ -54,12 +54,12 @@ public class TextureRenderer {
             squareVerts.flip();
             glBindBuffer(GL_ARRAY_BUFFER, squareVbo);
             glBufferData(GL_ARRAY_BUFFER, squareVerts, GL_STATIC_DRAW);
-            glEnableVertexAttribArray(Shaders.Attribute.POSITION.position);
-            glVertexAttribPointer(Shaders.Attribute.POSITION.position,
-                2, GL_FLOAT, false, 4 * 4, 0);
-            glEnableVertexAttribArray(Shaders.Attribute.TEXTURE.position);
-            glVertexAttribPointer(Shaders.Attribute.TEXTURE.position,
-                2, GL_FLOAT, false, 4 * 4, 4 * 2);
+//            glEnableVertexAttribArray(Shaders.Attribute.POSITION.position);
+//            glVertexAttribPointer(Shaders.Attribute.POSITION.position,
+//                2, GL_FLOAT, false, 4 * 4, 0);
+//            glEnableVertexAttribArray(Shaders.Attribute.TEXTURE.position);
+//            glVertexAttribPointer(Shaders.Attribute.TEXTURE.position,
+//                2, GL_FLOAT, false, 4 * 4, 4 * 2);
             Shaders.checkGLError("VBO texture " + shader);
         }
     }
