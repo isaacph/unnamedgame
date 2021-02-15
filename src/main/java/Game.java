@@ -26,10 +26,10 @@ public class Game {
 
     private Matrix4f proj = new Matrix4f();
     private Matrix4f projView = new Matrix4f();
-    private Vector2f mousePosition = new Vector2f();
+    public Vector2f mousePosition = new Vector2f();
 
     private Grid.Group grid;
-    private Camera camera;
+    public Camera camera;
 
     /**
      * The number of seconds since the last frame
@@ -114,13 +114,13 @@ public class Game {
         this.font = new Font("font.ttf", 48, 512, 512);
         this.tileGridRenderer = new TileGridRenderer();
         this.grid = new Grid.Group();
-        grid.setTile((byte) 1, 0, 0);
-        grid.setTile((byte) 1, 1, 1);
-        grid.setTile((byte) 1, 1, 0);
-        grid.setTile((byte) 1, 2, 0);
-        grid.setTile((byte) 1, 3, 0);
-        grid.setTile((byte) 1, 3, 1);
-        this.tileGridRenderer.build(grid.map.get(new Vector2i(0, 0)));
+//        grid.setTile((byte) 1, 0, 0);
+//        grid.setTile((byte) 1, 1, 1);
+//        grid.setTile((byte) 1, 1, 0);
+//        grid.setTile((byte) 1, 2, 0);
+//        grid.setTile((byte) 1, 3, 0);
+//        grid.setTile((byte) 1, 3, 1);
+//        this.tileGridRenderer.build(grid.map.get(new Vector2i(0, 0)));
         camera = new Camera();
 
         windowResize(screenWidth, screenHeight);
@@ -171,12 +171,13 @@ public class Game {
             }
             else if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
                 Vector2f worldSpace = camera.screenToWorldSpace(mousePosition);
-                if(grid.getTile(worldSpace.x, worldSpace.y) != 0) {
+                if(grid.getTile(worldSpace.x, worldSpace.y) != 0 || true) {
                     Grid updateGrid = grid.setTile((byte) 0, worldSpace.x, worldSpace.y);
                     tileGridRenderer.build(updateGrid);
                 }
             }
-            tileGridRenderer.update(delta, window);
+
+            tileGridRenderer.update(delta, window, this);
 
             // all updates go here
 

@@ -26,7 +26,8 @@ public class TileGridRenderer {
     private int shaderTexMorph;
     private int shaderSamplerTile;
     private int shaderLineWidth;
-    private int shaderYOffset;
+    private int shaderTextureOffset;
+    private int shaderTextureScale;
 
     /**
      * Every tile's visual height / width
@@ -45,6 +46,7 @@ public class TileGridRenderer {
 
     private static class GridInfo {
         public int texture;
+        public Vector2f textureOffset = new Vector2f();
 
         public void cleanUp() {
             glDeleteTextures(texture);
@@ -53,9 +55,14 @@ public class TileGridRenderer {
 
     private Texture grass, grass2;
     private Map<Vector2i, GridInfo> gridMap = new HashMap<>();
-    private static final Matrix4f TEX_MORPH = new Matrix4f().scale(-(float) Math.sqrt(2), TILE_RATIO * (float) Math.sqrt(2), 0).rotate(45.0f * (float) Math.PI / 180.0f, 0, 0, 1);
-    private float testTimer = 0;
+    private static final Matrix4f TEX_MORPH =
+        new Matrix4f().scale(-(float) Math.sqrt(2), TILE_RATIO * (float) Math.sqrt(2), 0)
+            .rotate(45.0f * (float) Math.PI / 180.0f, 0, 0, 1);
     private int vbo;
+
+    private float scale = 1.0f;
+    private float timer = 1.0f;
+    private Vector2i selected;
 
     public TileGridRenderer() {
         int vertex = Shaders.createShader("texturev.glsl", GL_VERTEX_SHADER);
@@ -77,7 +84,8 @@ public class TileGridRenderer {
         shaderNumTiles = glGetUniformLocation(shader, "numTiles");
         shaderTexMorph = glGetUniformLocation(shader, "texMorph");
         shaderLineWidth = glGetUniformLocation(shader, "lineWidth");
-        shaderYOffset = glGetUniformLocation(shader, "yOffset");
+        shaderTextureOffset = glGetUniformLocation(shader, "textureOffset");
+        shaderTextureScale = glGetUniformLocation(shader, "textureScale");
         glDeleteShader(vertex);
         glDeleteShader(fragment);
         Shaders.checkGLError("Shader link tile grid " + shader);
@@ -101,8 +109,31 @@ public class TileGridRenderer {
             Shaders.checkGLError("Tile Grid VBO init");
         }
 
-        grass = new Texture("mock grass.png", new Texture.Settings(GL_REPEAT, GL_NEAREST));
+        grass = new Texture("grass.png", new Texture.Settings(GL_REPEAT, GL_LINEAR));
         grass2 = new Texture("mock grass 2.png", new Texture.Settings(GL_REPEAT, GL_NEAREST));
+        scale = 2.0f;
+        selected = new Vector2i(0);
+    }
+
+    public void update(double delta, long window, Game game) {
+//        scale += (float) delta / 100.0f;
+        if(glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
+            Vector2f v = game.camera.screenToWorldSpace(game.mousePosition).mul(1.0f / 16.0f);
+            selected = new Vector2i((int) Math.floor(v.x), (int) Math.floor(v.y));
+            System.out.println(gridMap.get(selected).textureOffset.x + ", " + gridMap.get(selected).textureOffset.y);
+        }
+        if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+            gridMap.get(selected).textureOffset.y += delta / 20.0f;
+        }
+        if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+            gridMap.get(selected).textureOffset.y += -delta / 20.0f;
+        }
+        if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+            gridMap.get(selected).textureOffset.x += delta / 20.0f;
+        }
+        if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+            gridMap.get(selected).textureOffset.x += -delta / 20.0f;
+        }
     }
 
     public void build(Grid grid) {
@@ -126,20 +157,6 @@ public class TileGridRenderer {
         Shaders.checkGLError("Tile grid build " + grid.x + ", " + grid.y);
     }
 
-    public void update(double delta, long window) {
-        if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-            testTimer += (float) delta / 20.0f;
-            System.out.println(testTimer);
-            Vector2i key = new Vector2i(-1, -1);
-            System.out.println(Camera.worldToViewSpace(new Vector2f((key.x + 0.5f) * Grid.SIZE, (key.y + 0.5f) * Grid.SIZE)).y * testTimer);
-        } else if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-            testTimer -= (float) delta / 20.0f;
-            System.out.println(testTimer);
-            Vector2i key = new Vector2i(-1, -1);
-            System.out.println(Camera.worldToViewSpace(new Vector2f((key.x + 0.5f) * Grid.SIZE, (key.y + 0.5f) * Grid.SIZE)).y * testTimer);
-        }
-    }
-
     public void draw(Matrix4f matrix, Vector4f color, float scale) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             FloatBuffer buffer = stack.mallocFloat(16);
@@ -154,7 +171,11 @@ public class TileGridRenderer {
             glUniform1i(shaderSampler2, 2);
             glUniform1f(shaderVertScale, TILE_RATIO);
             glUniform1i(shaderNumTiles, Grid.SIZE);
-            glUniform1f(shaderLineWidth, 1.0f / (Grid.SIZE) / (TILE_WIDTH) / scale * 1.5f);
+            glUniform1f(shaderLineWidth, 1.0f / (Grid.SIZE) / (TILE_WIDTH) / scale * 0.0f);
+            glUniform1f(shaderTextureScale, this.scale);
+
+//            Vector2f v2 = Camera.worldToViewSpace(new Vector2f(16.0f, 16.0f).sub(new Vector2f(0.0f, 0.0f))).mul(1.0f / (float) Math.sqrt(2.0f) / Grid.SIZE);
+//            System.out.println(v2.x + ", " + v2.y);
 
             glUniformMatrix4fv(shaderTexMorph, false, TEX_MORPH.get(buffer));
             buffer.clear();
@@ -173,7 +194,12 @@ public class TileGridRenderer {
                     (key.y + 0.5f) * Grid.SIZE));
                 glUniformMatrix4fv(shaderMatrix, false, new Matrix4f(matrix)
                     .translate(v.x, v.y, 0).get(buffer));
-                glUniform1f(shaderYOffset, (key.x + key.y) * TileGridRenderer.TILE_RATIO);
+                Vector2f textureOffset = Camera.worldToViewSpace(new Vector2f(key).mul(Grid.SIZE).sub(new Vector2f(0.0f, 0.0f))).mul(1.0f / (float) Math.sqrt(2) / Grid.SIZE);
+//                System.out.println(textureOffset.x + ", " + textureOffset.y);
+                textureOffset = new Vector2f((key.x + key.y), (key.x + key.y) * TILE_RATIO);
+//                Vector2f textureOffset = new Vector2f();
+                textureOffset.mul(timer);
+                glUniform2f(shaderTextureOffset, textureOffset.x, textureOffset.y);
                 glDrawArrays(GL_TRIANGLES, 0, 6);
                 glDisableVertexAttribArray(Shaders.Attribute.POSITION.position);
                 glDisableVertexAttribArray(Shaders.Attribute.TEXTURE.position);
