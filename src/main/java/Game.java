@@ -30,6 +30,7 @@ public class Game {
 
     private Grid.Group grid;
     public Camera camera;
+    public Chatbox chatbox;
 
     /**
      * The number of seconds since the last frame
@@ -91,21 +92,32 @@ public class Game {
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
         glfwSetKeyCallback(window, (win, key, scancode, action, mods) -> {
-            if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-                glfwSetWindowShouldClose(window, true);
-            }
-            if(key == GLFW_KEY_BACKSPACE && action >= GLFW_PRESS) {
-                System.out.println("BACKSPACE");
-            }
             if(key == GLFW_KEY_ENTER && action == GLFW_PRESS) {
-                System.out.println("ENTER");
+                if(chatbox.focus) {
+                    if (!chatbox.send()) {
+                        chatbox.disable();
+                    }
+                } else {
+                    chatbox.enable();
+                }
+            }
+            if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+                if(chatbox.focus) {
+                    chatbox.disable();
+                }
+            } else if(key == GLFW_KEY_BACKSPACE && action > 0) {
+                if(chatbox.typing.length() > 0) {
+                    chatbox.typing.deleteCharAt(chatbox.typing.length() - 1);
+                }
             }
         });
         glfwSetWindowSizeCallback(window, (win, w, h) -> {
             windowResize(w, h);
         });
         glfwSetCharCallback(window, (win, codepoint) -> {
-//            System.out.print((char) codepoint);
+            if(chatbox.focus) {
+                chatbox.typing.append((char) codepoint);
+            }
         });
 
         this.boxRenderer = new BoxRenderer();
@@ -114,13 +126,7 @@ public class Game {
         this.font = new Font("font.ttf", 48, 512, 512);
         this.tileGridRenderer = new TileGridRenderer();
         this.grid = new Grid.Group();
-//        grid.setTile((byte) 1, 0, 0);
-//        grid.setTile((byte) 1, 1, 1);
-//        grid.setTile((byte) 1, 1, 0);
-//        grid.setTile((byte) 1, 2, 0);
-//        grid.setTile((byte) 1, 3, 0);
-//        grid.setTile((byte) 1, 3, 1);
-//        this.tileGridRenderer.build(grid.map.get(new Vector2i(0, 0)));
+        this.chatbox = new Chatbox(font, boxRenderer);
         camera = new Camera();
 
         windowResize(screenWidth, screenHeight);
@@ -178,6 +184,20 @@ public class Game {
             }
 
             tileGridRenderer.update(delta, window, this);
+            chatbox.update(delta);
+            for(String cmd : chatbox.commands) {
+                if(cmd.startsWith("/")) {
+                    String[] args = cmd.substring(1).split("\\s");
+                    if(args[0].equals("test")) {
+                        chatbox.println("Testing!");
+                    } else {
+                        chatbox.println("Unknown command!");
+                    }
+                } else {
+                    chatbox.println(cmd);
+                }
+            }
+            chatbox.commands.clear();
 
             // all updates go here
 
@@ -191,7 +211,8 @@ public class Game {
 //            rocket.bind();
 
             boxRenderer.draw(new Matrix4f(projView).translate(650, 50, 0).scale(400, 200, 0), new Vector4f(0, 0, 0, 0.5f));
-            font.draw("asjdfoiajsdiofajsoi", 500, 100, new Matrix4f(proj), new Vector4f(1));
+
+            chatbox.draw(new Matrix4f(proj));
 
             glfwSwapBuffers(window); // swap the color buffers, rendering what was drawn to the screen
         }
