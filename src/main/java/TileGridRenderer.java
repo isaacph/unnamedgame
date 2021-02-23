@@ -107,7 +107,7 @@ public class TileGridRenderer {
         }
 
         grass = new Texture("grass.png", new Texture.Settings(GL_REPEAT, GL_LINEAR));
-        grass2 = new Texture("mock grass 2.png", new Texture.Settings(GL_REPEAT, GL_NEAREST));
+        grass2 = new Texture("mock grass 2.png", new Texture.Settings(GL_REPEAT, GL_LINEAR));
         scale = 2.0f;
     }
 

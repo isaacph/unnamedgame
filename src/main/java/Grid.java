@@ -46,10 +46,10 @@ public class Grid {
             return f.get(((x % SIZE) + SIZE) % SIZE, ((y % SIZE) + SIZE) % SIZE);
         }
         public byte getTile(float x, float y) {
-            return getTile(x >= 0 ? (int) x : (int) x - 1, y >= 0 ? (int) y : (int) y - 1);
+            return getTile(Util.floor(x), Util.floor(y));
         }
         public Grid setTile(byte b, float x, float y) {
-            return setTile(b, x >= 0 ? (int) x : (int) x - 1, y >= 0 ? (int) y : (int) y - 1);
+            return setTile(b, Util.floor(x), Util.floor(y));
         }
         public Vector2i getGridIndex(int x, int y) {
             return new Vector2i((int) Math.floor((double) x / SIZE), (int) Math.floor((double) y / SIZE));
