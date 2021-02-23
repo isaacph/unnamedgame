@@ -111,27 +111,6 @@ public class TileGridRenderer {
         scale = 2.0f;
     }
 
-    public void update(double delta, long window, Game game) {
-//        scale += (float) delta / 100.0f;
-//        if(glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
-//            Vector2f v = game.camera.screenToWorldSpace(game.mousePosition).mul(1.0f / 16.0f);
-//            selected = new Vector2i((int) Math.floor(v.x), (int) Math.floor(v.y));
-//            System.out.println(gridMap.get(selected).textureOffset.x + ", " + gridMap.get(selected).textureOffset.y);
-//        }
-//        if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-//            gridMap.get(selected).textureOffset.y += delta / 20.0f;
-//        }
-//        if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-//            gridMap.get(selected).textureOffset.y += -delta / 20.0f;
-//        }
-//        if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-//            gridMap.get(selected).textureOffset.x += delta / 20.0f;
-//        }
-//        if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-//            gridMap.get(selected).textureOffset.x += -delta / 20.0f;
-//        }
-    }
-
     public void build(Grid grid) {
         try(MemoryStack stack = MemoryStack.stackPush()) {
             GridInfo data = gridMap.get(new Vector2i(grid.x, grid.y));

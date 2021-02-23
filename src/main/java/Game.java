@@ -21,7 +21,6 @@ public class Game {
     private long window;
     private BoxRenderer boxRenderer;
     public TextureRenderer textureRenderer;
-    private TileGridRenderer tileGridRenderer;
     private Texture rocket;
     private Font font;
 
@@ -32,12 +31,14 @@ public class Game {
     public Vector2f mousePosition = new Vector2f();
     public Vector2i mouseWorldPosition = new Vector2i();
 
-    private Grid.Group grid;
     public Camera camera;
     public Chatbox chatbox;
     public GameObjectFactory gameObjectFactory;
 
-    public World world = new World();
+    public World world;
+    public WorldRenderer worldRenderer;
+
+    public GameData gameData;
 
     /**
      * The number of seconds since the last frame
@@ -131,8 +132,11 @@ public class Game {
         this.textureRenderer = new TextureRenderer();
         this.rocket = new Texture("rocket1.png");
         this.font = new Font("font.ttf", 48, 512, 512);
-        this.tileGridRenderer = new TileGridRenderer();
-        this.grid = new Grid.Group();
+
+        this.gameData = new GameData();
+        this.world = new World();
+        this.worldRenderer = new WorldRenderer(gameData, world);
+
         this.chatbox = new Chatbox(font, boxRenderer);
         camera = new Camera();
 
@@ -180,25 +184,25 @@ public class Game {
             camera.move(window, delta);
 
             if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-                if(grid.getTile(mouseWorldPosition.x, mouseWorldPosition.y) != 1) {
-                    Grid updateGrid = grid.setTile((byte) 1, mouseWorldPosition.x, mouseWorldPosition.y);
-                    tileGridRenderer.build(updateGrid);
+                if(world.grid.getTile(mouseWorldPosition.x, mouseWorldPosition.y) != 1) {
+                    Grid updateGrid = world.grid.setTile((byte) 1, mouseWorldPosition.x, mouseWorldPosition.y);
+                    worldRenderer.tileGridRenderer.build(updateGrid);
                 }
             }
             else if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
-                if(grid.getTile(mouseWorldPosition.x, mouseWorldPosition.y) != 0) {
-                    Grid updateGrid = grid.setTile((byte) 0, mouseWorldPosition.x, mouseWorldPosition.y);
-                    tileGridRenderer.build(updateGrid);
+                if(world.grid.getTile(mouseWorldPosition.x, mouseWorldPosition.y) != 0) {
+                    Grid updateGrid = world.grid.setTile((byte) 0, mouseWorldPosition.x, mouseWorldPosition.y);
+                    worldRenderer.tileGridRenderer.build(updateGrid);
                 }
             }
             else if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-                GameObject obj = gameObjectFactory.createGameObject(GameObjectFactory.kid);
+                GameObject obj = gameObjectFactory.createGameObject(gameData.getPlaceholder());
                 obj.x = mouseWorldPosition.x;
                 obj.y = mouseWorldPosition.y;
                 world.add(obj);
+                worldRenderer.resetGameObjectRenderCache();
             }
 
-            tileGridRenderer.update(delta, window, this);
             chatbox.update(delta);
             for(String cmd : chatbox.commands) {
                 if(cmd.startsWith("/")) {
@@ -214,7 +218,7 @@ public class Game {
             }
             chatbox.commands.clear();
 
-            world.renderUpdate(this, delta);
+            worldRenderer.update(delta);
 
             // all updates go here
 
@@ -224,13 +228,8 @@ public class Game {
             camera.updateView();
             projView = new Matrix4f(proj).mul(camera.getView());
 
-            tileGridRenderer.draw(new Matrix4f(projView), new Vector4f(1), camera.getScaleFactor());
-
-            Vector2f tilePos = Camera.worldToViewSpace(new Vector2f(mouseWorldPosition.x + 0.5f, mouseWorldPosition.y + 0.5f));
-            boxRenderer.draw(new Matrix4f(projView).translate(tilePos.x, tilePos.y, 0).scale(1, TileGridRenderer.TILE_RATIO, 1)
-                .rotate(45 * (float) Math.PI / 180.0f, 0, 0, 1), new Vector4f(0.4f));
-
-            world.draw(this, projView);
+            worldRenderer.setMouseWorldPosition(new Vector2i(mouseWorldPosition));
+            worldRenderer.draw(new Matrix4f(projView), camera);
 
             chatbox.draw(new Matrix4f(proj));
 
