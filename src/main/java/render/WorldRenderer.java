@@ -1,3 +1,7 @@
+package render;
+
+import game.*;
+import staticData.GameData;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
@@ -23,29 +27,34 @@ public class WorldRenderer {
     private final GameData gameData;
 
     private final ArrayList<RenderComponent> gameObjectRenderer = new ArrayList<>();
-    private final Map<Long, RenderComponent> gameObjectRendererIndex = new HashMap<>();
+    private final Map<Integer, RenderComponent> gameObjectIDMap = new HashMap<>();
     private final GameObjectTextures textureLibrary = new GameObjectTextures();
 
-    public WorldRenderer(GameData gameData, World world) {
+    private Camera camera;
+    private GameTime time;
+
+    public WorldRenderer(Camera camera, GameData gameData, World world, GameTime gameTime) {
+        this.camera = camera;
         this.world = world;
         this.gameData = gameData;
         this.boxRenderer = new BoxRenderer();
         this.textureRenderer = new TextureRenderer();
         this.spriteRenderer = new SpriteRenderer();
         this.tileGridRenderer = new TileGridRenderer();
+        this.time = gameTime;
     }
 
-    public void update(double delta) {
+    public void update() {
 
     }
 
     public void resetGameObjectRenderCache() {
         gameObjectRenderer.clear();
-        gameObjectRendererIndex.clear();
-        for(GameObject obj : world.gameObjects) {
-            RenderComponent rc = getRenderComponent(obj);
+        gameObjectIDMap.clear();
+        for(GameObject obj : world.gameObjects.values()) {
+            RenderComponent rc = makeRenderComponent(obj);
             gameObjectRenderer.add(rc);
-            gameObjectRendererIndex.put(obj.uniqueID, rc);
+            gameObjectIDMap.put(obj.uniqueID, rc);
         }
         Collections.sort(gameObjectRenderer);
     }
@@ -54,19 +63,23 @@ public class WorldRenderer {
         this.mouseWorldPosition.set(v);
     }
 
-    public void draw(Matrix4f projView, Camera camera) {
-        tileGridRenderer.draw(new Matrix4f(projView), new Vector4f(1), camera.getScaleFactor());
+    public void draw(Camera camera) {
+        tileGridRenderer.draw(new Matrix4f(camera.getProjView()), new Vector4f(1), camera.getScaleFactor());
 
         Vector2f tilePos = Camera.worldToViewSpace(new Vector2f(mouseWorldPosition.x + 0.5f, mouseWorldPosition.y + 0.5f));
-        boxRenderer.draw(new Matrix4f(projView).translate(tilePos.x, tilePos.y, 0).scale(1, TileGridRenderer.TILE_RATIO, 1)
+        boxRenderer.draw(new Matrix4f(camera.getProjView()).translate(tilePos.x, tilePos.y, 0).scale(1, TileGridRenderer.TILE_RATIO, 1)
             .rotate(45 * (float) Math.PI / 180.0f, 0, 0, 1), new Vector4f(0.4f));
 
         for(RenderComponent renderer : gameObjectRenderer) {
-            renderer.draw(this, projView);
+            renderer.draw(this, camera.getProjView());
         }
     }
 
-    private RenderComponent getRenderComponent(GameObject gameObject) {
+    public RenderComponent getGameObjectRenderer(int id) {
+        return gameObjectIDMap.get(id);
+    }
+
+    private RenderComponent makeRenderComponent(GameObject gameObject) {
         return new TextureComponent(gameData, gameObject, textureLibrary);
     }
 

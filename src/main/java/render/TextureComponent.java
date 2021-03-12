@@ -1,3 +1,10 @@
+package render;
+
+import game.Camera;
+import org.joml.Vector2i;
+import staticData.GameData;
+import game.GameObject;
+import staticData.GameObjectType;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
@@ -8,6 +15,8 @@ public class TextureComponent extends RenderComponent {
     private Vector2f renderOffset;
     private Vector2f renderScale;
     private GameObject gameObject;
+    private Vector2f position;
+    private boolean fixedPosition = true;
 
     public TextureComponent(GameData gameData, GameObject gameObject, WorldRenderer.GameObjectTextures textureLibrary) {
         GameObjectType type = gameData.getType(gameObject.type);
@@ -15,13 +24,17 @@ public class TextureComponent extends RenderComponent {
         this.renderOffset = type.textureOffset;
         this.renderScale = type.textureScale;
         this.gameObject = gameObject;
+        this.position = new Vector2f(gameObject.x, gameObject.y);
     }
 
     @Override
-    public void draw(WorldRenderer game, Matrix4f orthoProj) {
+    public void draw(WorldRenderer renderer, Matrix4f orthoProj) {
         texture.bind();
-        Vector2f pos = Camera.worldToViewSpace(new Vector2f(gameObject.x, gameObject.y));
-        game.textureRenderer.draw(new Matrix4f(orthoProj)
+        if(fixedPosition) {
+            this.position = new Vector2f(gameObject.x, gameObject.y);
+        }
+        Vector2f pos = Camera.worldToViewSpace(position);
+        renderer.textureRenderer.draw(new Matrix4f(orthoProj)
             .translate(renderOffset.x + pos.x, renderOffset.y + pos.y, 0)
             .scale(renderScale.x, renderScale.y, 0),
             new Vector4f(1));
@@ -29,5 +42,14 @@ public class TextureComponent extends RenderComponent {
 
     public Vector2f getRenderPosition() {
         return Camera.worldToViewSpace(new Vector2f(this.gameObject.x + 0.5f, this.gameObject.y + 0.5f));
+    }
+
+    public void move(Vector2f position) {
+        this.fixedPosition = false;
+        this.position = new Vector2f(position);
+    }
+
+    public void resetPosition() {
+        this.fixedPosition = true;
     }
 }

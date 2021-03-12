@@ -1,17 +1,21 @@
-import org.joml.Matrix4f;
+package game;
 
 import org.joml.Matrix4f;
+
 import org.joml.Vector4f;
+import render.BoxRenderer;
+import render.Font;
 
 import java.util.ArrayList;
 
 public class Chatbox {
 
-    public ArrayList<String> lines;
-    public StringBuffer typing;
     private Font font;
     private BoxRenderer boxRender;
+    private GameTime time;
 
+    public ArrayList<String> lines;
+    public StringBuffer typing;
     public int displayLines = 7;
     public float x = 0, y = 40;
     public float jump = 40;
@@ -25,23 +29,24 @@ public class Chatbox {
 
     public ArrayList<String> commands = new ArrayList<>();
 
-    public Chatbox(Font f, BoxRenderer b) {
+    public Chatbox(Font f, BoxRenderer b, GameTime gameTime) {
         lines = new ArrayList<>();
         typing = new StringBuffer();
         font = f;
         boxRender = b;
+        time = gameTime;
     }
 
-    public void update(double delta) {
+    public void update() {
         if(visible) {
             if(!focus) {
-                focusTimer -= delta;
+                focusTimer -= time.getDelta();
                 if(focusTimer < 0) {
                     visible = false;
                 }
             } else {
                 focusTimer = FOCUS_TIME;
-                lineTimer += delta;
+                lineTimer += time.getDelta();
             }
         }
     }

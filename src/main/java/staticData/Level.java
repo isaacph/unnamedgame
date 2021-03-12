@@ -1,3 +1,6 @@
+package staticData;
+
+import game.Grid;
 import org.joml.Vector2i;
 
 import java.io.Serializable;

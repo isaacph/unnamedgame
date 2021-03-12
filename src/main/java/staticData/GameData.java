@@ -1,3 +1,5 @@
+package staticData;
+
 import org.joml.Vector2f;
 
 import java.io.Serializable;
@@ -8,7 +10,14 @@ public class GameData implements Serializable {
     private Map<Integer, GameObjectType> gameObjectTypes = new HashMap<>();
 
     public GameData() {
-        addType(new GameObjectType(genUniqueTypeID(), "kid", "kid.png", new Vector2f(0), new Vector2f(1)));
+        addType(new GameObjectType(genUniqueTypeID(),
+            "kid",
+            "kid.png",
+            new Vector2f(0),
+            new Vector2f(1),
+            new Vector2f(0),
+            new Vector2f(1),
+            new Vector2f(0)));
     }
 
     public Collection<GameObjectType> getTypes() {
@@ -44,5 +53,17 @@ public class GameData implements Serializable {
         for(GameObjectType type : oldMap.values()) {
             addType(type);
         }
+    }
+
+    public Vector2f getClickBoxOffset(int type) {
+        return new Vector2f(this.gameObjectTypes.get(type).clickBoxOffset);
+    }
+
+    public Vector2f getClickBoxSize(int type) {
+        return new Vector2f(this.gameObjectTypes.get(type).clickBoxSize);
+    }
+
+    public Vector2f getClickBoxDepthOffset(int type) {
+        return new Vector2f(this.gameObjectTypes.get(type).clickBoxDepthOffset);
     }
 }

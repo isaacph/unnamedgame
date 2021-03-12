@@ -1,12 +1,13 @@
-import org.joml.Matrix4f;
+package game;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class World implements Serializable {
 
-    public ArrayList<GameObject> gameObjects = new ArrayList<>();
+    public Map<Integer, GameObject> gameObjects = new HashMap<>();
     public Grid.Group grid = new Grid.Group();
 
     public World() {
@@ -26,12 +27,15 @@ public class World implements Serializable {
 //        }
 //    }
 
-    public void add(GameObject object) {
-        for(GameObject obj : gameObjects) {
+    public boolean add(GameObject object) {
+        for(GameObject obj : gameObjects.values()) {
             if(obj.x == object.x && obj.y == object.y) {
-                return;
+                return false;
             }
         }
-        gameObjects.add(object);
+        gameObjects.put(object.uniqueID, object);
+        return true;
     }
+
+
 }

@@ -1,7 +1,9 @@
+package render;
+
+import game.Util;
 import org.lwjgl.BufferUtils;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.IntBuffer;

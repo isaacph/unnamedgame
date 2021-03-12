@@ -1,3 +1,5 @@
+package game;
+
 import org.joml.Vector2i;
 
 import java.io.Serializable;
