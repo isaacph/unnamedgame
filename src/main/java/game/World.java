@@ -27,11 +27,18 @@ public class World implements Serializable {
 //        }
 //    }
 
-    public boolean add(GameObject object) {
+    public boolean occupied(int x, int y) {
         for(GameObject obj : gameObjects.values()) {
-            if(obj.x == object.x && obj.y == object.y) {
-                return false;
+            if(obj.x == x && obj.y == y) {
+                return true;
             }
+        }
+        return false;
+    }
+
+    public boolean add(GameObject object) {
+        if(occupied(object.x, object.y)) {
+            return false;
         }
         gameObjects.put(object.uniqueID, object);
         return true;

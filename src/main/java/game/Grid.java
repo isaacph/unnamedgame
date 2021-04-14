@@ -6,7 +6,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Grid {
+public class Grid implements Serializable {
 
     public static final int SIZE = 16;
 

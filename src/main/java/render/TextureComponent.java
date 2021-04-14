@@ -41,7 +41,11 @@ public class TextureComponent extends RenderComponent {
     }
 
     public Vector2f getRenderPosition() {
-        return Camera.worldToViewSpace(new Vector2f(this.gameObject.x + 0.5f, this.gameObject.y + 0.5f));
+        if(fixedPosition) {
+            this.position = new Vector2f(gameObject.x, gameObject.y);
+        }
+        Vector2f pos = Camera.worldToViewSpace(position);
+        return Camera.worldToViewSpace(pos);
     }
 
     public void move(Vector2f position) {

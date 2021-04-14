@@ -4,7 +4,7 @@ import game.GameObjectComponent;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 
-public abstract class RenderComponent implements GameObjectComponent, Comparable<RenderComponent>, IActionable {
+public abstract class RenderComponent implements GameObjectComponent, Comparable<RenderComponent>, IAnimatable {
 
     public abstract void draw(WorldRenderer renderer, Matrix4f projView);
 

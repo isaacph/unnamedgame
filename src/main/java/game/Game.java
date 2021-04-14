@@ -4,7 +4,18 @@ import org.joml.*;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 import render.*;
+import server.EchoPayload;
+import server.Server;
+import server.ServerPayload;
 import staticData.GameData;
+
+import java.io.*;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collection;
 
 import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
@@ -23,6 +34,7 @@ public class Game {
     private int screenWidth = 800, screenHeight = 600;
     private final Vector2f mousePosition = new Vector2f();
     private final Vector2i mouseWorldPosition = new Vector2i();
+    private final Vector2f mouseViewPosition = new Vector2f();
 
     private Camera camera;
     private Chatbox chatbox;
@@ -30,15 +42,19 @@ public class Game {
 
     private World world;
     private WorldRenderer worldRenderer;
-    private ActionManager actionManager;
+    private AnimationManager animationManager;
     private ClickBoxManager clickBoxManager;
 
     private GameData gameData;
     private GameTime gameTime;
 
+    private GameResources consRes;
+
     private Mode mode = Mode.PLAY;
-    private GameObject selectedObject = null;
+    private int selectedID = -1;
     private UICommand currentCommand = UICommand.NONE;
+
+    private SocketChannel socketChannel;
 
     enum Mode {
         PLAY, EDIT
@@ -101,8 +117,6 @@ public class Game {
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-        glfwSetKeyCallback(window, (win, key, scancode, action, mods) -> {
-        });
         glfwSetWindowSizeCallback(window, (win, w, h) -> {
             windowResize(w, h);
         });
@@ -125,7 +139,7 @@ public class Game {
         this.gameData = new GameData();
         this.world = new World();
         this.worldRenderer = new WorldRenderer(camera, gameData, world, gameTime);
-        this.actionManager = new ActionManager();
+        this.animationManager = new AnimationManager();
 
         this.gameTime = new GameTime(window);
         this.chatbox = new Chatbox(font, boxRenderer, gameTime);
@@ -133,8 +147,24 @@ public class Game {
         this.clickBoxManager = new ClickBoxManager(world, gameData, camera, worldRenderer);
 
         this.gameObjectFactory = new GameObjectFactory();
+        this.consRes = new GameResources(camera, chatbox, gameObjectFactory, world, worldRenderer, animationManager, clickBoxManager, gameData, gameTime);
 
         windowResize(screenWidth, screenHeight);
+
+        try {
+            socketChannel = SocketChannel.open();
+            socketChannel.configureBlocking(false);
+            socketChannel.connect(new InetSocketAddress("localhost", Server.PORT));
+            EchoPayload p = new EchoPayload("echo hello world");
+            try(ByteArrayOutputStream bos = new ByteArrayOutputStream(1024);
+                ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+                oos.writeObject(p);
+                System.out.println(new String(bos.toByteArray(), StandardCharsets.UTF_8));
+                socketChannel.write(ByteBuffer.wrap(bos.toByteArray()));
+            }
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void windowResize(int width, int height) {
@@ -150,22 +180,32 @@ public class Game {
         glfwGetCursorPos(window, mx, my);
         mousePosition.x = (float) mx[0];
         mousePosition.y = (float) my[0];
-        Vector2f pos = camera.screenToWorldSpace(mousePosition);
+        Vector2f vpos = camera.screenToViewSpace(mousePosition);
+        Vector2f pos = Camera.viewToWorldSpace(vpos);
         mouseWorldPosition.set(Util.floor(pos.x), Util.floor(pos.y));
+        mouseViewPosition.set(vpos);
     }
 
     private void mouseButton(int button, int action, int mods) {
         if(mode == Mode.PLAY) {
             if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
                 if(currentCommand == UICommand.NONE) {
-                    selectedObject = clickBoxManager.getGameObjectAtScreenPosition(mousePosition);
-                } else if(currentCommand == UICommand.MOVE) {
-                    if(!mouseWorldPosition.equals(selectedObject.x, selectedObject.y)) {
-                        actionManager.startAction(
-                            new MoveAction(gameTime, actionManager, world, worldRenderer, gameData, selectedObject.uniqueID, mouseWorldPosition));
-                        selectedObject.x = mouseWorldPosition.x;
-                        selectedObject.y = mouseWorldPosition.y;
-                        currentCommand = UICommand.NONE;
+                    GameObject selectedObject = clickBoxManager.getGameObjectAtViewPosition(mouseViewPosition);
+                    if(selectedObject != null) {
+                        selectedID = selectedObject.uniqueID;
+                    } else {
+                        selectedID = -1;
+                    }
+                } else {
+                    if(!animationManager.isObjectOccupied(selectedID)) {
+                        GameObject selectedObject = world.gameObjects.get(selectedID);
+                        if (currentCommand == UICommand.MOVE) {
+                            if (!mouseWorldPosition.equals(selectedObject.x, selectedObject.y)
+                                && !world.occupied(mouseWorldPosition.x, mouseWorldPosition.y)) {
+                                new MoveAction(selectedID, mouseWorldPosition.x, mouseWorldPosition.y).animate(consRes);
+                            }
+                            currentCommand = UICommand.NONE;
+                        }
                     }
                 }
             }
@@ -187,16 +227,14 @@ public class Game {
                 }
             }
         } else {
+            if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+                currentCommand = UICommand.NONE;
+            }
             if(key == GLFW_KEY_ENTER && action == GLFW_PRESS) {
                 chatbox.enable();
             } else if(mode == Mode.PLAY) {
-                if (currentCommand != UICommand.NONE) {
-                    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-                        currentCommand = UICommand.NONE;
-                    }
-                }
-                if (currentCommand == UICommand.NONE) {
-                    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+                if (currentCommand == UICommand.NONE && !animationManager.isObjectOccupied(selectedID)) { // no command is currently selected
+                    if(selectedID != -1 && key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
                         currentCommand = UICommand.MOVE;
                     }
                 }
@@ -217,7 +255,7 @@ public class Game {
             glfwPollEvents();
             camera.move();
 
-            if(mode == Mode.EDIT) {
+            if(mode == Mode.EDIT && !chatbox.focus) {
                 if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
                     if (world.grid.getTile(mouseWorldPosition.x, mouseWorldPosition.y) != 1) {
                         Grid updateGrid = world.grid.setTile((byte) 1, mouseWorldPosition.x, mouseWorldPosition.y);
@@ -235,15 +273,6 @@ public class Game {
                     if (world.add(obj)) {
                         worldRenderer.resetGameObjectRenderCache();
                         clickBoxManager.resetGameObjectCache();
-//                    actionManager.startAction(new MoveAction(gameTime,
-//                        actionManager,
-//                        world,
-//                        worldRenderer,
-//                        gameData,
-//                        obj.uniqueID,
-//                        new Vector2i(0, 0)));
-//                    obj.x = 0;
-//                    obj.y = 0;
                     }
                 }
             } else if(mode == Mode.PLAY) {
@@ -270,8 +299,34 @@ public class Game {
             }
             chatbox.commands.clear();
 
-            actionManager.update();
+            animationManager.update();
             worldRenderer.update();
+
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(1024);
+                buffer.clear();
+                try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+                    int length, total = 0;
+                    do {
+                        length = socketChannel.read(buffer);
+                        total += length;
+                        bos.write(buffer.array(), 0, length);
+                        buffer.clear();
+                    } while (length > 0);
+                    if (total > 0) {
+                        System.out.println(total);
+                        try (ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray())) {
+                            ObjectInputStream ois = new ObjectInputStream(bis);
+                            ((ClientPayload) ois.readObject()).execute(this.consRes);
+                        }
+                        catch (ClassNotFoundException e) {
+                            System.err.println("ServerPayload: invalid type");
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
             // all updates go here
 
@@ -280,14 +335,25 @@ public class Game {
             // everything drawing goes here
             camera.updateView();
 
-            if(selectedObject == null) {
+            if(selectedID == -1) {
                 worldRenderer.setMouseWorldPosition(new Vector2i(mouseWorldPosition));
             } else {
+                GameObject selectedObject = world.gameObjects.get(selectedID);
                 worldRenderer.setMouseWorldPosition(new Vector2i(selectedObject.x, selectedObject.y));
             }
             worldRenderer.draw(camera);
 
             chatbox.draw(camera.getProjection());
+
+//            for(GameObject gameObject : world.gameObjects.values()) {
+//                ClickBoxManager.ClickBox box = clickBoxManager.getGameObjectClickBox(gameObject.uniqueID);
+//                if(box != null) {
+//                    boxRenderer.draw(new Matrix4f(camera.getProjView()).translate(box.center().x, box.center().y, 0).scale(box.scale().x, box.scale().y, 0),
+//                        new Vector4f(0.5f));
+//                }
+//            }
+//            boxRenderer.draw(new Matrix4f(camera.getProjView()).translate(mouseViewPosition.x, mouseViewPosition.y, 0).scale(0.25f),
+//                new Vector4f(0.5f));
 
             glfwSwapBuffers(window); // swap the color buffers, rendering what was drawn to the screen
         }
