@@ -59,6 +59,12 @@ public class WorldRenderer {
         Collections.sort(gameObjectRenderer);
     }
 
+    public void rebuildTerrain() {
+        for(Grid grid : world.grid.map.values()) {
+            tileGridRenderer.build(grid);
+        }
+    }
+
     public void setMouseWorldPosition(Vector2i v) {
         this.mouseWorldPosition.set(v);
     }

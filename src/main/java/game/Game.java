@@ -5,6 +5,7 @@ import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 import render.*;
 import server.EchoPayload;
+import server.SendWorldPayload;
 import server.Server;
 import server.ServerPayload;
 import staticData.GameData;
@@ -16,6 +17,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 
 import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
@@ -47,6 +49,7 @@ public class Game {
 
     private GameData gameData;
     private GameTime gameTime;
+    private MultiplayerState gameState = new MultiplayerState();
 
     private GameResources consRes;
 
@@ -54,7 +57,7 @@ public class Game {
     private int selectedID = -1;
     private UICommand currentCommand = UICommand.NONE;
 
-    private SocketChannel socketChannel;
+    private ClientConnection<ClientPayload, ServerPayload> connection;
 
     enum Mode {
         PLAY, EDIT
@@ -151,20 +154,9 @@ public class Game {
 
         windowResize(screenWidth, screenHeight);
 
-        try {
-            socketChannel = SocketChannel.open();
-            socketChannel.configureBlocking(false);
-            socketChannel.connect(new InetSocketAddress("localhost", Server.PORT));
-            EchoPayload p = new EchoPayload("echo hello world");
-            try(ByteArrayOutputStream bos = new ByteArrayOutputStream(1024);
-                ObjectOutputStream oos = new ObjectOutputStream(bos)) {
-                oos.writeObject(p);
-                System.out.println(new String(bos.toByteArray(), StandardCharsets.UTF_8));
-                socketChannel.write(ByteBuffer.wrap(bos.toByteArray()));
-            }
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
+        this.connection = new ClientConnection<>();
+        this.connection.connect(new InetSocketAddress("localhost", Server.PORT));
+        this.connection.queueSend(new EchoPayload("Connection succeeded"));
     }
 
     private void windowResize(int width, int height) {
@@ -250,6 +242,11 @@ public class Game {
 
             gameTime.update();
 
+            Collection<ClientPayload> payloads = connection.update();
+            for(ClientPayload payload : payloads) {
+                payload.execute(this.consRes);
+            }
+
             // Poll for window events. Invokes window callbacks
             pollMousePosition();
             glfwPollEvents();
@@ -290,6 +287,32 @@ public class Game {
                     } else if(args[0].equals("play")) {
                         mode = Mode.PLAY;
                         chatbox.println("Gameplay enabled");
+                    } else if(args[0].equals("connect")) {
+                        if(args.length == 2) {
+                            connection.connect(new InetSocketAddress(args[1], Server.PORT));
+                            chatbox.println("Attempting to connect to " + args[1] + ":" + Server.PORT);
+                            connection.queueSend(new EchoPayload("Connection complete"));
+                        } else {
+                            chatbox.println("Need 2 params");
+                        }
+                    } else if(args[0].equals("echo")) {
+                        if(connection.isConnected()) {
+                            connection.queueSend(new EchoPayload("Echo: " + cmd.substring(1 + args[0].length())));
+                        }
+                    } else if(args[0].equals("getworld")) {
+                        if(connection.isConnected()) {
+                            connection.queueSend((server, sourceCon) -> {
+                                server.connection.send(sourceCon,
+                                        Collections.singletonList(new SendWorldPayload(server.world)));
+                            });
+                        }
+                    } else if(args[0].equals("setworld")) {
+                        if(connection.isConnected()) {
+                            World world = this.world;
+                            connection.queueSend((server, sourceCon) -> {
+                                server.world.setWorld(world);
+                            });
+                        }
                     } else {
                         chatbox.println("Unknown command!");
                     }
@@ -301,32 +324,6 @@ public class Game {
 
             animationManager.update();
             worldRenderer.update();
-
-            try {
-                ByteBuffer buffer = ByteBuffer.allocate(1024);
-                buffer.clear();
-                try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-                    int length, total = 0;
-                    do {
-                        length = socketChannel.read(buffer);
-                        total += length;
-                        bos.write(buffer.array(), 0, length);
-                        buffer.clear();
-                    } while (length > 0);
-                    if (total > 0) {
-                        System.out.println(total);
-                        try (ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray())) {
-                            ObjectInputStream ois = new ObjectInputStream(bis);
-                            ((ClientPayload) ois.readObject()).execute(this.consRes);
-                        }
-                        catch (ClassNotFoundException e) {
-                            System.err.println("ServerPayload: invalid type");
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
 
             // all updates go here
 
@@ -364,6 +361,7 @@ public class Game {
     public void cleanUp() {
         boxRenderer.cleanUp();
         textureRenderer.cleanUp();
+        connection.close();
     }
 
     public static void main(String[] args) {

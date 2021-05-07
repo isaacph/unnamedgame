@@ -1,7 +1,6 @@
 package server;
 
 import java.io.Serializable;
-import java.nio.channels.SocketChannel;
 
 public interface ServerPayload extends Serializable {
 

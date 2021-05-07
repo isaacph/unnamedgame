@@ -32,6 +32,11 @@ public class TileGridRenderer {
     private int shaderTextureOffset;
     private int shaderTextureScale;
 
+    private int selectShader;
+    private int selectShaderMatrix;
+    private int selectShaderLineWidth;
+    private int selectShaderTexMorph;
+
     /**
      * Every tile's visual height / width
      */
@@ -65,6 +70,7 @@ public class TileGridRenderer {
     private float scale = 1.0f;
 
     public TileGridRenderer() {
+
         int vertex = Shaders.createShader("texturev.glsl", GL_VERTEX_SHADER);
         int fragment = Shaders.createShader("gridf.glsl", GL_FRAGMENT_SHADER);
         shader = glCreateProgram();
@@ -89,6 +95,8 @@ public class TileGridRenderer {
         glDeleteShader(vertex);
         glDeleteShader(fragment);
         Shaders.checkGLError("Shader link tile grid " + shader);
+
+
 
         try (MemoryStack stack = MemoryStack.stackPush()) {
             FloatBuffer buffer = stack.mallocFloat(4 * 6);
