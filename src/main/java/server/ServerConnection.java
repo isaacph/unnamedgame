@@ -22,7 +22,7 @@ public class ServerConnection<IncomingType, OutgoingType>
 	private Predicate<OutgoingPairError<OutgoingType>> sendErrorHandler;
 	private Consumer<IOException> acceptErrorHandler;
 	private Predicate<IncomingPairError> readErrorHandler;
-	private int timeout;
+	private Consumer<Integer> connectionRemoveHandler;
 
 	public static class OutgoingPairError<OutgoingType> {
 		public int clientID;
@@ -50,6 +50,7 @@ public class ServerConnection<IncomingType, OutgoingType>
 			error.e.printStackTrace();
 			return false;
 		};
+		this.connectionRemoveHandler = integer -> {};
 	}
 
 	private int makeUniqueConnectionID() {
@@ -62,9 +63,13 @@ public class ServerConnection<IncomingType, OutgoingType>
 		serverSocketChannel.bind(new InetSocketAddress(port));
 	}
 
-	public void send(int clientID, Collection<OutgoingType> payloads) {
-		toSend.putIfAbsent(clientID, new ArrayList<>());
-		toSend.get(clientID).addAll(payloads);
+	public void send(int conID, Collection<OutgoingType> payloads) {
+		toSend.putIfAbsent(conID, new ArrayList<>());
+		toSend.get(conID).addAll(payloads);
+	}
+
+	public void send(int conId, OutgoingType payload) {
+		send(conId, Collections.singletonList(payload));
 	}
 
 	public Map<Integer, Collection<IncomingType>> pollAndSend() {
@@ -90,6 +95,7 @@ public class ServerConnection<IncomingType, OutgoingType>
 		toSend.clear();
 		for(int conId : conToRemove) {
 			connections.remove(conId);
+			this.connectionRemoveHandler.accept(conId);
 		}
 		conToRemove.clear();
 
@@ -144,5 +150,9 @@ public class ServerConnection<IncomingType, OutgoingType>
 	/** The return type for the handler is whether to keep the connection after the error **/
 	public void setReadErrorHandler(Predicate<IncomingPairError> readErrorHandler) {
 		this.readErrorHandler = readErrorHandler;
+	}
+
+	public void setConnectionRemoveHandler(Consumer<Integer> removeHandler) {
+		this.connectionRemoveHandler = removeHandler;
 	}
 }

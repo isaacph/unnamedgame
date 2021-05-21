@@ -2,6 +2,7 @@ package game;
 
 import render.AnimationManager;
 import render.WorldRenderer;
+import server.ServerPayload;
 import staticData.GameData;
 
 public class GameResources {
@@ -18,6 +19,8 @@ public class GameResources {
     public final GameData gameData;
     public final GameTime gameTime;
 
+    public final ClientConnection<ClientPayload, ServerPayload> connection;
+
     public GameResources(Camera camera,
                          Chatbox chatbox,
                          GameObjectFactory gameObjectFactory,
@@ -26,7 +29,8 @@ public class GameResources {
                          AnimationManager animationManager,
                          ClickBoxManager clickBoxManager,
                          GameData gameData,
-                         GameTime gameTime) {
+                         GameTime gameTime,
+                         ClientConnection<ClientPayload, ServerPayload> connection) {
 
         this.camera = camera;
         this.chatbox = chatbox;
@@ -37,5 +41,6 @@ public class GameResources {
         this.clickBoxManager = clickBoxManager;
         this.gameData = gameData;
         this.gameTime = gameTime;
+        this.connection = connection;
     }
 }

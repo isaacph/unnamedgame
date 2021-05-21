@@ -4,5 +4,5 @@ import java.io.Serializable;
 
 public interface ServerPayload extends Serializable {
 
-    void execute(Server server, int sourceCon);
+    void execute(Server server, ClientData client);
 }

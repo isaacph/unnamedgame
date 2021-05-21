@@ -33,6 +33,8 @@ public class WorldRenderer {
     private Camera camera;
     private GameTime time;
 
+    private final Font font;
+
     public WorldRenderer(Camera camera, GameData gameData, World world, GameTime gameTime) {
         this.camera = camera;
         this.world = world;
@@ -42,6 +44,7 @@ public class WorldRenderer {
         this.spriteRenderer = new SpriteRenderer();
         this.tileGridRenderer = new TileGridRenderer();
         this.time = gameTime;
+        this.font = new Font("font.ttf", 32, 512, 512);
     }
 
     public void update() {
@@ -56,11 +59,10 @@ public class WorldRenderer {
             gameObjectRenderer.add(rc);
             gameObjectIDMap.put(obj.uniqueID, rc);
         }
-        Collections.sort(gameObjectRenderer);
     }
 
     public void rebuildTerrain() {
-        for(Grid grid : world.grid.map.values()) {
+        for(ByteGrid grid : world.grid.map.values()) {
             tileGridRenderer.build(grid);
         }
     }
@@ -74,8 +76,11 @@ public class WorldRenderer {
 
         Vector2f tilePos = Camera.worldToViewSpace(new Vector2f(mouseWorldPosition.x + 0.5f, mouseWorldPosition.y + 0.5f));
         boxRenderer.draw(new Matrix4f(camera.getProjView()).translate(tilePos.x, tilePos.y, 0).scale(1, TileGridRenderer.TILE_RATIO, 1)
-            .rotate(45 * (float) Math.PI / 180.0f, 0, 0, 1), new Vector4f(0.4f));
+                .rotate(45 * (float) Math.PI / 180.0f, 0, 0, 1), new Vector4f(1.0f, 1.0f, 1.0f, 0.4f));
 
+        tileGridRenderer.drawSelect(camera.getProjView(), camera.getScaleFactor());
+
+        Collections.sort(gameObjectRenderer);
         for(RenderComponent renderer : gameObjectRenderer) {
             renderer.draw(this, camera.getProjView());
         }

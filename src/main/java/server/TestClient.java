@@ -24,8 +24,9 @@ public class TestClient implements Runnable {
         }
         int hc = this.hashCode();
         System.out.println(hc);
-        connection.queueSend((server, clientId) -> {
-            server.connection.send(clientId, Collections.singletonList(gameRes -> {
+        connection.queueSend((server, clientData) -> {
+            server.connection.send(server.getConnection(clientData.clientId),
+                    Collections.singletonList(gameRes -> {
                 System.out.println("test from client " + hc);
             }));
         });

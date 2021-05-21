@@ -14,9 +14,9 @@ public class EchoPayload implements ServerPayload {
     }
 
     @Override
-    public void execute(Server server, int sourceCon) {
+    public void execute(Server server, ClientData client) {
         if(this.msg == null) this.msg = "<empty>";
-        server.connection.send(sourceCon,
+        server.connection.send(server.getConnection(client.clientId),
                 Collections.singletonList(gameResources ->
                     gameResources.chatbox.println(msg)));
     }

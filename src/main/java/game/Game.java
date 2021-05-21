@@ -4,18 +4,12 @@ import org.joml.*;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 import render.*;
-import server.EchoPayload;
-import server.SendWorldPayload;
-import server.Server;
-import server.ServerPayload;
+import server.*;
 import staticData.GameData;
 
-import java.io.*;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -46,6 +40,7 @@ public class Game {
     private WorldRenderer worldRenderer;
     private AnimationManager animationManager;
     private ClickBoxManager clickBoxManager;
+    private SelectGridManager selectGridManager;
 
     private GameData gameData;
     private GameTime gameTime;
@@ -118,7 +113,7 @@ public class Game {
 
         // Enable blending (properly handling alpha values)
         glEnable(GL_BLEND);
-        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         glfwSetWindowSizeCallback(window, (win, w, h) -> {
             windowResize(w, h);
@@ -148,15 +143,18 @@ public class Game {
         this.chatbox = new Chatbox(font, boxRenderer, gameTime);
         this.camera = new Camera(gameTime, window);
         this.clickBoxManager = new ClickBoxManager(world, gameData, camera, worldRenderer);
-
         this.gameObjectFactory = new GameObjectFactory();
-        this.consRes = new GameResources(camera, chatbox, gameObjectFactory, world, worldRenderer, animationManager, clickBoxManager, gameData, gameTime);
-
-        windowResize(screenWidth, screenHeight);
 
         this.connection = new ClientConnection<>();
         this.connection.connect(new InetSocketAddress("localhost", Server.PORT));
         this.connection.queueSend(new EchoPayload("Connection succeeded"));
+
+
+        this.consRes = new GameResources(camera, chatbox, gameObjectFactory, world, worldRenderer, animationManager, clickBoxManager, gameData, gameTime, connection);
+
+        this.selectGridManager = new SelectGridManager(world);
+
+        windowResize(screenWidth, screenHeight);
     }
 
     private void windowResize(int width, int height) {
@@ -194,9 +192,13 @@ public class Game {
                         if (currentCommand == UICommand.MOVE) {
                             if (!mouseWorldPosition.equals(selectedObject.x, selectedObject.y)
                                 && !world.occupied(mouseWorldPosition.x, mouseWorldPosition.y)) {
-                                new MoveAction(selectedID, mouseWorldPosition.x, mouseWorldPosition.y).animate(consRes);
+                                MoveAction moveAction = new MoveAction(selectedID, mouseWorldPosition.x, mouseWorldPosition.y);
+                                if(moveAction.validate(world, gameData)) {
+                                    moveAction.animate(consRes);
+                                }
                             }
                             currentCommand = UICommand.NONE;
+                            worldRenderer.tileGridRenderer.buildSelect(new ArrayList<>());
                         }
                     }
                 }
@@ -221,6 +223,7 @@ public class Game {
         } else {
             if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
                 currentCommand = UICommand.NONE;
+                worldRenderer.tileGridRenderer.buildSelect(new ArrayList<>());
             }
             if(key == GLFW_KEY_ENTER && action == GLFW_PRESS) {
                 chatbox.enable();
@@ -228,6 +231,10 @@ public class Game {
                 if (currentCommand == UICommand.NONE && !animationManager.isObjectOccupied(selectedID)) { // no command is currently selected
                     if(selectedID != -1 && key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
                         currentCommand = UICommand.MOVE;
+                        selectGridManager.regenerateSelect(
+                                new Vector2i(world.gameObjects.get(selectedID).x, world.gameObjects.get(selectedID).y),
+                                gameData.getSpeed(world.gameObjects.get(selectedID).type));
+                        worldRenderer.tileGridRenderer.buildSelect(new ArrayList<>(selectGridManager.getSelectionGrid().map.values()));
                     }
                 }
             }
@@ -255,12 +262,12 @@ public class Game {
             if(mode == Mode.EDIT && !chatbox.focus) {
                 if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
                     if (world.grid.getTile(mouseWorldPosition.x, mouseWorldPosition.y) != 1) {
-                        Grid updateGrid = world.grid.setTile((byte) 1, mouseWorldPosition.x, mouseWorldPosition.y);
+                        ByteGrid updateGrid = world.grid.setTile((byte) 1, mouseWorldPosition.x, mouseWorldPosition.y);
                         worldRenderer.tileGridRenderer.build(updateGrid);
                     }
                 } else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
                     if (world.grid.getTile(mouseWorldPosition.x, mouseWorldPosition.y) != 0) {
-                        Grid updateGrid = world.grid.setTile((byte) 0, mouseWorldPosition.x, mouseWorldPosition.y);
+                        ByteGrid updateGrid = world.grid.setTile((byte) 0, mouseWorldPosition.x, mouseWorldPosition.y);
                         worldRenderer.tileGridRenderer.build(updateGrid);
                     }
                 } else if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
@@ -302,8 +309,14 @@ public class Game {
                     } else if(args[0].equals("getworld")) {
                         if(connection.isConnected()) {
                             connection.queueSend((server, sourceCon) -> {
-                                server.connection.send(sourceCon,
+                                server.connection.send(server.getConnection(sourceCon.clientId),
                                         Collections.singletonList(new SendWorldPayload(server.world)));
+                            });
+                        }
+                    } else if(args[0].equals("name")) {
+                        if(connection.isConnected()) {
+                            connection.queueSend((server, sourceCon) -> {
+                                server.clientName.put(sourceCon.clientId, String.join(" ", Arrays.copyOfRange(args, 1, args.length)));
                             });
                         }
                     } else if(args[0].equals("setworld")) {
@@ -317,7 +330,7 @@ public class Game {
                         chatbox.println("Unknown command!");
                     }
                 } else {
-                    chatbox.println(cmd);
+                    connection.queueSend(new ChatMessage(cmd));
                 }
             }
             chatbox.commands.clear();

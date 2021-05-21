@@ -1,14 +1,16 @@
 package render;
 
-import game.ClickBoxManager;
-import game.GameResources;
-import game.GameTime;
-import game.World;
+import game.*;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import staticData.GameData;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MoveAnimation implements Animation {
+
+    public static final float TRAVEL_SPEED = 5.0f;
 
     private int objectID;
     private Vector2i targetInt;
@@ -21,6 +23,8 @@ public class MoveAnimation implements Animation {
     private ClickBoxManager clickBoxManager;
 
     private Vector2f position;
+    private List<Vector2i> path = new ArrayList<>();
+    private int pathIndex;
 
     public MoveAnimation(GameResources res, int objectID, Vector2i target) {
         this.world = res.world;
@@ -37,18 +41,27 @@ public class MoveAnimation implements Animation {
 
     @Override
     public void onStart() {
-        this.position = new Vector2f(world.gameObjects.get(objectID).x, world.gameObjects.get(objectID).y);
+        GameObject object = world.gameObjects.get(objectID);
+        this.position = new Vector2f(object.x, object.y);
         clickBoxManager.getGameObjectClickBox(objectID).disabled = true;
         this.animationManager.setObjectOccupied(objectID, true);
+        this.path = Pathfinding.shortestPath(SelectGridManager.getWeightStorage(world), new Vector2i(object.x, object.y), this.targetInt, gameData.getSpeed(object.type));
+        this.pathIndex = 0;
     }
 
     @Override
     public void onUpdate() {
-        Vector2f move = new Vector2f(target).sub(position);
-        float distSq  = move.lengthSquared();
-        move.normalize((float) time.getDelta());
-        if(distSq <= move.lengthSquared()) {
+        if(this.pathIndex >= path.size()) {
             animationManager.endAction(this);
+            return;
+        }
+        Vector2f move = new Vector2f(path.get(pathIndex).x, path.get(pathIndex).y).sub(position);
+        float distSq  = move.lengthSquared();
+        move.normalize((float) time.getDelta() * TRAVEL_SPEED);
+        if(distSq <= 0.001 || distSq <= move.lengthSquared()) {
+            this.position.set(path.get(pathIndex).x, path.get(pathIndex).y);
+            renderer.getGameObjectRenderer(objectID).move(position);
+            ++this.pathIndex;
         } else {
             this.position.add(move);
             renderer.getGameObjectRenderer(objectID).move(position);

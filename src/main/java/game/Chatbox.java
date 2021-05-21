@@ -20,7 +20,6 @@ public class Chatbox {
     public float x = 0, y = 40;
     public float jump = 40;
     public float width = 800;
-    public boolean visible = false;
     public boolean focus = false;
     public static final float FOCUS_TIME = 5;
     public static final int CAPACITY = 40;
@@ -38,33 +37,31 @@ public class Chatbox {
     }
 
     public void update() {
-        if(visible) {
-            if(!focus) {
-                focusTimer -= time.getDelta();
-                if(focusTimer < 0) {
-                    visible = false;
-                }
-            } else {
-                focusTimer = FOCUS_TIME;
-                lineTimer += time.getDelta();
+        if(!focus) {
+            focusTimer -= time.getDelta();
+            if(focusTimer < 0) {
+                focusTimer = 0;
             }
+        } else {
+            focusTimer = FOCUS_TIME;
+            lineTimer += time.getDelta();
         }
     }
 
     public void draw(Matrix4f ortho) {
-        if(visible) {
-            boxRender.draw(new Matrix4f(ortho).translate(x + width / 2, y + displayLines * jump / 2 - 30.0f, 0)
-                .scale(width, displayLines * jump + 20.0f, 0), new Vector4f(0, 0, 0, 0.3f * focusTimer / FOCUS_TIME));
-            float pos = y;
-            for (int i = 0;
-                 i < displayLines - 1;
-                 ++i) {
-                int next = lines.size() - (displayLines - 1) + i;
-                if (next >= 0 && next < lines.size()) {
-                    font.draw(lines.get(lines.size() - (displayLines - 1) + i), x, pos, ortho, new Vector4f(1, 1, 1, focusTimer / FOCUS_TIME));
-                }
-                pos += jump;
+        boxRender.draw(new Matrix4f(ortho).translate(x + width / 2, y + displayLines * jump / 2 - 30.0f, 0)
+            .scale(width, displayLines * jump + 20.0f, 0), new Vector4f(0, 0, 0, 0.3f * focusTimer / FOCUS_TIME));
+        float pos = y;
+        for (int i = 0;
+             i < displayLines - 1;
+             ++i) {
+            int next = lines.size() - (displayLines - 1) + i;
+            if (next >= 0 && next < lines.size()) {
+                font.draw(lines.get(lines.size() - (displayLines - 1) + i), x, pos, ortho, new Vector4f(1, 1, 1, focusTimer / FOCUS_TIME));
             }
+            pos += jump;
+        }
+        if(focus) {
             if((int) (lineTimer * 4) % 2 == 0) {
                 font.draw(typing.toString(), x, pos, ortho, new Vector4f(1, 1, 1, focusTimer / FOCUS_TIME));
             } else {
@@ -96,14 +93,12 @@ public class Chatbox {
     }
 
     public void enable() {
-        visible = true;
         focus = true;
         focusTimer = FOCUS_TIME;
         lineTimer = 0;
     }
     public void disable() {
         focus = false;
-        visible = true;
         focusTimer = FOCUS_TIME;
         lineTimer = 0;
     }

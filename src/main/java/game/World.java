@@ -1,14 +1,13 @@
 package game;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 public class World implements Serializable {
 
     public Map<Integer, GameObject> gameObjects = new HashMap<>();
-    public Grid.Group grid = new Grid.Group();
+    public ByteGrid.Group grid = new ByteGrid.Group();
     private int version = 0;
 
     public World() {
