@@ -7,11 +7,11 @@ public class ServerMain {
         server.start();
 
         try {
-            System.in.read();
+            //System.in.read();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            server.stop();
+            //server.stop();
         }
     }
 }

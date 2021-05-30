@@ -10,12 +10,16 @@ import java.util.Map;
 
 public class GameObject implements Serializable {
 
-    public final int uniqueID;
+    public final GameObjectID uniqueID;
     public final int type;
     public int x, y;
+    public TeamID team;
+    public float health;
 
-    public GameObject(int uniqueID, int type) {
+    public GameObject(GameObjectID uniqueID, int type, TeamID team, float health) {
         this.uniqueID = uniqueID;
         this.type = type;
+        this.team = team;
+        this.health = health;
     }
 }

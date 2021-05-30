@@ -7,10 +7,7 @@ import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector4f;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static org.lwjgl.opengl.GL11.GL_NEAREST;
 import static org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE;
@@ -21,13 +18,14 @@ public class WorldRenderer {
     public final TextureRenderer textureRenderer;
     public final SpriteRenderer spriteRenderer;
     public final TileGridRenderer tileGridRenderer;
+    public final EllipseRenderer ellipseRenderer;
 
-    private final Vector2i mouseWorldPosition = new Vector2i();
+    private final Collection<Vector2i> mouseWorldPosition = new ArrayList<>();
     private final World world;
     private final GameData gameData;
 
     private final ArrayList<RenderComponent> gameObjectRenderer = new ArrayList<>();
-    private final Map<Integer, RenderComponent> gameObjectIDMap = new HashMap<>();
+    private final Map<GameObjectID, RenderComponent> gameObjectIDMap = new HashMap<>();
     private final GameObjectTextures textureLibrary = new GameObjectTextures();
 
     private Camera camera;
@@ -43,6 +41,7 @@ public class WorldRenderer {
         this.textureRenderer = new TextureRenderer();
         this.spriteRenderer = new SpriteRenderer();
         this.tileGridRenderer = new TileGridRenderer();
+        this.ellipseRenderer = new EllipseRenderer();
         this.time = gameTime;
         this.font = new Font("font.ttf", 32, 512, 512);
     }
@@ -62,36 +61,44 @@ public class WorldRenderer {
     }
 
     public void rebuildTerrain() {
+        tileGridRenderer.clear();
         for(ByteGrid grid : world.grid.map.values()) {
             tileGridRenderer.build(grid);
         }
     }
 
-    public void setMouseWorldPosition(Vector2i v) {
-        this.mouseWorldPosition.set(v);
+    public void setMouseWorldPosition(Collection<Vector2i> v) {
+        this.mouseWorldPosition.clear();
+        this.mouseWorldPosition.addAll(v);
     }
 
     public void draw(Camera camera) {
         tileGridRenderer.draw(new Matrix4f(camera.getProjView()), new Vector4f(1), camera.getScaleFactor());
 
-        Vector2f tilePos = Camera.worldToViewSpace(new Vector2f(mouseWorldPosition.x + 0.5f, mouseWorldPosition.y + 0.5f));
-        boxRenderer.draw(new Matrix4f(camera.getProjView()).translate(tilePos.x, tilePos.y, 0).scale(1, TileGridRenderer.TILE_RATIO, 1)
-                .rotate(45 * (float) Math.PI / 180.0f, 0, 0, 1), new Vector4f(1.0f, 1.0f, 1.0f, 0.4f));
+        for(Vector2i pos : mouseWorldPosition) {
+            Vector2f tilePos = Camera.worldToViewSpace(new Vector2f(pos.x + 0.5f, pos.y + 0.5f));
+            boxRenderer.draw(new Matrix4f(camera.getProjView()).translate(tilePos.x, tilePos.y, 0).scale(1, TileGridRenderer.TILE_RATIO, 1)
+                    .rotate(45 * (float) Math.PI / 180.0f, 0, 0, 1), new Vector4f(1.0f, 1.0f, 1.0f, 0.4f));
+        }
 
         tileGridRenderer.drawSelect(camera.getProjView(), camera.getScaleFactor());
 
         Collections.sort(gameObjectRenderer);
         for(RenderComponent renderer : gameObjectRenderer) {
+            renderer.drawGround(this, camera.getProjView());
+        }
+
+        for(RenderComponent renderer : gameObjectRenderer) {
             renderer.draw(this, camera.getProjView());
         }
     }
 
-    public RenderComponent getGameObjectRenderer(int id) {
+    public RenderComponent getGameObjectRenderer(GameObjectID id) {
         return gameObjectIDMap.get(id);
     }
 
     private RenderComponent makeRenderComponent(GameObject gameObject) {
-        return new TextureComponent(gameData, gameObject, textureLibrary);
+        return new TeamTextureComponent(gameObject.uniqueID, world, gameData, textureLibrary);
     }
 
     public static class GameObjectTextures {
@@ -100,7 +107,7 @@ public class WorldRenderer {
         public Texture getTexture(String path) {
             Texture texture = texturesLoaded.get(path);
             if(texture == null) {
-                texture = new Texture(path, new Texture.Settings(GL_CLAMP_TO_EDGE, GL_NEAREST));
+                texture = Texture.makeTexture(path, new Texture.Settings(GL_CLAMP_TO_EDGE, GL_NEAREST));
                 texturesLoaded.put(path, texture);
             }
             return texture;

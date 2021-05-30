@@ -34,6 +34,8 @@ public class Chatbox {
         font = f;
         boxRender = b;
         time = gameTime;
+        jump = font.getSize() - 4.0f;
+        displayLines = (int) (400.0f / jump);
     }
 
     public void update() {
@@ -63,9 +65,9 @@ public class Chatbox {
         }
         if(focus) {
             if((int) (lineTimer * 4) % 2 == 0) {
-                font.draw(typing.toString(), x, pos, ortho, new Vector4f(1, 1, 1, focusTimer / FOCUS_TIME));
+                font.draw("> " + typing.toString(), x, pos, ortho, new Vector4f(1, 1, 1, focusTimer / FOCUS_TIME));
             } else {
-                font.draw(typing.toString() + "|", x, pos, ortho, new Vector4f(1, 1, 1, focusTimer / FOCUS_TIME));
+                font.draw("> " + typing.toString() + "|", x, pos, ortho, new Vector4f(1, 1, 1, focusTimer / FOCUS_TIME));
             }
         }
     }
@@ -82,14 +84,16 @@ public class Chatbox {
         int index = 0, start = 0;
         while(index < s.length()) {
             float width = 0;
-            while (width < this.width && index < s.length()) {
+            while (width < this.width && index < s.length() && s.charAt(index) != '\n') {
                 ++index;
                 width = font.textWidth(s.substring(start, index));
             }
             if(width >= this.width) --index;
+            if(index < s.length() && s.charAt(index) == '\n') ++index;
             add(s.substring(start, index));
             start = index;
         }
+        System.out.println("Chatbox: " + s);
     }
 
     public void enable() {

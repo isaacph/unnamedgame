@@ -3,6 +3,7 @@ package game;
 import org.joml.Vector2f;
 import render.WorldRenderer;
 import staticData.GameData;
+import staticData.GameObjectType;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,13 +18,16 @@ public class ClickBoxManager {
     private final WorldRenderer worldRenderer;
 
     private final Collection<ClickBox> clickBoxes = new ArrayList<>();
-    private final Map<Integer, ClickBox> gameObjectClickBoxMap = new HashMap<>();
+    private final Map<GameObjectID, ClickBox> gameObjectClickBoxMap = new HashMap<>();
+
+    public GameObjectID selectedID;
 
     public ClickBoxManager(World world, GameData gameData, Camera camera, WorldRenderer worldRenderer) {
         this.world = world;
         this.gameData = gameData;
         this.camera = camera;
         this.worldRenderer = worldRenderer;
+        this.selectedID = null;
     }
 
     public void resetGameObjectCache() {
@@ -37,17 +41,18 @@ public class ClickBoxManager {
     }
 
     public ClickBox makeClickBox(GameObject obj) {
-        return new ClickBox(obj.uniqueID,
+        GameObjectType type = gameData.getType(obj.type);
+        return new ClickBox(obj.uniqueID, obj.team,
             Camera.worldToViewSpace(new Vector2f(obj.x, obj.y))
-                .add(gameData.getClickBoxOffset(obj.type))
-                .sub(gameData.getClickBoxSize(obj.type).div(2)),
+                .add(type.getClickBoxOffset())
+                .sub(type.getClickBoxSize().div(2)),
             Camera.worldToViewSpace(new Vector2f(obj.x, obj.y))
-                .add(gameData.getClickBoxOffset(obj.type))
-                .add(gameData.getClickBoxSize(obj.type).div(2)),
-            gameData.getClickBoxDepthOffset(obj.type));
+                .add(type.getClickBoxOffset())
+                .add(type.getClickBoxSize().div(2)),
+                type.getClickBoxDepthOffset());
     }
 
-    public ClickBox getGameObjectClickBox(int uniqueID) {
+    public ClickBox getGameObjectClickBox(GameObjectID uniqueID) {
         return gameObjectClickBoxMap.get(uniqueID);
     }
 
@@ -56,7 +61,28 @@ public class ClickBoxManager {
         Vector2f topClickBoxDepthPosition = null;
         GameObject top = null;
         for(ClickBox clickBox : clickBoxes) {
-            if(!clickBox.disabled && Util.pointInside(
+            if(!clickBox.disabled && MathUtil.pointInside(
+                position.x,
+                position.y,
+                clickBox.min.x,
+                clickBox.min.y,
+                clickBox.max.x,
+                clickBox.max.y)) {
+                if(topClickBoxDepthPosition == null || clickBox.depthOffset.y > topClickBoxDepthPosition.y) {
+                    topClickBoxDepthPosition = clickBox.center().add(clickBox.depthOffset, new Vector2f());
+                    top = world.gameObjects.get(clickBox.gameObjectID);
+                }
+            }
+        }
+        return top;
+    }
+
+    public GameObject getGameObjectAtViewPosition(Vector2f viewPosition, TeamID team) {
+        Vector2f position = new Vector2f(viewPosition);
+        Vector2f topClickBoxDepthPosition = null;
+        GameObject top = null;
+        for(ClickBox clickBox : clickBoxes) {
+            if(clickBox.teamID.equals(team) && !clickBox.disabled && MathUtil.pointInside(
                 position.x,
                 position.y,
                 clickBox.min.x,
@@ -73,14 +99,16 @@ public class ClickBoxManager {
     }
 
     public static class ClickBox {
-        public int gameObjectID;
+        public GameObjectID gameObjectID;
         public Vector2f min;
         public Vector2f max;
         public Vector2f depthOffset;
+        public TeamID teamID;
         public boolean disabled;
 
-        public ClickBox(int id, Vector2f min, Vector2f max, Vector2f d) {
+        public ClickBox(GameObjectID id, TeamID teamID, Vector2f min, Vector2f max, Vector2f d) {
             this.gameObjectID = id;
+            this.teamID = teamID;
             this.min = min;
             this.max = max;
             this.depthOffset = d;

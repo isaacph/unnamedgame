@@ -15,11 +15,13 @@ public class GameResources {
     public final WorldRenderer worldRenderer;
     public final AnimationManager animationManager;
     public final ClickBoxManager clickBoxManager;
+    public final SelectGridManager selectGridManager;
 
     public final GameData gameData;
     public final GameTime gameTime;
 
     public final ClientConnection<ClientPayload, ServerPayload> connection;
+    public final ClientInfo clientInfo;
 
     public GameResources(Camera camera,
                          Chatbox chatbox,
@@ -28,9 +30,11 @@ public class GameResources {
                          WorldRenderer worldRenderer,
                          AnimationManager animationManager,
                          ClickBoxManager clickBoxManager,
+                         SelectGridManager selectGridManager,
                          GameData gameData,
                          GameTime gameTime,
-                         ClientConnection<ClientPayload, ServerPayload> connection) {
+                         ClientConnection<ClientPayload, ServerPayload> connection,
+                         ClientInfo clientInfo) {
 
         this.camera = camera;
         this.chatbox = chatbox;
@@ -42,5 +46,7 @@ public class GameResources {
         this.gameData = gameData;
         this.gameTime = gameTime;
         this.connection = connection;
+        this.clientInfo = clientInfo;
+        this.selectGridManager = selectGridManager;
     }
 }

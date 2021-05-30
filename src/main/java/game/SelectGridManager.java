@@ -1,18 +1,26 @@
 package game;
 
 import org.joml.Vector2i;
+import staticData.GameData;
+import staticData.GameObjectType;
+
+import java.util.Set;
 
 public class SelectGridManager {
 
+    private final GameData gameData;
     private final World world;
     private final ByteGrid.Group selectionGrid = new ByteGrid.Group();
 
-    public SelectGridManager(World world) {
+    public SelectGridManager(World world, GameData gameData) {
         this.world = world;
+        this.gameData = gameData;
     }
 
-    public void regenerateSelect(Vector2i start, double speed) {
-        Pathfinding.Paths paths = Pathfinding.pathPossibilities(getWeightStorage(world), start, speed);
+    public void regenerateSelect(GameObjectID object) {
+        GameObject obj = world.gameObjects.get(object);
+        double speed = gameData.getType(obj.type).getBaseSpeed();
+        Pathfinding.Paths paths = Pathfinding.pathPossibilities(getWeightStorage(object, world, gameData), new Vector2i(obj.x, obj.y), speed);
         Pathfinding.changeSelectGrid(selectionGrid, paths);
     }
 
@@ -20,11 +28,21 @@ public class SelectGridManager {
         return selectionGrid;
     }
 
-    public static Pathfinding.WeightStorage getWeightStorage(World world) {
+    public static Pathfinding.WeightStorage getWeightStorage(GameObjectID gameObjectID, World world, GameData gameData) {
+        GameObject gameObject = world.gameObjects.get(gameObjectID);
+        GameObjectType type = gameData.getType(gameObject.type);
         return tile -> {
-            byte t = world.grid.getTile(tile.x, tile.y);
-            if(t == 0) return 1;
-            else return Double.POSITIVE_INFINITY;
+            if(tile.x == gameObject.x && tile.y == gameObject.y) {
+                return 0;
+            }
+            double weight = 0;
+            Set<Vector2i> occTiles = type.getRelativeOccupiedTiles();
+            for(Vector2i occ : occTiles) {
+                int ox = occ.x + tile.x;
+                int oy = occ.y + tile.y;
+                weight = Math.max(weight, world.getTileWeight(gameData, ox, oy));
+            }
+            return weight;
         };
     }
 }

@@ -1,6 +1,6 @@
 package render;
 
-import game.Util;
+import game.MathUtil;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 import org.lwjgl.stb.*;
@@ -57,7 +57,7 @@ public class Font {
 
         try {
             // NOTE: this font rendering code is taken from a previous project of mine
-            InputStream stream = Util.getInputStream(source);
+            InputStream stream = MathUtil.getInputStream(source);
             ReadableByteChannel channel = Channels.newChannel(stream);
             ByteBuffer buffer = MemoryUtil.memAlloc(stream.available()); // plz be an int!
             channel.read(buffer);
@@ -255,4 +255,6 @@ public class Font {
 //        glDeleteVertexArrays(vao);
         glDeleteBuffers(vbo);
     }
+
+    public int getSize() { return size; }
 }

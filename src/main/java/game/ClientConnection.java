@@ -7,6 +7,7 @@ import server.SocketChannelWriter;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.net.InetAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
@@ -14,16 +15,18 @@ import java.nio.channels.UnresolvedAddressException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.function.Consumer;
 
 public class ClientConnection<IncomingType, OutgoingType> {
 
     private SocketChannel socketChannel;
     private SocketChannelReader<IncomingType> socketChannelReader = new SocketChannelReader<>();
     private SocketChannelWriter<OutgoingType> socketChannelWriter = new SocketChannelWriter<>();
-    private ArrayList<OutgoingType> toSend = new ArrayList<>();
+    private Consumer<SocketAddress> onConnectHandler = socketAddress -> {};
+    private SocketAddress localAddress;
+    private SocketAddress remoteAddress;
 
     public void connect(SocketAddress remote) {
-        toSend.clear();
         if(socketChannel != null) {
             try {
                 socketChannel.close();
@@ -36,6 +39,7 @@ public class ClientConnection<IncomingType, OutgoingType> {
         try {
             socketChannel = SocketChannel.open();
             socketChannel.configureBlocking(false);
+            this.localAddress = socketChannel.getLocalAddress();
         } catch (IOException e) {
             System.err.println("Failed to open socket");
             e.printStackTrace();
@@ -50,6 +54,7 @@ public class ClientConnection<IncomingType, OutgoingType> {
         }
         try {
             socketChannel.connect(remote);
+            this.remoteAddress = remote;
         } catch (IOException e) {
             System.err.println("Failed to connect to remote " + remote.toString());
             e.printStackTrace();
@@ -68,6 +73,9 @@ public class ClientConnection<IncomingType, OutgoingType> {
         if(socketChannel.isConnectionPending()) {
             try {
                 socketChannel.finishConnect();
+                this.remoteAddress = socketChannel.getRemoteAddress();
+                this.localAddress = socketChannel.getLocalAddress();
+                this.onConnectHandler.accept(remoteAddress);
             } catch(IOException e) {
                 System.err.println("Failed to finish connection");
                 e.printStackTrace();
@@ -76,14 +84,10 @@ public class ClientConnection<IncomingType, OutgoingType> {
         }
         if(!socketChannel.isConnected()) return Collections.emptyList();
         try {
-            if(!toSend.isEmpty()) {
-                socketChannelWriter.writeTo(socketChannel, toSend);
-            }
+            socketChannelWriter.update();
         } catch(IOException e) {
-            System.err.println("Failed to write to socket");
+            System.err.println("SocketChannelWriter update error");
             e.printStackTrace();
-        } finally {
-            toSend.clear();
         }
 
         try {
@@ -108,11 +112,27 @@ public class ClientConnection<IncomingType, OutgoingType> {
     }
 
     public void queueSend(OutgoingType payload) {
-        toSend.add(payload);
+        socketChannelWriter.queueSend(socketChannel, payload);
+    }
+
+    public void clearQueue() {
+        socketChannelWriter.clearQueue();
     }
 
     public boolean isConnected() {
         if(socketChannel == null) return false;
         return socketChannel.isConnected();
+    }
+
+    public SocketAddress getLocalAddress() {
+        return localAddress;
+    }
+
+    public SocketAddress getRemoteAddress() {
+        return remoteAddress;
+    }
+
+    public void setOnConnectHandler(Consumer<SocketAddress> handler) {
+        this.onConnectHandler = handler;
     }
 }

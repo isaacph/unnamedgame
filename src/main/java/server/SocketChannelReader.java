@@ -1,11 +1,12 @@
 package server;
 
+import game.MathUtil;
 import org.lwjgl.BufferUtils;
+import org.lwjgl.system.MemoryStack;
+import org.lwjgl.system.MemoryUtil;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
+import java.io.*;
+import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
@@ -13,7 +14,9 @@ import java.util.Collection;
 
 public class SocketChannelReader<IncomingType> {
 
-    private ByteBuffer buffer = BufferUtils.createByteBuffer(8192);
+    private ByteBuffer buffer = BufferUtils.createByteBuffer(1<<20);
+    private int receivingRemaining = 0;
+    private ByteArrayOutputStream receiving = new ByteArrayOutputStream();
 
     public SocketChannelReader() {
 
@@ -26,32 +29,54 @@ public class SocketChannelReader<IncomingType> {
         ArrayList<IncomingType> payloads = new ArrayList<>();
 
         buffer.clear();
-        try(ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-            int length, total = 0;
-            do {
-                length = socket.read(buffer);
-                if(length > 0) {
-                    total += length;
-                    byte[] bytes = new byte[length];
-                    buffer.flip();
-                    buffer.get(bytes);
-                    bos.write(bytes);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        int length, total = 0;
+        do {
+            length = socket.read(buffer);
+            if(length > 0) {
+                total += length;
+                byte[] bytes = new byte[length];
+                buffer.flip();
+                buffer.get(bytes);
+                bos.write(bytes);
+            }
+            buffer.clear();
+        } while (length > 0);
+        if(total > 0) {
+            System.out.println(total);
+            byte[] received = bos.toByteArray();
+            int receivedOffset = 0;
+            bos.close();
+            try {
+                while(received.length - receivedOffset > 0) {
+                    if(receivingRemaining == 0) {
+                        DataInputStream dis = new DataInputStream(new ByteArrayInputStream(received, receivedOffset, 4));
+                        receivingRemaining = dis.readInt();
+                        receivedOffset += 4;
+                    }
+                    if(receivingRemaining > 0) {
+                        int count = Math.min(receivingRemaining, received.length - receivedOffset);
+                        receiving.write(received, receivedOffset, count);
+                        receivedOffset += count;
+                        receivingRemaining -= count;
+
+                        if(receivingRemaining == 0) {
+                            try(ByteArrayInputStream bis2 = new ByteArrayInputStream(receiving.toByteArray())) {
+                                ObjectInputStream ois2 = new ObjectInputStream(bis2);
+                                payloads.add((IncomingType) ois2.readObject());
+                            }
+                            catch(InvalidClassException e) {
+                                System.err.println("ServerPayload: invalid type");
+                                e.printStackTrace();
+                            } finally {
+                                receiving.reset();
+                            }
+                        }
+                    }
                 }
-                buffer.clear();
-            } while (length > 0);
-            if(total > 0) {
-                System.out.println(total);
-                try (ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray())) {
-                    ObjectInputStream ois = new ObjectInputStream(bis);
-                    payloads.addAll((Collection<IncomingType>) ois.readObject());
-                    return payloads;
-                }
-                catch (ClassNotFoundException e) {
-                    System.err.println("ServerPayload: invalid type");
-                }
-                catch (Exception e) {
-                    e.printStackTrace();
-                }
+            } catch(Exception e) {
+                System.err.println("ServerPayload: error, now we pray");
+                e.printStackTrace();
             }
         }
         return payloads;

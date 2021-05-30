@@ -168,8 +168,8 @@ public class TileGridRenderer {
             Shaders.checkGLError("Tile ByteGrid VBO init");
         }
 
-        grass = new Texture("grass.png", new Texture.Settings(GL_REPEAT, GL_LINEAR));
-        grass2 = new Texture("mock grass 2.png", new Texture.Settings(GL_REPEAT, GL_LINEAR));
+        grass = Texture.makeTexture("grass.png", new Texture.Settings(GL_REPEAT, GL_LINEAR));
+        grass2 = Texture.makeTexture("mock grass 2.png", new Texture.Settings(GL_REPEAT, GL_LINEAR));
         scale = 2.0f;
     }
 
@@ -192,6 +192,13 @@ public class TileGridRenderer {
             gridMap.put(new Vector2i(grid.x, grid.y), data);
         }
         Shaders.checkGLError("Tile grid build " + grid.x + ", " + grid.y);
+    }
+
+    public void clear() {
+        for(GridInfo data : gridMap.values()) {
+            glDeleteTextures(data.texture);
+        }
+        gridMap.clear();
     }
 
     public void buildSelect(List<ByteGrid> gridsToBuild) {

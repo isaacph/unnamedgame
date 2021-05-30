@@ -42,9 +42,9 @@ void main() {
     vec2 tc = (texMorph * vec4(texCoord, 0, 1)).xy + textureOffset;
     int value = int(texture2D(samplerTile, texCoord + vec2(0.5)).r * 128.0);
     vec4 tex = vec4(0);
-    if(value == 0) {
+    if(value == 1) {
         tex = texture2D(sampler1, tc * textureScale);
-    } else if(value == 1) {
+    } else if(value == 2) {
         tex = texture2D(sampler2, tc * textureScale);
     }
 

@@ -1,6 +1,6 @@
 package render;
 
-import game.Util;
+import game.MathUtil;
 import org.lwjgl.BufferUtils;
 
 import java.io.BufferedReader;
@@ -15,7 +15,7 @@ public final class Shaders {
     public static int createShader(String path, int type) {
         try {
 //            InputStream stream = Shaders.class.getResourceAsStream(path);
-            InputStream stream = Util.getInputStream(path);
+            InputStream stream = MathUtil.getInputStream(path);
             BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
             StringBuffer content = new StringBuffer();
             while(reader.ready()) {

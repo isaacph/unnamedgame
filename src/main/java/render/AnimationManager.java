@@ -1,6 +1,7 @@
 package render;
 
 import game.Action;
+import game.GameObjectID;
 
 import java.util.*;
 
@@ -8,7 +9,7 @@ public class AnimationManager {
     private final Collection<Animation> animations = new ArrayList<>();
     private boolean updating = false;
     private final Collection<Animation> toRemove = new ArrayList<>();
-    private final Set<Integer> occupiedObjects = new HashSet<>();
+    private final Set<GameObjectID> occupiedObjects = new HashSet<>();
 
     public AnimationManager() {
 
@@ -52,11 +53,11 @@ public class AnimationManager {
         }
     }
 
-    public boolean isObjectOccupied(int uniqueID) {
+    public boolean isObjectOccupied(GameObjectID uniqueID) {
         return this.occupiedObjects.contains(uniqueID);
     }
 
-    public void setObjectOccupied(int uniqueID, boolean occupied) {
+    public void setObjectOccupied(GameObjectID uniqueID, boolean occupied) {
         if(occupied) {
             this.occupiedObjects.add(uniqueID);
         } else {

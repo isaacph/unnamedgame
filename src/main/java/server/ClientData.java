@@ -1,12 +1,14 @@
 package server;
 
+import game.ClientID;
+
 public class ClientData {
     public String name;
-    public int clientId;
+    public ClientID clientId;
     public long lastMessage;
 
-    public ClientData(int clientId) {
+    public ClientData(ClientID clientId) {
         this.clientId = clientId;
-        this.name = "Unnamed";
+        this.name = "Unnamed" + clientId.hashCode();
     }
 }

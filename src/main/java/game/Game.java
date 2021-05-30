@@ -5,13 +5,14 @@ import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 import render.*;
 import server.*;
+import server.commands.*;
 import staticData.GameData;
+import staticData.GameObjectType;
 
+import java.io.*;
+import java.lang.Math;
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.*;
 
 import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
@@ -32,9 +33,9 @@ public class Game {
     private final Vector2i mouseWorldPosition = new Vector2i();
     private final Vector2f mouseViewPosition = new Vector2f();
 
+    private GameTime gameTime;
     private Camera camera;
     private Chatbox chatbox;
-    private GameObjectFactory gameObjectFactory;
 
     private World world;
     private WorldRenderer worldRenderer;
@@ -43,16 +44,15 @@ public class Game {
     private SelectGridManager selectGridManager;
 
     private GameData gameData;
-    private GameTime gameTime;
-    private MultiplayerState gameState = new MultiplayerState();
+    private GameObjectFactory gameObjectFactory;
+
+    private ClientConnection<ClientPayload, ServerPayload> connection;
+    private ClientInfo clientInfo;
 
     private GameResources consRes;
 
     private Mode mode = Mode.PLAY;
-    private int selectedID = -1;
     private UICommand currentCommand = UICommand.NONE;
-
-    private ClientConnection<ClientPayload, ServerPayload> connection;
 
     enum Mode {
         PLAY, EDIT
@@ -132,7 +132,7 @@ public class Game {
 
         this.boxRenderer = new BoxRenderer();
         this.textureRenderer = new TextureRenderer();
-        this.font = new Font("font.ttf", 48, 512, 512);
+        this.font = new Font("font.ttf", 24, 512, 512);
 
         this.gameData = new GameData();
         this.world = new World();
@@ -144,15 +144,19 @@ public class Game {
         this.camera = new Camera(gameTime, window);
         this.clickBoxManager = new ClickBoxManager(world, gameData, camera, worldRenderer);
         this.gameObjectFactory = new GameObjectFactory();
+        this.clientInfo = new ClientInfo();
 
         this.connection = new ClientConnection<>();
+        this.connection.setOnConnectHandler(socketAddress -> {
+            connection.queueSend(new GetWorld());
+            connection.queueSend(new GetClientID());
+        });
         this.connection.connect(new InetSocketAddress("localhost", Server.PORT));
         this.connection.queueSend(new EchoPayload("Connection succeeded"));
 
+        this.consRes = new GameResources(camera, chatbox, gameObjectFactory, world, worldRenderer, animationManager, clickBoxManager, selectGridManager, gameData, gameTime, connection, clientInfo);
 
-        this.consRes = new GameResources(camera, chatbox, gameObjectFactory, world, worldRenderer, animationManager, clickBoxManager, gameData, gameTime, connection);
-
-        this.selectGridManager = new SelectGridManager(world);
+        this.selectGridManager = new SelectGridManager(world, gameData);
 
         windowResize(screenWidth, screenHeight);
     }
@@ -172,7 +176,7 @@ public class Game {
         mousePosition.y = (float) my[0];
         Vector2f vpos = camera.screenToViewSpace(mousePosition);
         Vector2f pos = Camera.viewToWorldSpace(vpos);
-        mouseWorldPosition.set(Util.floor(pos.x), Util.floor(pos.y));
+        mouseWorldPosition.set(MathUtil.floor(pos.x), MathUtil.floor(pos.y));
         mouseViewPosition.set(vpos);
     }
 
@@ -180,22 +184,19 @@ public class Game {
         if(mode == Mode.PLAY) {
             if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
                 if(currentCommand == UICommand.NONE) {
-                    GameObject selectedObject = clickBoxManager.getGameObjectAtViewPosition(mouseViewPosition);
-                    if(selectedObject != null) {
-                        selectedID = selectedObject.uniqueID;
+                    GameObject selectedObject = clickBoxManager.getGameObjectAtViewPosition(mouseViewPosition, world.teams.getClientTeam(clientInfo.clientID));
+                    if(selectedObject != null && selectedObject.team.equals(world.teams.getClientTeam(clientInfo.clientID))) {
+                        clickBoxManager.selectedID = selectedObject.uniqueID;
                     } else {
-                        selectedID = -1;
+                        clickBoxManager.selectedID = null;
                     }
                 } else {
-                    if(!animationManager.isObjectOccupied(selectedID)) {
-                        GameObject selectedObject = world.gameObjects.get(selectedID);
+                    if(!animationManager.isObjectOccupied(clickBoxManager.selectedID)) {
                         if (currentCommand == UICommand.MOVE) {
-                            if (!mouseWorldPosition.equals(selectedObject.x, selectedObject.y)
-                                && !world.occupied(mouseWorldPosition.x, mouseWorldPosition.y)) {
-                                MoveAction moveAction = new MoveAction(selectedID, mouseWorldPosition.x, mouseWorldPosition.y);
-                                if(moveAction.validate(world, gameData)) {
-                                    moveAction.animate(consRes);
-                                }
+                            MoveAction moveAction = new MoveAction(clickBoxManager.selectedID, mouseWorldPosition.x, mouseWorldPosition.y);
+                            if(moveAction.validate(clientInfo.clientID, world, gameData)) {
+                                connection.queueSend(new ActionCommand(moveAction, world));
+                                moveAction.animate(consRes);
                             }
                             currentCommand = UICommand.NONE;
                             worldRenderer.tileGridRenderer.buildSelect(new ArrayList<>());
@@ -228,12 +229,12 @@ public class Game {
             if(key == GLFW_KEY_ENTER && action == GLFW_PRESS) {
                 chatbox.enable();
             } else if(mode == Mode.PLAY) {
-                if (currentCommand == UICommand.NONE && !animationManager.isObjectOccupied(selectedID)) { // no command is currently selected
-                    if(selectedID != -1 && key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+                if (currentCommand == UICommand.NONE && !animationManager.isObjectOccupied(clickBoxManager.selectedID)) { // no command is currently selected
+                    if(clickBoxManager.selectedID != null &&
+                            world.gameObjects.get(clickBoxManager.selectedID) != null && gameData.getType(world.gameObjects.get(clickBoxManager.selectedID).type).getBaseSpeed() > 0 &&
+                            key == GLFW_KEY_Q && action == GLFW_PRESS) {
                         currentCommand = UICommand.MOVE;
-                        selectGridManager.regenerateSelect(
-                                new Vector2i(world.gameObjects.get(selectedID).x, world.gameObjects.get(selectedID).y),
-                                gameData.getSpeed(world.gameObjects.get(selectedID).type));
+                        selectGridManager.regenerateSelect(clickBoxManager.selectedID);
                         worldRenderer.tileGridRenderer.buildSelect(new ArrayList<>(selectGridManager.getSelectionGrid().map.values()));
                     }
                 }
@@ -261,22 +262,38 @@ public class Game {
 
             if(mode == Mode.EDIT && !chatbox.focus) {
                 if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+                    if (world.grid.getTile(mouseWorldPosition.x, mouseWorldPosition.y) != 2) {
+                        ByteGrid updateGrid = world.grid.setTile((byte) 2, mouseWorldPosition.x, mouseWorldPosition.y);
+                        worldRenderer.tileGridRenderer.build(updateGrid);
+                    }
+                } else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
                     if (world.grid.getTile(mouseWorldPosition.x, mouseWorldPosition.y) != 1) {
                         ByteGrid updateGrid = world.grid.setTile((byte) 1, mouseWorldPosition.x, mouseWorldPosition.y);
                         worldRenderer.tileGridRenderer.build(updateGrid);
                     }
-                } else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
-                    if (world.grid.getTile(mouseWorldPosition.x, mouseWorldPosition.y) != 0) {
-                        ByteGrid updateGrid = world.grid.setTile((byte) 0, mouseWorldPosition.x, mouseWorldPosition.y);
-                        worldRenderer.tileGridRenderer.build(updateGrid);
+                } else if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+                    ClientID clientID = clientInfo.clientID;
+                    TeamID team = world.teams.getClientTeam(clientID);
+                    GameObject obj = gameObjectFactory.createGameObject(gameData.getPlaceholder(), team);
+                    if(obj != null) {
+                        obj.x = mouseWorldPosition.x;
+                        obj.y = mouseWorldPosition.y;
+                        if(world.add(obj, gameData)) {
+                            worldRenderer.resetGameObjectRenderCache();
+                            clickBoxManager.resetGameObjectCache();
+                        }
                     }
-                } else if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-                    GameObject obj = gameObjectFactory.createGameObject(gameData.getPlaceholder());
-                    obj.x = mouseWorldPosition.x;
-                    obj.y = mouseWorldPosition.y;
-                    if (world.add(obj)) {
-                        worldRenderer.resetGameObjectRenderCache();
-                        clickBoxManager.resetGameObjectCache();
+                } else if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
+                    ClientID clientID = clientInfo.clientID;
+                    TeamID team = world.teams.getClientTeam(clientID);
+                    GameObject obj = gameObjectFactory.createGameObject(gameData.getBuildingPlaceholder(), team);
+                    if(obj != null) {
+                        obj.x = mouseWorldPosition.x;
+                        obj.y = mouseWorldPosition.y;
+                        if(world.add(obj, gameData)) {
+                            worldRenderer.resetGameObjectRenderCache();
+                            clickBoxManager.resetGameObjectCache();
+                        }
                     }
                 }
             } else if(mode == Mode.PLAY) {
@@ -284,58 +301,108 @@ public class Game {
 
             chatbox.update();
             for(String cmd : chatbox.commands) {
-                if(cmd.startsWith("/")) {
-                    String[] args = cmd.substring(1).split("\\s");
-                    if(args[0].equals("test")) {
-                        chatbox.println("Testing!");
-                    } else if(args[0].equals("edit")) {
-                        mode = Mode.EDIT;
-                        chatbox.println("Editing enabled");
-                    } else if(args[0].equals("play")) {
-                        mode = Mode.PLAY;
-                        chatbox.println("Gameplay enabled");
-                    } else if(args[0].equals("connect")) {
-                        if(args.length == 2) {
-                            connection.connect(new InetSocketAddress(args[1], Server.PORT));
-                            chatbox.println("Attempting to connect to " + args[1] + ":" + Server.PORT);
-                            connection.queueSend(new EchoPayload("Connection complete"));
+                try {
+                    if(cmd.startsWith("/")) {
+                        String[] args = cmd.substring(1).split("\\s");
+                        args[0] = args[0].toLowerCase();
+                        if(args[0].equals("test")) {
+                            chatbox.println("Testing!");
+                        } else if(args[0].equals("edit")) {
+                            mode = Mode.EDIT;
+                            chatbox.println("Editing enabled");
+                        } else if(args[0].equals("play")) {
+                            mode = Mode.PLAY;
+                            chatbox.println("Gameplay enabled");
+                        } else if(args[0].equals("connect")) {
+                            if(args.length == 2) {
+                                connection.connect(new InetSocketAddress(args[1], Server.PORT));
+                                chatbox.println("Attempting to connect to " + args[1] + ":" + Server.PORT);
+                                connection.queueSend(new EchoPayload("Connection complete"));
+                            } else {
+                                chatbox.println("Need 2 params");
+                            }
+                        } else if(args[0].equals("echo")) {
+                            if(connection.isConnected()) {
+                                connection.queueSend(new EchoPayload("Echo: " + cmd.substring(1 + args[0].length())));
+                            }
+                        } else if(args[0].equals("getworld")) {
+                            if(connection.isConnected()) {
+                                connection.queueSend(new GetWorld());
+                            }
+                        } else if(args[0].equals("name")) {
+                            if(args.length != 2) {
+                                chatbox.println("Must use 2 arguments");
+                            } else {
+                                if(connection.isConnected()) {
+                                    connection.queueSend(new NameChange(args[1]));
+                                }
+                            }
+                        } else if(args[0].equals("setworld")) {
+                            if(connection.isConnected()) {
+                                connection.queueSend(new SetWorld(world));
+                            }
+                        } else if(args[0].equals("join")) {
+                            if(args.length != 2 || args[1].length() <= 1) {
+                                chatbox.println("Must use 2 arguments");
+                            } else {
+                                if(connection.isConnected()) {
+                                    connection.queueSend(new JoinTeam(args[1]));
+                                } else {
+                                    chatbox.println("Must be connected");
+                                }
+                            }
+                        } else if(args[0].equals("teams")) {
+                            connection.queueSend(new ListTeams());
+                        } else if(args[0].equals("delteam")) {
+                            if(args.length != 2 || args[1].length() <= 1) {
+                                chatbox.println("Must use 2 arguments");
+                            } else {
+                                connection.queueSend(new RemoveTeam(world.teams.getTeamWithName(args[1])));
+                            }
+                        } else if(args[0].equals("getteamcolor")) {
+                            if(args.length != 2 || args[1].length() <= 1) {
+                                chatbox.println("Must use 2 arguments");
+                            } else {
+                                TeamID team = world.teams.getTeamWithName(args[1]);
+                                String teamName = world.teams.getTeamName(team);
+                                if(team == null) {
+                                    chatbox.println("Team not found.");
+                                } else {
+                                    Vector3f color = world.teams.getTeamColor(team);
+                                    if(color == null) chatbox.println("Team " + teamName + " color undefined.");
+                                    else chatbox.println("Team " + teamName +
+                                            " color: Red=" + (int) (color.x * 255) +
+                                            " Green=" + (int) (color.y * 255) +
+                                            " Blue=" + (int) (color.z * 255));
+                                }
+                            }
+                        } else if(args[0].equals("setteamcolor")) {
+                            if(args.length != 5 || args[1].length() <= 1) {
+                                chatbox.println("Must use 5 arguments");
+                            } else {
+                                String teamName = args[1];
+                                Vector3f color = new Vector3f(
+                                        Math.min(255, Math.max(0, Integer.parseInt(args[2]))) / 255.0f,
+                                        Math.min(255, Math.max(0, Integer.parseInt(args[3]))) / 255.0f,
+                                        Math.min(255, Math.max(0, Integer.parseInt(args[4]))) / 255.0f
+                                );
+                                connection.queueSend(new SetTeamColor(teamName, color));
+                            }
                         } else {
-                            chatbox.println("Need 2 params");
-                        }
-                    } else if(args[0].equals("echo")) {
-                        if(connection.isConnected()) {
-                            connection.queueSend(new EchoPayload("Echo: " + cmd.substring(1 + args[0].length())));
-                        }
-                    } else if(args[0].equals("getworld")) {
-                        if(connection.isConnected()) {
-                            connection.queueSend((server, sourceCon) -> {
-                                server.connection.send(server.getConnection(sourceCon.clientId),
-                                        Collections.singletonList(new SendWorldPayload(server.world)));
-                            });
-                        }
-                    } else if(args[0].equals("name")) {
-                        if(connection.isConnected()) {
-                            connection.queueSend((server, sourceCon) -> {
-                                server.clientName.put(sourceCon.clientId, String.join(" ", Arrays.copyOfRange(args, 1, args.length)));
-                            });
-                        }
-                    } else if(args[0].equals("setworld")) {
-                        if(connection.isConnected()) {
-                            World world = this.world;
-                            connection.queueSend((server, sourceCon) -> {
-                                server.world.setWorld(world);
-                            });
+                            chatbox.println("Unknown command!");
                         }
                     } else {
-                        chatbox.println("Unknown command!");
+                        connection.queueSend(new ChatMessage(cmd));
                     }
-                } else {
-                    connection.queueSend(new ChatMessage(cmd));
+                } catch(Exception e) {
+                    System.err.println("Error processing command");
+                    e.printStackTrace();
                 }
             }
             chatbox.commands.clear();
 
             animationManager.update();
+
             worldRenderer.update();
 
             // all updates go here
@@ -345,13 +412,18 @@ public class Game {
             // everything drawing goes here
             camera.updateView();
 
-            if(selectedID == -1) {
-                worldRenderer.setMouseWorldPosition(new Vector2i(mouseWorldPosition));
+            if(clickBoxManager.selectedID == null) {
+                worldRenderer.setMouseWorldPosition(Collections.singletonList(new Vector2i(mouseWorldPosition)));
             } else {
-                GameObject selectedObject = world.gameObjects.get(selectedID);
-                worldRenderer.setMouseWorldPosition(new Vector2i(selectedObject.x, selectedObject.y));
+                GameObject selectedObject = world.gameObjects.get(clickBoxManager.selectedID);
+                Collection<Vector2i> occupied = MathUtil.addToAll(gameData.getType(selectedObject.type).getRelativeOccupiedTiles(), new Vector2i(selectedObject.x, selectedObject.y));
+                worldRenderer.setMouseWorldPosition(occupied);
             }
             worldRenderer.draw(camera);
+
+//            for(ClickBoxManager.ClickBox clickBox : clickBoxManager.clickBoxes) {
+//                boxRenderer.draw(new Matrix4f(camera.getProjView()).translate(clickBox.center().x, clickBox.center().y, 0).scale(clickBox.scale().x, clickBox.scale().y, 1), new Vector4f(1, 1, 1, 0.6f));
+//            }
 
             chatbox.draw(camera.getProjection());
 
@@ -377,7 +449,32 @@ public class Game {
         connection.close();
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
+//        TeamID.Generator gen = new TeamID.Generator();
+//        ClientID.Generator gen2 = new ClientID.Generator();
+//        Map<TeamID, Integer> test = new HashMap<>();
+//        TeamID id = gen.generate();
+//        ClientID client = gen2.generate();
+//        test.put(id, 5);
+//        System.out.println(test.get(id));
+//
+//        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//        ObjectOutputStream oos = new ObjectOutputStream(baos);
+//        oos.writeObject(id);
+//        ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
+//        TeamID chadID = (TeamID) ois.readObject();
+//
+//        TeamManager manager = new TeamManager();
+//        manager.addTeam(id);
+//        System.out.println(manager.getClientTeam(client));
+//        manager.setClientTeam(client, id);
+//        System.out.println(manager.getClientTeam(client));
+//        manager.setClientTeam(client, chadID);
+//        System.out.println(manager.getClientTeam(client));
+//        System.out.println(manager.getTeamClients(chadID));
+//        System.out.println(manager.getTeamClients(id));
+//
+//        System.exit(0);
         new Game().run();
     }
 

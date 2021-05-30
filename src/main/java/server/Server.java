@@ -1,9 +1,9 @@
 package server;
 
-import game.ClientPayload;
-import game.EmptyServerPayload;
-import game.GameResources;
-import game.World;
+import game.*;
+import server.commands.ChatMessage;
+import server.commands.ConnectionLifeCheck;
+import staticData.GameData;
 
 import java.io.*;
 import java.net.InetAddress;
@@ -16,22 +16,24 @@ import java.util.*;
 public class Server {
 
     public static final int PORT = 6000;
-    public static final long AFK_TIME_MS = 60000;
-    public static final long LIFE_CHECK_TIME_MS = 10000;
+    public static final long AFK_TIME_MS = 20000;
+    public static final long LIFE_CHECK_TIME_MS = 5000;
 
     private final Thread thread;
     private volatile boolean running;
 
-    private int clientIdCounter = 0;
-
-    public final Map<Integer, String> clientName = new HashMap<>();
     public ServerConnection<ServerPayload, ClientPayload> connection;
+    private final ClientID.Generator clientIDGenerator = new ClientID.Generator();
 
     public World world;
+    public GameData gameData;
+    public final GameObjectFactory gameObjectFactory = new GameObjectFactory();
+    public final TeamID.Generator teamIDGenerator = new TeamID.Generator();
 
-    public final Map<Integer, ClientData> clientIdMap = new HashMap<>();
-    public final Map<Integer, Integer> connectionClientIdMap = new HashMap<>();
-    public final Map<Integer, Integer> clientIdConnectionMap = new HashMap<>();
+    public final Collection<ClientID> clientIDs = new ArrayList<>();
+    public final Map<ClientID, ClientData> clientIdMap = new HashMap<>();
+    public final Map<Integer, ClientID> connectionClientIdMap = new HashMap<>();
+    public final Map<ClientID, Integer> clientIdConnectionMap = new HashMap<>();
 
     public Server() {
         thread = new Thread(this::run);
@@ -55,24 +57,29 @@ public class Server {
                 connection = new ServerConnection<>(PORT);
                 connection.init();
                 connection.setReadErrorHandler(incomingPairError -> {
-                    System.err.println("Read error " + incomingPairError.clientID);
+                    System.err.println("Read error, client " + incomingPairError.clientID);
                     incomingPairError.e.printStackTrace();
                     return false;
                 });
                 connection.setConnectionRemoveHandler(connectionId -> {
-                    int clientIdRemove = connectionClientIdMap.remove(connectionId);
+                    ClientID clientIdRemove = connectionClientIdMap.remove(connectionId);
                     clientIdConnectionMap.remove(clientIdRemove);
                     clientIdMap.remove(clientIdRemove);
+                    clientIDs.remove(clientIdRemove);
                 });
             } catch(IOException e) {
                 System.err.println("Failed to init server connection");
                 throw e;
             }
+            gameData = new GameData();
             world = new World();
             while(running) {
+                long time = System.currentTimeMillis();
+
                 Map<Integer, Collection<ServerPayload>> received = connection.pollAndSend();
                 for(int conId : received.keySet()) {
                     ClientData client = loadClientFromConnection(conId);
+                    client.lastMessage = time;
                     for(ServerPayload payload : received.get(conId)) {
                         payload.execute(this, client);
                     }
@@ -80,25 +87,25 @@ public class Server {
 
                 // update world
                 try {
-//                    Thread.sleep(500);
+                    Thread.sleep(200);
                 } catch (Exception e) {}
 
-                long newTime = System.currentTimeMillis();
-                if(newTime - lastLifeCheck > LIFE_CHECK_TIME_MS) {
-//                    ArrayList<Integer> clientsToForget = new ArrayList<>();
-//                    for(ClientData client : clientIdMap.values()) {
-//                        if(newTime - client.lastMessage > AFK_TIME_MS) {
-//                            clientsToForget.add(client.clientId);
-//                        }
-//                    }
-//                    for(int clientIdRemove : clientsToForget) {
-//                        clientIdMap.remove(clientIdRemove);
-//                        int conId = clientIdConnectionMap.remove(clientIdRemove);
-//                        connectionClientIdMap.remove(conId);
-//                    }
-                    broadcast((GameResources gameResources) ->
-                            gameResources.connection.queueSend(new EmptyServerPayload()));
-                    lastLifeCheck = newTime;
+                if(time - lastLifeCheck > LIFE_CHECK_TIME_MS) {
+                    lastLifeCheck = time;
+
+                    Collection<ClientID> toRemove = new ArrayList<>();
+                    for(ClientID clientID : clientIDs) {
+                        long lastMessage = clientIdMap.get(clientID).lastMessage;
+                        long diff = time - lastMessage;
+                        if(diff > AFK_TIME_MS) {
+                            toRemove.add(clientID);
+                        }
+                    }
+                    for(ClientID id : toRemove) {
+                        removeClient(id);
+                    }
+
+                    broadcast(new ConnectionLifeCheck());
                 }
             }
         } catch (IOException e) {
@@ -114,21 +121,41 @@ public class Server {
         running = false;
     }
 
-    public void broadcast(Collection<ClientPayload> payload) {
-        for(int clientId : clientIdMap.keySet()) {
-            connection.send(getConnection(clientId), payload);
+    public void broadcast(Collection<ClientPayload> payload, Collection<ClientID> blacklist) {
+        for(ClientID clientId : clientIDs) {
+            if(!blacklist.contains(clientId)) {
+                connection.send(getConnection(clientId), payload);
+            }
         }
     }
 
-    private void broadcast(ClientPayload payload) {
+    public void broadcast(ClientPayload payload, Collection<ClientID> blacklist) {
+        broadcast(Collections.singletonList(payload), Collections.emptyList());
+    }
+
+    public void broadcast(ClientPayload payload, ClientID blacklist) {
+        broadcast(Collections.singletonList(payload), Collections.singletonList(blacklist));
+    }
+
+    public void broadcast(ClientPayload payload, ClientData blacklist) {
+        broadcast(Collections.singletonList(payload), Collections.singletonList(blacklist.clientId));
+    }
+
+    public void broadcast(Collection<ClientPayload> payload) {
+        broadcast(payload, Collections.emptyList());
+    }
+
+    public void broadcast(ClientPayload payload) {
         broadcast(Collections.singletonList(payload));
     }
 
     public ClientData loadClientFromConnection(int conId) {
-        Integer clientId = connectionClientIdMap.get(conId);
+        ClientID clientId = connectionClientIdMap.get(conId);
         if(clientId == null || !clientIdMap.containsKey(clientId)) {
-            clientId = clientIdCounter++;
+            clientId = clientIDGenerator.generate();
+            clientIDs.add(clientId);
             ClientData client = new ClientData(clientId);
+            client.lastMessage = System.currentTimeMillis();
             clientIdMap.put(clientId, client);
             clientIdConnectionMap.put(clientId, conId);
             connectionClientIdMap.put(conId, clientId);
@@ -138,7 +165,25 @@ public class Server {
         return client;
     }
 
-    public int getConnection(int clientId) {
+    public void removeClient(ClientID client) {
+        boolean contained = clientIDs.remove(client);
+        ClientData data = clientIdMap.remove(client);
+        Integer conID = clientIdConnectionMap.remove(client);
+        world.teams.setClientTeam(client, null);
+        if(conID != null) {
+            connectionClientIdMap.remove(conID);
+            connection.cleanDisconnect(conID, new ChatMessage("Disconnecting..."));
+        }
+        if(contained && data != null) {
+            broadcast(new ChatMessage(data.name + " has disconnected."));
+        }
+    }
+
+    public int getConnection(ClientID clientId) {
         return clientIdConnectionMap.get(clientId);
+    }
+
+    public void send(ClientData client, ClientPayload payload) {
+        connection.send(getConnection(client.clientId), payload);
     }
 }

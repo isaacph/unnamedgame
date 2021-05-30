@@ -9,22 +9,35 @@ import staticData.GameData;
 
 public class MoveAction implements Action {
 
-    private int objectID = -1;
-    private int targetX = 0, targetY = 0;
+    private GameObjectID objectID;
+    private int targetX, targetY;
 
-    public MoveAction() {
-    }
-
-    public MoveAction(int objectID, int targetX, int targetY) {
+    public MoveAction(GameObjectID objectID, int targetX, int targetY) {
         this.objectID = objectID;
         this.targetX = targetX;
         this.targetY = targetY;
     }
 
     @Override
-    public boolean validate(World world, GameData gameData) {
+    public boolean validate(ClientID actor, World world, GameData gameData) {
         GameObject object = world.gameObjects.get(objectID);
-        return !Pathfinding.shortestPath(SelectGridManager.getWeightStorage(world), new Vector2i(object.x, object.y), new Vector2i(targetX, targetY), gameData.getSpeed(object.type)).isEmpty();
+        if(actor == null || object == null) {
+            return false;
+        }
+        if(!object.team.equals(world.teams.getClientTeam(actor))) {
+            return false;
+        }
+        if(object.x == targetX && object.y == targetY) {
+            return false;
+        }
+        // at the moment we are only allowing move commands for 1x1 game objects, so that's all we consider here
+        if(world.occupied(targetX, targetY, gameData) != null) {
+            return false;
+        }
+        if(Pathfinding.shortestPath(SelectGridManager.getWeightStorage(objectID, world, gameData), new Vector2i(object.x, object.y), new Vector2i(targetX, targetY), gameData.getType(object.type).getBaseSpeed()).isEmpty()) {
+            return false;
+        }
+        return true;
     }
 
     @Override

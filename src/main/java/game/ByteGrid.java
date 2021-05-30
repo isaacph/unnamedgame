@@ -48,10 +48,10 @@ public class ByteGrid implements Serializable {
             return f.get(((x % SIZE) + SIZE) % SIZE, ((y % SIZE) + SIZE) % SIZE);
         }
         public byte getTile(float x, float y) {
-            return getTile(Util.floor(x), Util.floor(y));
+            return getTile(MathUtil.floor(x), MathUtil.floor(y));
         }
         public ByteGrid setTile(byte b, float x, float y) {
-            return setTile(b, Util.floor(x), Util.floor(y));
+            return setTile(b, MathUtil.floor(x), MathUtil.floor(y));
         }
         public Vector2i getGridIndex(int x, int y) {
             return new Vector2i((int) Math.floor((double) x / SIZE), (int) Math.floor((double) y / SIZE));

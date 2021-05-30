@@ -12,7 +12,7 @@ public class MoveAnimation implements Animation {
 
     public static final float TRAVEL_SPEED = 5.0f;
 
-    private int objectID;
+    private GameObjectID objectID;
     private Vector2i targetInt;
     private Vector2f target;
     private World world;
@@ -21,18 +21,20 @@ public class MoveAnimation implements Animation {
     private GameTime time;
     private AnimationManager animationManager;
     private ClickBoxManager clickBoxManager;
+    private SelectGridManager selectGridManager;
 
     private Vector2f position;
     private List<Vector2i> path = new ArrayList<>();
     private int pathIndex;
 
-    public MoveAnimation(GameResources res, int objectID, Vector2i target) {
+    public MoveAnimation(GameResources res, GameObjectID objectID, Vector2i target) {
         this.world = res.world;
         this.clickBoxManager = res.clickBoxManager;
         this.renderer = res.worldRenderer;
         this.gameData = res.gameData;
         this.time = res.gameTime;
         this.animationManager = res.animationManager;
+        this.selectGridManager = res.selectGridManager;
 
         this.objectID = objectID;
         this.targetInt = new Vector2i(target);
@@ -45,7 +47,7 @@ public class MoveAnimation implements Animation {
         this.position = new Vector2f(object.x, object.y);
         clickBoxManager.getGameObjectClickBox(objectID).disabled = true;
         this.animationManager.setObjectOccupied(objectID, true);
-        this.path = Pathfinding.shortestPath(SelectGridManager.getWeightStorage(world), new Vector2i(object.x, object.y), this.targetInt, gameData.getSpeed(object.type));
+        this.path = Pathfinding.shortestPath(SelectGridManager.getWeightStorage(object.uniqueID, world, gameData), new Vector2i(object.x, object.y), this.targetInt, gameData.getType(object.type).getBaseSpeed());
         this.pathIndex = 0;
     }
 

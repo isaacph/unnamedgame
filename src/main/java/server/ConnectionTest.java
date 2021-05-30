@@ -1,7 +1,10 @@
 package server;
 
 import game.ClientConnection;
+import game.MathUtil;
+import org.lwjgl.system.MemoryStack;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.InetSocketAddress;
@@ -11,7 +14,7 @@ import java.util.Map;
 
 class ConnectionTest
 {
-	private static class Payload implements Serializable
+	public static class Payload implements Serializable
 	{
 		public String string;
 		public Payload(String str) {
@@ -27,31 +30,16 @@ class ConnectionTest
 		return buffer.toString();
 	}
 
-	public static void main(String... args) throws IOException {
+	public static void main(String... args) throws IOException, InterruptedException {
 		int port = 1234;
 		System.out.println("Starting server on port " + port);
 		ServerConnection<Payload, Payload> server = new ServerConnection<>(port);
-		ClientConnection<Payload, Payload> client = new ClientConnection<>();
 		server.init();
-		client.connect(new InetSocketAddress("localhost", port));
-
-		while(!client.isConnected()) {
-			client.update();
-		}
-		client.queueSend(new Payload(makeBigStr('A', 16384)));
 		while(true) {
-			if(client.isConnected()) {
-				Collection<Payload> cp = client.update();
-				for(Payload p : cp) {
-					System.out.println("From server: " + p.string);
-				}
-				client.close();
-			}
-
 			Map<Integer, Collection<Payload>> sp = server.pollAndSend();
 			for(int key : sp.keySet()) {
 				for(Payload p : sp.get(key)) {
-					System.out.println("From client " + key + ": " + p.string);
+					System.out.println("From client " + key + ": ");
 					server.send(key, Collections.singletonList(new Payload(p.string)));
 				}
 			}

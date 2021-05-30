@@ -15,19 +15,18 @@ public class ServerConnection<IncomingType, OutgoingType>
 	public final int port;
 	private ServerSocketChannel serverSocketChannel;
 	private final Map<Integer, SocketChannel> connections = new HashMap<>();
-	private final Map<Integer, Collection<OutgoingType>> toSend = new HashMap<>();
 	private int connectionCounter = 0;
 	private SocketChannelReader<IncomingType> reader = new SocketChannelReader<>();
 	private SocketChannelWriter<OutgoingType> writer = new SocketChannelWriter<>();
-	private Predicate<OutgoingPairError<OutgoingType>> sendErrorHandler;
+	private Predicate<OutgoingPairError> sendErrorHandler;
 	private Consumer<IOException> acceptErrorHandler;
 	private Predicate<IncomingPairError> readErrorHandler;
 	private Consumer<Integer> connectionRemoveHandler;
 
-	public static class OutgoingPairError<OutgoingType> {
+	public static class OutgoingPairError {
 		public int clientID;
-		public Collection<OutgoingType> payload;
 		public IOException e;
+		public boolean serialized;
 	}
 	public static class IncomingPairError {
 		public int clientID;
@@ -64,35 +63,35 @@ public class ServerConnection<IncomingType, OutgoingType>
 	}
 
 	public void send(int conID, Collection<OutgoingType> payloads) {
-		toSend.putIfAbsent(conID, new ArrayList<>());
-		toSend.get(conID).addAll(payloads);
+		for(OutgoingType p : payloads) {
+			send(conID, p);
+		}
 	}
 
 	public void send(int conId, OutgoingType payload) {
-		send(conId, Collections.singletonList(payload));
+		writer.queueSend(connections.get(conId), payload);
 	}
 
 	public Map<Integer, Collection<IncomingType>> pollAndSend() {
 
 		Collection<Integer> conToRemove = new ArrayList<>();
 		// send to connections
-		for(int key : toSend.keySet()) {
-			for(OutgoingType payload : toSend.get(key)) {
-				Collection<OutgoingType> payloads = Collections.singletonList(payload);
-				try {
-					writer.writeTo(connections.get(key), payloads);
-				} catch(IOException e) {
-					OutgoingPairError<OutgoingType> error = new OutgoingPairError<>();
-					error.e = e;
-					error.clientID = key;
-					error.payload = payloads;
-					if(!sendErrorHandler.test(error)) {
-						conToRemove.add(key);
-					}
+		try {
+			writer.update();
+		} catch(SocketChannelWriter.Exception e) {
+			OutgoingPairError error = new OutgoingPairError();
+			error.clientID = -1;
+			for(int conID : connections.keySet()) {
+				if(connections.get(conID).equals(e.channel)) {
+					error.clientID = conID;
 				}
 			}
+			error.serialized = e.serialized;
+			error.e = e;
+			if(!sendErrorHandler.test(error) && error.clientID != -1) {
+				conToRemove.add(error.clientID);
+			}
 		}
-		toSend.clear();
 		for(int conId : conToRemove) {
 			connections.remove(conId);
 			this.connectionRemoveHandler.accept(conId);
@@ -118,7 +117,7 @@ public class ServerConnection<IncomingType, OutgoingType>
 			try {
 				Collection<IncomingType> payloads = reader.readFrom(connections.get(conId));
 				if(payloads != null) {
-					msgToProcess.put(conId, payloads);
+					if(!payloads.isEmpty()) msgToProcess.put(conId, payloads);
 				} else {
 					conToRemove.add(conId);
 				}
@@ -139,7 +138,7 @@ public class ServerConnection<IncomingType, OutgoingType>
 	}
 
 	/** The return type for the handler is whether to keep the connection after the error **/
-	public void setSendErrorHandler(Predicate<OutgoingPairError<OutgoingType>> sendErrorHandler) {
+	public void setSendErrorHandler(Predicate<OutgoingPairError> sendErrorHandler) {
 		this.sendErrorHandler = sendErrorHandler;
 	}
 
@@ -154,5 +153,36 @@ public class ServerConnection<IncomingType, OutgoingType>
 
 	public void setConnectionRemoveHandler(Consumer<Integer> removeHandler) {
 		this.connectionRemoveHandler = removeHandler;
+	}
+
+	public void removeConnection(int conId) {
+		SocketChannel channel = connections.remove(conId);
+		if(channel != null && channel.isOpen() && (channel.isConnected() || channel.isConnectionPending())) {
+			try {
+				channel.close();
+			} catch(IOException e) {
+				System.err.println("ServerConnection: remove channel error");
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public void cleanDisconnect(int conId, OutgoingType dcMessage) {
+		SocketChannel channel = connections.get(conId);
+		if(channel != null && channel.isOpen() && (channel.isConnected() || channel.isConnectionPending())) {
+			connections.remove(conId);
+			writer.queueSend(channel, dcMessage, () -> {
+				try {
+					if(channel.isOpen() && channel.isConnected() || channel.isConnectionPending()) {
+						channel.close();
+					}
+				} catch(IOException e) {
+					System.err.println("ServerConnection: trying to cleanly close channel");
+					e.printStackTrace();
+				}
+			});
+		} else {
+			removeConnection(conId);
+		}
 	}
 }

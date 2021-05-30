@@ -6,7 +6,7 @@ import java.io.Serializable;
 
 public interface Action extends Serializable {
 
-    boolean validate(World world, GameData gameData);
+    boolean validate(ClientID actor, World world, GameData gameData);
 
     /** Should call execute **/
     void animate(GameResources gameResources);
