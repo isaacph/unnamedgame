@@ -4,6 +4,7 @@ import org.joml.Vector2i;
 import staticData.GameData;
 import staticData.GameObjectType;
 
+import java.util.Collection;
 import java.util.Set;
 
 public class SelectGridManager {
@@ -19,9 +20,13 @@ public class SelectGridManager {
 
     public void regenerateSelect(GameObjectID object) {
         GameObject obj = world.gameObjects.get(object);
-        double speed = gameData.getType(obj.type).getBaseSpeed();
+        double speed = obj.speedLeft;
         Pathfinding.Paths paths = Pathfinding.pathPossibilities(getWeightStorage(object, world, gameData), new Vector2i(obj.x, obj.y), speed);
         Pathfinding.changeSelectGrid(selectionGrid, paths);
+    }
+
+    public void regenerateSelect(Collection<Vector2i> tiles) {
+        Pathfinding.changeSelectGrid(selectionGrid, tiles);
     }
 
     public ByteGrid.Group getSelectionGrid() {

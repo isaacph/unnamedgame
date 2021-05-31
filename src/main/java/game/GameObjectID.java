@@ -30,7 +30,7 @@ public class GameObjectID implements Serializable {
         return "GameObject:" + id.toString();
     }
 
-    public static class Generator {
+    public static class Generator implements Serializable {
 
         public Generator() {
 

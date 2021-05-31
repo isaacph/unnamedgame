@@ -2,6 +2,8 @@ package render;
 
 import game.Action;
 import game.GameObjectID;
+import game.World;
+import staticData.GameData;
 
 import java.util.*;
 
@@ -9,7 +11,7 @@ public class AnimationManager {
     private final Collection<Animation> animations = new ArrayList<>();
     private boolean updating = false;
     private final Collection<Animation> toRemove = new ArrayList<>();
-    private final Set<GameObjectID> occupiedObjects = new HashSet<>();
+    private final Map<GameObjectID, Integer> occupiedObjects = new HashMap<>();
 
     public AnimationManager() {
 
@@ -22,6 +24,12 @@ public class AnimationManager {
         animations.clear();
         toRemove.clear();
         occupiedObjects.clear();
+    }
+
+    public void resetWhereNeeded() {
+        for(Animation animation : animations) {
+            animation.onObjectChange();
+        }
     }
 
     public void startAnimation(Animation animation) {
@@ -54,14 +62,17 @@ public class AnimationManager {
     }
 
     public boolean isObjectOccupied(GameObjectID uniqueID) {
-        return this.occupiedObjects.contains(uniqueID);
+        return this.occupiedObjects.get(uniqueID) != null && this.occupiedObjects.get(uniqueID) > 0;
     }
 
     public void setObjectOccupied(GameObjectID uniqueID, boolean occupied) {
+        Integer occupation = occupiedObjects.get(uniqueID);
+        if(occupation == null) occupation = 0;
         if(occupied) {
-            this.occupiedObjects.add(uniqueID);
+            occupation++;
         } else {
-            this.occupiedObjects.remove(uniqueID);
+            occupation = Math.max(0, occupation - 1);
         }
+        this.occupiedObjects.put(uniqueID, occupation);
     }
 }

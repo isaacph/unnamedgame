@@ -18,6 +18,9 @@ public class TeamTextureComponent extends RenderComponent {
     private GameData gameData;
     private Vector2f position;
     private boolean fixedPosition = true;
+    private Vector2f centerOffset;
+    private boolean forceVisible = false;
+    private boolean forcedVisiblity = false;
 
     public TeamTextureComponent(GameObjectID gameObjectID, World world, GameData gameData, WorldRenderer.GameObjectTextures textureLibrary) {
         this.world = world;
@@ -29,12 +32,17 @@ public class TeamTextureComponent extends RenderComponent {
         this.renderOffset = type.getTextureOffset();
         this.renderScale = type.getTextureScale();
         this.position = new Vector2f(obj.x, obj.y);
+        this.centerOffset = type.getCenterOffset();
+    }
+
+    private boolean visible(GameObject obj) {
+        return forceVisible ? forcedVisiblity : obj.alive;
     }
 
     @Override
     public void drawGround(WorldRenderer renderer, Matrix4f orthoProj) {
         GameObject gameObject = world.gameObjects.get(gameObjectID);
-        if(gameObject != null) {
+        if(gameObject != null && visible(gameObject)) {
             GameObjectType type = gameData.getType(gameObject.type);
             if(fixedPosition) {
                 this.position = new Vector2f(gameObject.x, gameObject.y);
@@ -50,7 +58,7 @@ public class TeamTextureComponent extends RenderComponent {
     @Override
     public void draw(WorldRenderer renderer, Matrix4f orthoProj) {
         GameObject gameObject = world.gameObjects.get(gameObjectID);
-        if(gameObject != null) {
+        if(gameObject != null && visible(gameObject)) {
             if(fixedPosition) {
                 this.position = new Vector2f(gameObject.x, gameObject.y);
             }
@@ -72,6 +80,10 @@ public class TeamTextureComponent extends RenderComponent {
         return Camera.worldToViewSpace(position);
     }
 
+    public Vector2f getWorldCenter() {
+        return new Vector2f(position).add(centerOffset);
+    }
+
     public void move(Vector2f position) {
         this.fixedPosition = false;
         this.position = new Vector2f(position);
@@ -79,5 +91,16 @@ public class TeamTextureComponent extends RenderComponent {
 
     public void resetPosition() {
         this.fixedPosition = true;
+    }
+
+    @Override
+    public void forceVisible(boolean visible) {
+        this.forceVisible = true;
+        this.forcedVisiblity = visible;
+    }
+
+    @Override
+    public void resetVisible() {
+        this.forceVisible = false;
     }
 }

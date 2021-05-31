@@ -7,6 +7,8 @@ import render.MoveAnimation;
 import render.WorldRenderer;
 import staticData.GameData;
 
+import java.util.List;
+
 public class MoveAction implements Action {
 
     private GameObjectID objectID;
@@ -24,6 +26,15 @@ public class MoveAction implements Action {
         if(actor == null || object == null) {
             return false;
         }
+        if(!object.alive) {
+            return false;
+        }
+        if(world.teams.getClientTeam(actor) == null) {
+            return false;
+        }
+        if(!gameData.getType(object.type).canMove()) {
+            return false;
+        }
         if(!object.team.equals(world.teams.getClientTeam(actor))) {
             return false;
         }
@@ -34,7 +45,12 @@ public class MoveAction implements Action {
         if(world.occupied(targetX, targetY, gameData) != null) {
             return false;
         }
-        if(Pathfinding.shortestPath(SelectGridManager.getWeightStorage(objectID, world, gameData), new Vector2i(object.x, object.y), new Vector2i(targetX, targetY), gameData.getType(object.type).getBaseSpeed()).isEmpty()) {
+        Pathfinding.WeightStorage ws = SelectGridManager.getWeightStorage(objectID, world, gameData);
+        List<Vector2i> shortestPath = Pathfinding.shortestPath(ws, new Vector2i(object.x, object.y), new Vector2i(targetX, targetY), object.speedLeft);
+        if(shortestPath.isEmpty()) {
+            return false;
+        }
+        if(object.speedLeft < Pathfinding.getPathWeight(shortestPath, ws)) {
             return false;
         }
         return true;
@@ -54,7 +70,11 @@ public class MoveAction implements Action {
         if(world.gameObjects.get(objectID) == null) {
             throw new RuntimeException("Attempted to execute MoveAction on unknown game object:" + objectID);
         }
-        world.gameObjects.get(objectID).x = targetX;
-        world.gameObjects.get(objectID).y = targetY;
+        Pathfinding.WeightStorage ws = SelectGridManager.getWeightStorage(objectID, world, gameData);
+        GameObject object = world.gameObjects.get(objectID);
+        List<Vector2i> shortestPath = Pathfinding.shortestPath(ws, new Vector2i(object.x, object.y), new Vector2i(targetX, targetY), object.speedLeft);
+        object.x = targetX;
+        object.y = targetY;
+        object.speedLeft -= Pathfinding.getPathWeight(shortestPath, ws);
     }
 }

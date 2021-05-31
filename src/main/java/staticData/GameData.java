@@ -20,17 +20,19 @@ public class GameData implements Serializable {
                 new Vector2f(1),
                 new Vector2f(0),
                 new Vector2i(0), new Vector2i(0),
-                8.0, 1, new Vector2f(0), 1));
+                8.0, 1, new Vector2f(0), 1, true, 1.2f,
+                new Vector2f(0.0f)));
         int id2 = addType(new GameObjectType(genUniqueTypeID(),
                 "building",
                 "kid.png",
                 new Vector2f(0.0f, 0.0f),
                 new Vector2f(2),
                 new Vector2f(0.0f, 0.0f),
-                new Vector2f(2),
+                new Vector2f(1.4f, 2.0f),
                 new Vector2f(0.0f, 0.0f),
                 new Vector2i(0), new Vector2i(1),
-                0.0, 1.5f, new Vector2f(0.5f), 2));
+                1.0, 1.5f, new Vector2f(0.5f), 2, false, 0,
+                new Vector2f(0.5f)));
     }
 
     public Collection<GameObjectType> getTypes() {

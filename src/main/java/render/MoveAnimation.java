@@ -73,7 +73,15 @@ public class MoveAnimation implements Animation {
     @Override
     public void onFinish() {
         renderer.getGameObjectRenderer(objectID).resetPosition();
-        clickBoxManager.getGameObjectClickBox(objectID).set(clickBoxManager.makeClickBox(world.gameObjects.get(objectID)));
+        clickBoxManager.resetGameObjectClickBox(objectID);
         this.animationManager.setObjectOccupied(objectID, false);
+    }
+
+    @Override
+    public void onObjectChange() {
+        GameObject gameObject = world.gameObjects.get(objectID);
+        if(gameObject == null) {
+            animationManager.endAction(this);
+        }
     }
 }

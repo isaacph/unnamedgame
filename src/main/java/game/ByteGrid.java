@@ -42,6 +42,16 @@ public class ByteGrid implements Serializable {
             f.set(b, ((x % SIZE) + SIZE) % SIZE, ((y % SIZE) + SIZE) % SIZE);
             return f;
         }
+
+        public ByteGrid makeTileGrid(int x, int y) {
+            Vector2i p = getGridIndex(x, y);
+            ByteGrid f = map.get(p);
+            if(f == null) {
+                f = new ByteGrid(p.x, p.y);
+                map.put(p, f);
+            }
+            return f;
+        }
         public byte getTile(int x, int y) {
             ByteGrid f = map.get(getGridIndex(x, y));
             if(f == null) return 0;

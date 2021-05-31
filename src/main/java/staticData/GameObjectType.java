@@ -24,9 +24,12 @@ public class GameObjectType implements Serializable {
     private float circleSize;
     private Vector2f circleOffset;
     private float maxHealth;
+    private boolean canMove;
+    private float damage;
+    private Vector2f centerOffset;
 
     public GameObjectType(int uniqueID, String name, String texture, Vector2f offset, Vector2f scale, Vector2f cbOffset, Vector2f cbSize, Vector2f cbdOffset,
-                          Vector2i occupySizeMin, Vector2i occupySizeMax, double baseSpeed, float circleSize, Vector2f circleOffset, float maxHealth) {
+                          Vector2i occupySizeMin, Vector2i occupySizeMax, double baseSpeed, float circleSize, Vector2f circleOffset, float maxHealth, boolean canMove, float damage, Vector2f centerOffset) {
         this.name = name;
         this.texture = texture;
         this.textureOffset = offset;
@@ -44,6 +47,10 @@ public class GameObjectType implements Serializable {
         this.baseSpeed = baseSpeed;
         this.circleOffset = circleOffset;
         this.circleSize = circleSize;
+        this.maxHealth = maxHealth;
+        this.canMove = canMove;
+        this.damage = damage;
+        this.centerOffset = centerOffset;
     }
 
     public void initialize(GameObject gameObject) {
@@ -99,4 +106,14 @@ public class GameObjectType implements Serializable {
     }
 
     public float getMaxHealth() { return maxHealth; }
+
+    public boolean canMove() {
+        return canMove;
+    }
+
+    public float getDamage() { return damage; }
+
+    public Vector2f getCenterOffset() {
+        return new Vector2f(centerOffset);
+    }
 }

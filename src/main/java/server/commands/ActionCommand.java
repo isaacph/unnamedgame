@@ -32,6 +32,10 @@ public class ActionCommand implements ServerPayload, ClientPayload {
             server.send(client, new InvalidWorld(server.world.getVersion()));
             return;
         }
+        if(!server.world.teams.isClientsTurn(client.clientId)) {
+            server.send(client, new ChatMessage("Not your turn"));
+            return;
+        }
 
         if(action.validate(client.clientId, server.world, server.gameData)) {
             action.execute(server.world, server.gameData);

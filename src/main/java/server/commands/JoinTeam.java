@@ -29,5 +29,8 @@ public class JoinTeam implements ServerPayload {
         server.world.teams.setClientTeam(client.clientId, teamID);
         server.send(client, new SetTeams(server.world.teams));
         server.broadcast(new ChatMessage("Player " + client.name + " has joined team " + targetTeam));
+        if(server.world.teams.getTurn() != null && server.world.teams.getTurn().equals(teamID)) {
+            server.send(client, new ChatMessage("Your turn!"));
+        }
     }
 }

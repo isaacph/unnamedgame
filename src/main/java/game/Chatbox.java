@@ -35,7 +35,7 @@ public class Chatbox {
         boxRender = b;
         time = gameTime;
         jump = font.getSize() - 4.0f;
-        displayLines = (int) (400.0f / jump);
+        displayLines = (int) (200.0f / jump);
     }
 
     public void update() {

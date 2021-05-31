@@ -56,6 +56,31 @@ public class ClickBoxManager {
         return gameObjectClickBoxMap.get(uniqueID);
     }
 
+    public void resetGameObjectClickBox(GameObjectID uniqueID) {
+        GameObject gameObject = world.gameObjects.get(uniqueID);
+        ClickBox cb = gameObjectClickBoxMap.get(uniqueID);
+        if(gameObject == null) {
+            if(cb != null) {
+                gameObjectClickBoxMap.remove(uniqueID);
+                clickBoxes.remove(cb);
+            }
+            return;
+        } else {
+            if(cb != null) {
+                if(gameObject.alive) {
+                    cb.set(makeClickBox(gameObject));
+                } else {
+                    gameObjectClickBoxMap.remove(uniqueID);
+                    clickBoxes.remove(cb);
+                }
+            } else if(gameObject.alive) {
+                cb = makeClickBox(gameObject);
+                clickBoxes.add(cb);
+                gameObjectClickBoxMap.put(gameObject.uniqueID, cb);
+            }
+        }
+    }
+
     public GameObject getGameObjectAtViewPosition(Vector2f viewPosition) {
         Vector2f position = new Vector2f(viewPosition);
         Vector2f topClickBoxDepthPosition = null;
@@ -83,6 +108,27 @@ public class ClickBoxManager {
         GameObject top = null;
         for(ClickBox clickBox : clickBoxes) {
             if(clickBox.teamID.equals(team) && !clickBox.disabled && MathUtil.pointInside(
+                position.x,
+                position.y,
+                clickBox.min.x,
+                clickBox.min.y,
+                clickBox.max.x,
+                clickBox.max.y)) {
+                if(topClickBoxDepthPosition == null || clickBox.depthOffset.y > topClickBoxDepthPosition.y) {
+                    topClickBoxDepthPosition = clickBox.center().add(clickBox.depthOffset, new Vector2f());
+                    top = world.gameObjects.get(clickBox.gameObjectID);
+                }
+            }
+        }
+        return top;
+    }
+
+    public GameObject getGameObjectAtViewPositionExcludeTeam(Vector2f viewPosition, TeamID team) {
+        Vector2f position = new Vector2f(viewPosition);
+        Vector2f topClickBoxDepthPosition = null;
+        GameObject top = null;
+        for(ClickBox clickBox : clickBoxes) {
+            if(!clickBox.teamID.equals(team) && !clickBox.disabled && MathUtil.pointInside(
                 position.x,
                 position.y,
                 clickBox.min.x,

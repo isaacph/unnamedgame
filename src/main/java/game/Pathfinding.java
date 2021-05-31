@@ -48,10 +48,10 @@ public final class Pathfinding {
                 Vector2i tile = new Vector2i(currentTile).add(dir);
                 double tileWeight = weightStorage.getWeight(tile);
                 double newTileSpeed = currentSpeed - tileWeight;
-                if(newTileSpeed > 0 && (!paths.speedLeft.containsKey(tile) || newTileSpeed > paths.speedLeft.get(tile))) {
+                if(newTileSpeed >= 0 && (!paths.speedLeft.containsKey(tile) || newTileSpeed > paths.speedLeft.get(tile))) {
                     paths.speedLeft.put(new Vector2i(tile), newTileSpeed);
                     paths.tileParent.put(new Vector2i(tile), currentTile);
-                    if(newTileSpeed > 0) {
+                    if(newTileSpeed >= 0) {
                         tileQueue.addLast(new Vector2i(tile));
                     }
                 }
@@ -79,6 +79,13 @@ public final class Pathfinding {
             if(paths.speedLeft.get(tile) >= 0) {
                 group.setTile((byte) 1, tile.x, tile.y);
             }
+        }
+    }
+
+    public static void changeSelectGrid(ByteGrid.Group group, Collection<Vector2i> tiles) {
+        group.map.clear();
+        for(Vector2i tile : tiles) {
+            group.setTile((byte) 1, tile.x, tile.y);
         }
     }
 
@@ -132,5 +139,15 @@ public final class Pathfinding {
 
     public static int manhattanDistance(Vector2i a, Vector2i b) {
         return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+    }
+
+    public static double getPathWeight(List<Vector2i> path, WeightStorage weightStorage) {
+        if(path == null || weightStorage == null) return 0;
+        double weight = 0;
+        for(int i = 0; i < path.size(); ++i) {
+            Vector2i pos = path.get(i);
+            weight += weightStorage.getWeight(pos);
+        }
+        return weight;
     }
 }

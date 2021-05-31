@@ -15,11 +15,21 @@ public class GameObject implements Serializable {
     public int x, y;
     public TeamID team;
     public float health;
+    public double totalSpeed;
+    public double speedLeft;
+    public boolean alive;
 
-    public GameObject(GameObjectID uniqueID, int type, TeamID team, float health) {
+    public GameObject(GameObjectID uniqueID, int type, TeamID team, float health, double totalSpeed) {
         this.uniqueID = uniqueID;
         this.type = type;
         this.team = team;
         this.health = health;
+        this.totalSpeed = totalSpeed;
+        this.speedLeft = totalSpeed;
+        this.alive = true;
+    }
+
+    public void resetSpeed() {
+        speedLeft = totalSpeed;
     }
 }
