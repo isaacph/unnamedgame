@@ -151,7 +151,7 @@ public class Game {
             connection.queueSend(new GetWorld());
             connection.queueSend(new GetClientID());
         });
-        this.connection.connect(new InetSocketAddress("192.168.1.8", Server.PORT));
+        this.connection.connect(new InetSocketAddress("", Server.PORT));
         this.connection.queueSend(new EchoPayload("Connection succeeded"));
 
         this.consRes = new GameResources(camera, chatbox, gameObjectFactory, world, worldRenderer, animationManager, clickBoxManager, selectGridManager, gameData, gameTime, connection, clientInfo);
@@ -518,6 +518,8 @@ public class Game {
                             connection.queueSend(new NextTurn());
                         } else if(args[0].equals("endturn")) {
                             connection.queueSend(new EndTurn());
+                        } else if(args[0].equals("dead")) {
+                            connection.queueSend(new DeadCommand());
                         } else {
                             chatbox.println("Unknown command!");
                         }

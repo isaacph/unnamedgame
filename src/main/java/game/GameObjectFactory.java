@@ -14,6 +14,8 @@ public class GameObjectFactory implements Serializable {
      */
     public GameObject createGameObject(GameObjectType type, TeamID team) {
         if(team == null) return null;
+        GameObjectID id = generator.generate();
+        if(id == null) return null;
         GameObject object = new GameObject(generator.generate(), type.getUniqueID(), team, type.getMaxHealth(), type.getBaseSpeed());
         type.initialize(object);
         object.resetSpeed();

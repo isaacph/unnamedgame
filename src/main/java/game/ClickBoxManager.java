@@ -34,9 +34,11 @@ public class ClickBoxManager {
         clickBoxes.clear();
         gameObjectClickBoxMap.clear();
         for(GameObject obj : world.gameObjects.values()) {
-            ClickBox cb = makeClickBox(obj);
-            clickBoxes.add(cb);
-            gameObjectClickBoxMap.put(obj.uniqueID, cb);
+            if(obj.alive) {
+                ClickBox cb = makeClickBox(obj);
+                clickBoxes.add(cb);
+                gameObjectClickBoxMap.put(obj.uniqueID, cb);
+            }
         }
     }
 
@@ -136,8 +138,11 @@ public class ClickBoxManager {
                 clickBox.max.x,
                 clickBox.max.y)) {
                 if(topClickBoxDepthPosition == null || clickBox.depthOffset.y > topClickBoxDepthPosition.y) {
-                    topClickBoxDepthPosition = clickBox.center().add(clickBox.depthOffset, new Vector2f());
-                    top = world.gameObjects.get(clickBox.gameObjectID);
+                    GameObject go = world.gameObjects.get(clickBox.gameObjectID);
+                    if(go.alive) {
+                        topClickBoxDepthPosition = clickBox.center().add(clickBox.depthOffset, new Vector2f());
+                        top = world.gameObjects.get(clickBox.gameObjectID);
+                    }
                 }
             }
         }

@@ -51,9 +51,9 @@ public class MathUtil {
 
     public static InputStream getInputStream(String path) throws IOException {
 //        return new FileInputStream("src/main/resources/" + path);
-        InputStream stream = MathUtil.class.getResourceAsStream("../" + path);
+        InputStream stream = MathUtil.class.getClassLoader().getResourceAsStream("" + path);
         if(stream == null) {
-            throw new IOException("Resource not found at ../" + path);
+            throw new IOException("Resource not found at " + path);
         }
         return stream;
     }
