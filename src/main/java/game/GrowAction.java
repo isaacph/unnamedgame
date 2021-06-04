@@ -38,7 +38,7 @@ public class GrowAction implements Action {
     }
 
     @Override
-    public void animate(GameResources gameResources) {
+    public void animate(Game gameResources) {
         execute(gameResources.world, gameResources.gameData);
         gameResources.worldRenderer.resetGameObjectRenderCache();
         gameResources.animationManager.resetWhereNeeded();

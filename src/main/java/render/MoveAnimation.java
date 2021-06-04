@@ -27,7 +27,7 @@ public class MoveAnimation implements Animation {
     private List<Vector2i> path = new ArrayList<>();
     private int pathIndex;
 
-    public MoveAnimation(GameResources res, GameObjectID objectID, Vector2i target) {
+    public MoveAnimation(Game res, GameObjectID objectID, Vector2i target) {
         this.world = res.world;
         this.clickBoxManager = res.clickBoxManager;
         this.renderer = res.worldRenderer;

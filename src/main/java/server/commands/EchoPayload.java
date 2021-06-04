@@ -1,4 +1,8 @@
-package server;
+package server.commands;
+
+import server.ClientData;
+import server.Server;
+import server.ServerPayload;
 
 import java.io.IOException;
 import java.io.Serializable;

@@ -7,9 +7,7 @@ import render.*;
 import server.*;
 import server.commands.*;
 import staticData.GameData;
-import staticData.GameObjectType;
 
-import java.io.*;
 import java.lang.Math;
 import java.net.InetSocketAddress;
 import java.util.*;
@@ -33,23 +31,21 @@ public class Game {
     private final Vector2i mouseWorldPosition = new Vector2i();
     private final Vector2f mouseViewPosition = new Vector2f();
 
-    private GameTime gameTime;
-    private Camera camera;
-    private Chatbox chatbox;
+    public GameTime gameTime;
+    public Camera camera;
+    public Chatbox chatbox;
 
-    private World world;
-    private WorldRenderer worldRenderer;
-    private AnimationManager animationManager;
-    private ClickBoxManager clickBoxManager;
-    private SelectGridManager selectGridManager;
+    public World world;
+    public WorldRenderer worldRenderer;
+    public AnimationManager animationManager;
+    public ClickBoxManager clickBoxManager;
+    public SelectGridManager selectGridManager;
 
-    private GameData gameData;
-    private GameObjectFactory gameObjectFactory;
+    public GameData gameData;
+    public GameObjectFactory gameObjectFactory;
 
-    private ClientConnection<ClientPayload, ServerPayload> connection;
-    private ClientInfo clientInfo;
-
-    private GameResources consRes;
+    public ClientConnection<ClientPayload, ServerPayload> connection;
+    public ClientInfo clientInfo;
 
     private Mode mode = Mode.PLAY;
     private UICommand currentCommand = UICommand.NONE;
@@ -154,8 +150,6 @@ public class Game {
         this.connection.connect(new InetSocketAddress("", Server.PORT));
         this.connection.queueSend(new EchoPayload("Connection succeeded"));
 
-        this.consRes = new GameResources(camera, chatbox, gameObjectFactory, world, worldRenderer, animationManager, clickBoxManager, selectGridManager, gameData, gameTime, connection, clientInfo);
-
         this.selectGridManager = new SelectGridManager(world, gameData);
 
         windowResize(screenWidth, screenHeight);
@@ -195,7 +189,7 @@ public class Game {
                         MoveAction moveAction = new MoveAction(clickBoxManager.selectedID, mouseWorldPosition.x, mouseWorldPosition.y);
                         if(moveAction.validate(clientInfo.clientID, world, gameData)) {
                             connection.queueSend(new ActionCommand(moveAction, world));
-                            moveAction.animate(consRes);
+                            moveAction.animate(this);
                         }
                         currentCommand = UICommand.NONE;
                         worldRenderer.tileGridRenderer.buildSelect(new ArrayList<>());
@@ -205,7 +199,7 @@ public class Game {
                         SpawnAction spawnAction = new SpawnAction(clickBoxManager.selectedID, mouseWorldPosition.x, mouseWorldPosition.y);
                         if(spawnAction.validate(clientInfo.clientID, world, gameData)) {
                             connection.queueSend(new ActionCommand(spawnAction, world));
-                            spawnAction.animate(consRes);
+                            spawnAction.animate(this);
                         }
                         currentCommand = UICommand.NONE;
                         worldRenderer.tileGridRenderer.buildSelect(new ArrayList<>());
@@ -216,7 +210,7 @@ public class Game {
                         AttackAction attackAction = new AttackAction(clickBoxManager.selectedID, selectedObject.uniqueID);
                         if(attackAction.validate(clientInfo.clientID, world, gameData)) {
                             connection.queueSend(new ActionCommand(attackAction, world));
-                            attackAction.animate(consRes);
+                            attackAction.animate(this);
                         }
                         currentCommand = UICommand.NONE;
                         worldRenderer.tileGridRenderer.buildSelect(new ArrayList<>());
@@ -243,7 +237,7 @@ public class Game {
                             GrowAction growAction = new GrowAction(seeds);
                             if(growAction.validate(clientInfo.clientID, world, gameData)) {
                                 connection.queueSend(new ActionCommand(growAction, world));
-                                growAction.animate(consRes);
+                                growAction.animate(this);
                             }
                         }
                     }
@@ -378,7 +372,7 @@ public class Game {
 
             Collection<ClientPayload> payloads = connection.update();
             for(ClientPayload payload : payloads) {
-                payload.execute(this.consRes);
+                payload.execute(this);
             }
 
             // Poll for window events. Invokes window callbacks

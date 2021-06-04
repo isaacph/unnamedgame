@@ -1,7 +1,7 @@
 package game.error;
 
 import game.ClientPayload;
-import game.GameResources;
+import game.Game;
 import server.commands.GetWorld;
 
 import java.util.UUID;
@@ -15,7 +15,7 @@ public class InvalidWorld implements ClientPayload {
     }
 
     @Override
-    public void execute(GameResources gameResources) {
+    public void execute(Game gameResources) {
         gameResources.chatbox.println("Invalid world: out of date");
         gameResources.chatbox.println("   client UUID: " + gameResources.world.getVersion());
         gameResources.chatbox.println("   server UUID: " + serverUUID);

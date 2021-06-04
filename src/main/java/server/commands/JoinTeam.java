@@ -1,9 +1,6 @@
 package server.commands;
 
-import game.ClientPayload;
-import game.GameResources;
 import game.TeamID;
-import game.TeamManager;
 import server.ClientData;
 import server.Server;
 import server.ServerPayload;

@@ -1,14 +1,12 @@
 package server.commands;
 
 import game.ClientPayload;
-import game.GameResources;
+import game.Game;
 import game.TeamManager;
 import game.World;
 import server.ClientData;
 import server.Server;
 import server.ServerPayload;
-
-import java.util.Collections;
 
 public class SetWorld implements ClientPayload, ServerPayload {
 
@@ -19,7 +17,7 @@ public class SetWorld implements ClientPayload, ServerPayload {
     }
 
     @Override
-    public void execute(GameResources gameResources) {
+    public void execute(Game gameResources) {
         gameResources.world.setWorld(world);
         gameResources.clickBoxManager.resetGameObjectCache();
         gameResources.worldRenderer.resetGameObjectRenderCache();

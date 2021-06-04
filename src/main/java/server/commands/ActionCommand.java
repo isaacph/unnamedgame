@@ -2,7 +2,7 @@ package server.commands;
 
 import game.Action;
 import game.ClientPayload;
-import game.GameResources;
+import game.Game;
 import game.World;
 import game.error.InvalidWorld;
 import server.ClientData;
@@ -22,7 +22,7 @@ public class ActionCommand implements ServerPayload, ClientPayload {
     }
 
     @Override
-    public void execute(GameResources gameResources) {
+    public void execute(Game gameResources) {
         action.animate(gameResources);
     }
 

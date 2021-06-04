@@ -1,8 +1,8 @@
 package render;
 
+import game.Game;
 import game.GameObject;
 import game.GameObjectID;
-import game.GameResources;
 import org.joml.Vector2f;
 import staticData.GameObjectType;
 
@@ -10,7 +10,7 @@ public class AttackAnimation implements Animation {
 
     private GameObjectID attackerID;
     private GameObjectID victimID;
-    private GameResources gameResources;
+    private Game gameResources;
 
     private float progress = 0;
     private final float progressHit = 1.0f;
@@ -20,7 +20,7 @@ public class AttackAnimation implements Animation {
 
     private boolean victimDead;
 
-    public AttackAnimation(GameObjectID attackerID, GameObjectID victimID, GameResources gameResources) {
+    public AttackAnimation(GameObjectID attackerID, GameObjectID victimID, Game gameResources) {
         this.attackerID = attackerID;
         this.victimID = victimID;
         this.gameResources = gameResources;

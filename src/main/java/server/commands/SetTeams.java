@@ -1,7 +1,7 @@
 package server.commands;
 
 import game.ClientPayload;
-import game.GameResources;
+import game.Game;
 import game.TeamManager;
 
 public class SetTeams implements ClientPayload {
@@ -13,7 +13,7 @@ public class SetTeams implements ClientPayload {
     }
 
     @Override
-    public void execute(GameResources gameResources) {
+    public void execute(Game gameResources) {
         gameResources.world.teams = teamManager;
     }
 }

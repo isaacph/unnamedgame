@@ -2,12 +2,10 @@ package server.commands;
 
 import game.ClientID;
 import game.ClientPayload;
-import game.GameResources;
+import game.Game;
 import server.ClientData;
 import server.Server;
 import server.ServerPayload;
-
-import java.util.UUID;
 
 public class GetClientID implements ServerPayload {
 
@@ -24,7 +22,7 @@ public class GetClientID implements ServerPayload {
         }
 
         @Override
-        public void execute(GameResources gameResources) {
+        public void execute(Game gameResources) {
             gameResources.clientInfo.clientID = clientID;
         }
     }

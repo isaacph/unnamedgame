@@ -1,7 +1,7 @@
 package server.commands;
 
 import game.ClientPayload;
-import game.GameResources;
+import game.Game;
 import game.TeamID;
 import server.ClientData;
 import server.Server;
@@ -32,7 +32,7 @@ public class ChatMessage implements ServerPayload, ClientPayload {
     }
 
     @Override
-    public void execute(GameResources gameResources) {
+    public void execute(Game gameResources) {
         gameResources.chatbox.println(message);
     }
 }

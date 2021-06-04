@@ -1,7 +1,7 @@
-package server;
+package server.commands;
 
 import game.ClientPayload;
-import game.GameResources;
+import game.Game;
 import game.World;
 
 public class SendWorldPayload implements ClientPayload {
@@ -12,7 +12,7 @@ public class SendWorldPayload implements ClientPayload {
     }
 
     @Override
-    public void execute(GameResources gameResources) {
+    public void execute(Game gameResources) {
         gameResources.world.setWorld(world);
         gameResources.animationManager.reset();
         gameResources.clickBoxManager.resetGameObjectCache();

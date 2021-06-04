@@ -57,7 +57,7 @@ public class MoveAction implements Action {
     }
 
     @Override
-    public void animate(GameResources resources) {
+    public void animate(Game resources) {
         if(resources.world.gameObjects.get(objectID) == null) {
             throw new RuntimeException("Attempted to animate MoveAction on unknown game object:" + objectID);
         }

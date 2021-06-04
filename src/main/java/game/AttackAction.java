@@ -36,7 +36,7 @@ public class AttackAction implements Action {
     }
 
     @Override
-    public void animate(GameResources gameResources) {
+    public void animate(Game gameResources) {
         gameResources.animationManager.startAnimation(new AttackAnimation(attackerID, victimID, gameResources));
         this.execute(gameResources.world, gameResources.gameData);
     }

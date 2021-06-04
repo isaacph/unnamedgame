@@ -36,7 +36,7 @@ public class SpawnAction implements Action {
     }
 
     @Override
-    public void animate(GameResources gameResources) {
+    public void animate(Game gameResources) {
         this.execute(gameResources.world, gameResources.gameData);
         gameResources.worldRenderer.resetGameObjectRenderCache();
         gameResources.clickBoxManager.resetGameObjectClickBox(cachedNewGameObject);

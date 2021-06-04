@@ -9,7 +9,7 @@ public interface Action extends Serializable {
     boolean validate(ClientID actor, World world, GameData gameData);
 
     /** Should call execute **/
-    void animate(GameResources gameResources);
+    void animate(Game gameResources);
 
 
     void execute(World world, GameData gameData);
