@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SocketChannel;
 import java.util.*;
 
@@ -42,7 +43,7 @@ public class SocketChannelWriter<OutgoingType> {
         socketQueue.add(new SocketPayload<>(socket, payload, onSent));
     }
 
-    public void update() throws SocketChannelWriter.Exception {
+    public void update() throws SocketChannelWriter.Exception, ClosedChannelException {
         do {
             if(sending.remaining() == 0) {
                 if(socketQueue.isEmpty()) break;

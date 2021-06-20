@@ -30,7 +30,7 @@ public class TeamID implements Serializable {
         return other instanceof TeamID && ((TeamID) other).id == id;
     }
 
-    public static class Generator {
+    public static class Generator implements Serializable {
 
         private int generatorNumber;
 

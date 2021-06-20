@@ -1,0 +1,72 @@
+{
+  "types": [
+    {
+      "name": "kid",
+      "speed": 8.0,
+      "health": 1.0,
+      "damage": 1.0,
+      "canMove": true,
+      "canGrow": true,
+      "canSpawn": false,
+      "produce": "building",
+      "shape": {
+        "type": "square",
+        "size": 1
+      },
+      "display": {
+        "type": "simple",
+        "texture": "kid.png",
+        "size": 1.0,
+        "offsetX": 0.0,
+        "offsetY": 0.0,
+        "circleSize": 1.0,
+        "circleOffsetX": 0.0,
+        "circleOffsetY": 0.0,
+        "centerOffsetX": 0.0,
+        "centerOffsetY": 0.0
+      },
+      "clickbox": {
+        "type": "aabb",
+        "sizeX": 1.0,
+        "sizeY": 1.0,
+        "offsetX": 0.0,
+        "offsetY": 0.0,
+        "depthOffset": 0.0
+      }
+    },
+    {
+      "name": "building",
+      "speed": 1.0,
+      "health": 2.0,
+      "damage": 0.0,
+      "canMove": false,
+      "canGrow": false,
+      "canSpawn": true,
+      "produce": "kid",
+      "shape": {
+        "type": "square",
+        "size": 2
+      },
+      "display": {
+        "type": "simple",
+        "texture": "kid.png",
+        "size": 2.0,
+        "offsetX": 0.0,
+        "offsetY": 0.0,
+        "circleSize": 1.5,
+        "circleOffsetX": 0.5,
+        "circleOffsetY": 0.5,
+        "centerOffsetX": 0.5,
+        "centerOffsetY": 0.5
+      },
+      "clickbox": {
+        "type": "aabb",
+        "sizeX": 1.4,
+        "sizeY": 2.0,
+        "offsetX": 0.0,
+        "offsetY": 0.0,
+        "depthOffset": 0.0
+      }
+    }
+  ]
+}

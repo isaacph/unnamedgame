@@ -19,7 +19,7 @@ public class JoinTeam implements ServerPayload {
 
         TeamID teamID = server.world.teams.getTeamWithName(targetTeam);
         if(teamID == null) {
-            teamID = server.teamIDGenerator.generate();
+            teamID = server.world.teams.teamIDGenerator.generate();
             server.world.teams.addTeam(teamID);
             server.world.teams.setTeamName(teamID, targetTeam);
         }

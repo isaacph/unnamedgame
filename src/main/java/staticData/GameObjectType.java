@@ -1,119 +1,137 @@
 package staticData;
 
+import game.ClickBox;
 import game.GameObject;
-import org.joml.Vector2f;
+import game.GameObjectID;
+import game.World;
 import org.joml.Vector2i;
-import org.joml.Vector3f;
+import org.json.JSONObject;
+import render.RenderComponent;
+import render.TeamTextureComponent;
+import render.WorldRenderer;
 
 import java.io.Serializable;
-import java.util.HashSet;
 import java.util.Set;
 
 public class GameObjectType implements Serializable {
 
     private String name;
-    private String texture;
+    private GameObjectTypeID uniqueID;
+    private float speed;
+    private float health;
+    private Display display;
+    private ClickBoxData clickbox;
+    private Shape shape;
+    private float damage;
+    private boolean canMove;
+    private boolean canGrow;
+    private boolean canSpawn;
+    private GameObjectTypeID produce;
+
+    /*private String texture;
     private Vector2f textureOffset;
     private Vector2f textureScale;
     private Vector2f clickBoxOffset;
     private Vector2f clickBoxSize;
     private Vector2f clickBoxDepthOffset;
     private Set<Vector2i> relativeOccupiedTiles;
-    private int uniqueID;
+    private GameObjectTypeID uniqueID;
     private double baseSpeed;
     private float circleSize;
     private Vector2f circleOffset;
     private float maxHealth;
     private boolean canMove;
     private float damage;
-    private Vector2f centerOffset;
+    private Vector2f centerOffset;*/
 
-    public GameObjectType(int uniqueID, String name, String texture, Vector2f offset, Vector2f scale, Vector2f cbOffset, Vector2f cbSize, Vector2f cbdOffset,
-                          Vector2i occupySizeMin, Vector2i occupySizeMax, double baseSpeed, float circleSize, Vector2f circleOffset, float maxHealth, boolean canMove, float damage, Vector2f centerOffset) {
-        this.name = name;
-        this.texture = texture;
-        this.textureOffset = offset;
-        this.textureScale = scale;
-        this.uniqueID = uniqueID;
-        this.clickBoxOffset = cbOffset;
-        this.clickBoxSize = cbSize;
-        this.clickBoxDepthOffset = cbdOffset;
-        relativeOccupiedTiles = new HashSet<>();
-        for(int x = occupySizeMin.x; x <= occupySizeMax.x; ++x) {
-            for(int y = occupySizeMin.y; y <= occupySizeMax.y; ++y) {
-                relativeOccupiedTiles.add(new Vector2i(x, y));
-            }
-        }
-        this.baseSpeed = baseSpeed;
-        this.circleOffset = circleOffset;
-        this.circleSize = circleSize;
-        this.maxHealth = maxHealth;
-        this.canMove = canMove;
-        this.damage = damage;
-        this.centerOffset = centerOffset;
+    public GameObjectType(JSONObject obj, GameObjectTypeFactory factory) {
+        name = obj.getString("name");
+        uniqueID = new GameObjectTypeID(name);
+        speed = obj.getFloat("speed");
+        health = obj.getFloat("health");
+        display = factory.makeDisplay(obj.getJSONObject("display"));
+        clickbox = factory.makeClickbox(obj.getJSONObject("clickbox"));
+        shape = factory.makeShape(obj.getJSONObject("shape"));
+        damage = obj.getFloat("damage");
+        canMove = obj.getBoolean("canMove");
+        canGrow = obj.getBoolean("canGrow");
+        canSpawn = obj.getBoolean("canSpawn");
+        produce = new GameObjectTypeID(obj.getString("produce"));
     }
 
-    public void initialize(GameObject gameObject) {
+    public void initialize(Object gameObject) {
 
     }
 
     public String getName() {
-        return name;
+        return uniqueID.getName();
     }
 
-    public String getTexturePath() {
-        return texture;
-    }
-
-    public Vector2f getTextureOffset() {
-        return new Vector2f(textureOffset);
-    }
-
-    public Vector2f getTextureScale() {
-        return new Vector2f(textureScale);
-    }
-
-    public Vector2f getClickBoxOffset() {
-        return new Vector2f(clickBoxOffset);
-    }
-
-    public Vector2f getClickBoxSize() {
-        return new Vector2f(clickBoxSize);
-    }
-
-    public Vector2f getClickBoxDepthOffset() {
-        return new Vector2f(clickBoxDepthOffset);
-    }
-
-    public float getCircleSize() {
-        return circleSize;
-    }
-    public Vector2f getCircleOffset() {
-        return new Vector2f(circleOffset);
-    }
-
-    public int getUniqueID() {
+    public GameObjectTypeID getUniqueID() {
         return uniqueID;
     }
 
     public double getBaseSpeed() {
-        return baseSpeed;
+        return speed;
     }
 
-    /** plz don't change my set */
-    public Set<Vector2i> getRelativeOccupiedTiles() {
-        return relativeOccupiedTiles;
-    }
-
-    public float getMaxHealth() { return maxHealth; }
+    public float getMaxHealth() { return health; }
 
     public boolean canMove() {
         return canMove;
     }
 
+    public boolean canGrow() {
+        return canGrow;
+    }
+
+    public boolean canSpawn() {
+        return canSpawn;
+    }
+
+    public GameObjectTypeID producedType() {
+        return produce;
+    }
+
     public float getDamage() { return damage; }
 
-    public Vector2f getCenterOffset() {
-        return new Vector2f(centerOffset);
+    @Override
+    public String toString() {
+        return uniqueID.toString();
+    }
+
+    public static void assertString(String givenType, String assertType) throws AssertionError {
+        if(!givenType.equals(assertType)) {
+            throw new AssertionError("Wrong object type! Should have been checked earlier! (type: "
+                    + givenType + ", should be " + assertType + ")");
+        }
+    }
+
+    public JSONObject toJSON() {
+        JSONObject obj = new JSONObject();
+        obj.put("name", name);
+        obj.put("speed", speed);
+        obj.put("display", display.toJSON());
+        obj.put("clickbox", clickbox.toJSON());
+        obj.put("shape", shape.toJSON());
+        obj.put("health", health);
+        obj.put("damage", damage);
+        obj.put("canMove", canMove);
+        obj.put("canGrow", canGrow);
+        obj.put("canSpawn", canSpawn);
+        obj.put("produce", produce.getName());
+        return obj;
+    }
+
+    public Set<Vector2i> getRelativeOccupiedTiles() {
+        return shape.getRelativeOccupiedTiles();
+    }
+
+    public ClickBox makeClickBox(GameObject obj) {
+        return clickbox.makeClickBox(obj);
+    }
+
+    public RenderComponent makeRenderComponent(GameObjectID gameObjectID, World world, GameData gameData, WorldRenderer.GameObjectTextures textureLibrary) {
+        return display.makeRenderComponent(gameObjectID, world, gameData, textureLibrary);
     }
 }

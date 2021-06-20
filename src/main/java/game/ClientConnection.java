@@ -10,6 +10,7 @@ import java.io.ObjectInputStream;
 import java.net.InetAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.UnresolvedAddressException;
 import java.util.ArrayList;
@@ -82,10 +83,10 @@ public class ClientConnection<IncomingType, OutgoingType> {
                 return Collections.emptyList();
             }
         }
-        if(!socketChannel.isConnected()) return Collections.emptyList();
+        if(!socketChannel.isConnected() || !socketChannel.isOpen()) return Collections.emptyList();
         try {
             socketChannelWriter.update();
-        } catch(IOException e) {
+        }catch(IOException e) {
             System.err.println("SocketChannelWriter update error");
             e.printStackTrace();
         }

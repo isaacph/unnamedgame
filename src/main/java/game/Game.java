@@ -1,6 +1,7 @@
 package game;
 
 import org.joml.*;
+import org.json.JSONObject;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 import render.*;
@@ -8,9 +9,12 @@ import server.*;
 import server.commands.*;
 import staticData.GameData;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.Math;
 import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.Random;
 
 import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
@@ -42,7 +46,6 @@ public class Game {
     public SelectGridManager selectGridManager;
 
     public GameData gameData;
-    public GameObjectFactory gameObjectFactory;
 
     public ClientConnection<ClientPayload, ServerPayload> connection;
     public ClientInfo clientInfo;
@@ -129,17 +132,26 @@ public class Game {
         this.boxRenderer = new BoxRenderer();
         this.textureRenderer = new TextureRenderer();
         this.font = new Font("font.ttf", 24, 512, 512);
+        this.gameTime = new GameTime(window);
+        this.chatbox = new Chatbox(font, boxRenderer, gameTime);
+        this.camera = new Camera(gameTime, window);
 
         this.gameData = new GameData();
+        try {
+            String file = MathUtil.readFile("gamedata.json");
+            this.gameData.fromJSON(new JSONObject(file), e -> {
+                chatbox.println("Failed to parse JSON game data");
+                chatbox.println(e.getMessage());
+            });
+        } catch(IOException e) {
+            chatbox.println("JSON file missing (probably)");
+            e.printStackTrace();
+        }
         this.world = new World();
         this.worldRenderer = new WorldRenderer(camera, gameData, world, gameTime);
         this.animationManager = new AnimationManager();
 
-        this.gameTime = new GameTime(window);
-        this.chatbox = new Chatbox(font, boxRenderer, gameTime);
-        this.camera = new Camera(gameTime, window);
         this.clickBoxManager = new ClickBoxManager(world, gameData, camera, worldRenderer);
-        this.gameObjectFactory = new GameObjectFactory();
         this.clientInfo = new ClientInfo();
 
         this.connection = new ClientConnection<>();
@@ -291,7 +303,7 @@ public class Game {
                         }
                         if(key == GLFW_KEY_W && action == GLFW_PRESS) {
                             GameObject obj = world.gameObjects.get(clickBoxManager.selectedID);
-                            if(obj != null && obj.type == gameData.getBuildingPlaceholder().getUniqueID() && obj.speedLeft > 0 && !animationManager.isObjectOccupied(clickBoxManager.selectedID) && obj.alive) {
+                            if(obj != null && gameData.getType(obj.type).canSpawn() && obj.speedLeft > 0 && !animationManager.isObjectOccupied(clickBoxManager.selectedID) && obj.alive) {
                                 currentCommand = UICommand.SPAWN;
                                 Set<Vector2i> options = MathUtil.adjacentTiles(MathUtil.addToAll(gameData.getType(obj.type).getRelativeOccupiedTiles(), new Vector2i(obj.x, obj.y)));
                                 List<Vector2i> newOptions = new ArrayList<>();
@@ -337,7 +349,7 @@ public class Game {
                                             break;
                                         }
                                         GameObject tileObj = world.gameObjects.get(id);
-                                        if(tileObj.type != gameData.getPlaceholder().getUniqueID()) {
+                                        if(!gameData.getType(tileObj.type).canGrow()) {
                                             allPresent = false;
                                             break;
                                         }
@@ -391,28 +403,22 @@ public class Game {
                         ByteGrid updateGrid = world.grid.setTile((byte) 1, mouseWorldPosition.x, mouseWorldPosition.y);
                         worldRenderer.tileGridRenderer.build(updateGrid);
                     }
-                } else if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
-                    ClientID clientID = clientInfo.clientID;
-                    TeamID team = world.teams.getClientTeam(clientID);
-                    GameObject obj = gameObjectFactory.createGameObject(gameData.getPlaceholder(), team);
-                    if(obj != null) {
-                        obj.x = mouseWorldPosition.x;
-                        obj.y = mouseWorldPosition.y;
-                        if(world.add(obj, gameData)) {
-                            worldRenderer.resetGameObjectRenderCache();
-                            clickBoxManager.resetGameObjectCache();
-                        }
-                    }
-                } else if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
-                    ClientID clientID = clientInfo.clientID;
-                    TeamID team = world.teams.getClientTeam(clientID);
-                    GameObject obj = gameObjectFactory.createGameObject(gameData.getBuildingPlaceholder(), team);
-                    if(obj != null) {
-                        obj.x = mouseWorldPosition.x;
-                        obj.y = mouseWorldPosition.y;
-                        if(world.add(obj, gameData)) {
-                            worldRenderer.resetGameObjectRenderCache();
-                            clickBoxManager.resetGameObjectCache();
+                }
+                for(int i = GLFW_KEY_1; i <= GLFW_KEY_9; ++i) {
+                    if(glfwGetKey(window, i) == GLFW_PRESS) {
+                        ClientID clientID = clientInfo.clientID;
+                        TeamID team = world.teams.getClientTeam(clientID);
+                        if(team == null) chatbox.println("Need to have team");
+                        GameObject obj = null;
+                        if(i - GLFW_KEY_1 >= gameData.getTypes().size()) chatbox.println("Missing entity type");
+                        else obj = world.gameObjectFactory.createGameObject(gameData.getTypes().get(i - GLFW_KEY_1), team);
+                        if(obj != null) {
+                            obj.x = mouseWorldPosition.x;
+                            obj.y = mouseWorldPosition.y;
+                            if(world.add(obj, gameData)) {
+                                worldRenderer.resetGameObjectRenderCache();
+                                clickBoxManager.resetGameObjectCache();
+                            }
                         }
                     }
                 }
@@ -514,6 +520,51 @@ public class Game {
                             connection.queueSend(new EndTurn());
                         } else if(args[0].equals("dead")) {
                             connection.queueSend(new DeadCommand());
+                        } else if(args[0].equals("gamedata")) {
+                            if(args.length < 2) {
+                                chatbox.println("Invalid number of arguments");
+                            } else if(args[1].equalsIgnoreCase("send")) {
+                                connection.queueSend(new SetGameData(gameData));
+                            } else if(args[1].equalsIgnoreCase("save")) {
+                                MathUtil.writeFile(String.join(" ", Arrays.copyOfRange(args, 2, args.length)), gameData.toJSON().toString(4));
+                            } else if(args[1].equalsIgnoreCase("load")) {
+                                if(args.length < 3) {
+                                    chatbox.println("Need file name to load");
+                                } else {
+                                    String path = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
+                                    String data = MathUtil.readFile(path);
+                                    JSONObject obj = new JSONObject(data);
+                                    if(gameData.fromJSON(obj, e -> {
+                                        chatbox.println("Failed to load JSON file " + path);
+                                        chatbox.println(e.getMessage());
+                                        e.printStackTrace();
+                                    })) {
+                                        chatbox.println("Game data loaded on client");
+                                    }
+                                }
+                            }
+                        } else if(args[0].equals("moveall")) {
+                            TeamID team = world.teams.getClientTeam(clientInfo.clientID);
+                            if(team != null) {
+                                for(GameObject gameObject : world.gameObjects.values()) {
+                                    if(gameObject.team.equals(team)) {
+                                        Set<Vector2i> targets = Pathfinding.pathPossibilities(SelectGridManager.getWeightStorage(gameObject.uniqueID, world, gameData), new Vector2i(gameObject.x, gameObject.y), gameObject.speedLeft).possiblities();
+                                        int n = new Random().nextInt(targets.size());
+                                        Vector2i target = new Vector2i();
+                                        for(Vector2i v : targets) {
+                                            if(n-- == 0) {
+                                                target = v;
+                                                break;
+                                            }
+                                        }
+                                        MoveAction action = new MoveAction(gameObject.uniqueID, target.x, target.y);
+                                        if(action.validate(clientInfo.clientID, world, gameData)) {
+                                            action.animate(this);
+                                            connection.queueSend(new ActionCommand(action, world));
+                                        }
+                                    }
+                                }
+                            }
                         } else {
                             chatbox.println("Unknown command!");
                         }
@@ -521,7 +572,8 @@ public class Game {
                         connection.queueSend(new ChatMessage(cmd));
                     }
                 } catch(Exception e) {
-                    System.err.println("Error processing command");
+                    chatbox.println("Error processing command:");
+                    chatbox.println(e.getMessage());
                     e.printStackTrace();
                 }
             }

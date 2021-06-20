@@ -2,6 +2,7 @@ package game;
 
 import org.joml.Vector2i;
 import staticData.GameData;
+import staticData.GameObjectTypeID;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,9 +29,11 @@ public class GrowAction implements Action {
         TeamID team = world.teams.getClientTeam(actor);
         if(team == null) return false;
         Collection<Vector2i> square = new ArrayList<>();
+        GameObjectTypeID growInto = gameData.getType(gameObjects.get(0).type).producedType();
         for(GameObject gameObject : gameObjects) {
             if(!gameObject.alive || gameObject.team == null || !gameObject.team.equals(team)) return false;
-            if(gameObject.type != gameData.getPlaceholder().getUniqueID()) return false;
+            if(!gameData.getType(gameObject.type).canGrow()) return false;
+            if(!gameData.getType(gameObject.type).producedType().equals(growInto)) return false;
             square.add(new Vector2i(gameObject.x, gameObject.y));
         }
         if(!MathUtil.isSquare(square)) return false;
@@ -58,7 +61,11 @@ public class GrowAction implements Action {
             square.add(new Vector2i(obj.x, obj.y));
         }
         Vector2i pos = MathUtil.squareTop(square);
-        GameObject newObj = world.gameObjectFactory.createGameObject(gameData.getBuildingPlaceholder(), team);
+        GameObject newObj = world.gameObjectFactory.createGameObject(
+                gameData.getType(
+                        gameData.getType(world.gameObjects.get(seeds.get(0)).type)
+                        .producedType()),
+                team);
         world.gameObjects.put(newObj.uniqueID, newObj);
         newObj.x = pos.x;
         newObj.y = pos.y;

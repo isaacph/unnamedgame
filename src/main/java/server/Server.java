@@ -1,6 +1,7 @@
 package server;
 
 import game.*;
+import org.json.JSONObject;
 import server.commands.ChatMessage;
 import server.commands.ConnectionLifeCheck;
 import staticData.GameData;
@@ -28,7 +29,6 @@ public class Server {
     public World world;
     public GameData gameData;
     public final GameObjectFactory gameObjectFactory = new GameObjectFactory();
-    public final TeamID.Generator teamIDGenerator = new TeamID.Generator();
 
     public final Collection<ClientID> clientIDs = new ArrayList<>();
     public final Map<ClientID, ClientData> clientIdMap = new HashMap<>();
@@ -72,6 +72,16 @@ public class Server {
                 throw e;
             }
             gameData = new GameData();
+            try {
+                String file = MathUtil.readFile("gamedata.json");
+                this.gameData.fromJSON(new JSONObject(file), e -> {
+                    System.err.println("Failed to parse JSON game data");
+                    System.err.println(e.getMessage());
+                });
+            } catch(IOException e) {
+                System.err.println("JSON file missing (probably)");
+                e.printStackTrace();
+            }
             world = new World();
             while(running) {
                 long time = System.currentTimeMillis();

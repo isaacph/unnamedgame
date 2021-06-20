@@ -26,6 +26,7 @@ public class TeamManager implements Serializable {
     private final ArrayList<TeamID> turnOrder = new ArrayList<>();
     private final Map<ClientID, Boolean> clientEndedTurn = new HashMap<>();
     private int currentTurn = -1;
+    public final TeamID.Generator teamIDGenerator = new TeamID.Generator();
 
     public List<ClientID> getTeamClients(TeamID teamID) {
         return new ArrayList<>(teamClients.get(teamID));

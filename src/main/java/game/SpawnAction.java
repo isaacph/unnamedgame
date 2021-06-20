@@ -24,7 +24,7 @@ public class SpawnAction implements Action {
         GameObject source = world.gameObjects.get(sourceID);
         if(actor == null || source == null) return false;
         if(!source.alive) return false;
-        if(source.type != gameData.getBuildingPlaceholder().getUniqueID()) return false;
+        if(!gameData.getType(source.type).canSpawn()) return false;
         if(world.teams.getClientTeam(actor) == null) return false;
         if(!source.team.equals(world.teams.getClientTeam(actor))) return false;
         if(world.occupied(targetX, targetY, gameData) != null) return false;
@@ -49,7 +49,9 @@ public class SpawnAction implements Action {
         }
         GameObject object = world.gameObjects.get(sourceID);
         object.speedLeft -= 1;
-        GameObject newGameObject = world.gameObjectFactory.createGameObject(gameData.getPlaceholder(), object.team);
+        GameObject newGameObject = world.gameObjectFactory.createGameObject(
+                gameData.getType(gameData.getType(object.type).producedType()),
+                object.team);
         world.gameObjects.put(newGameObject.uniqueID, newGameObject);
         newGameObject.x = targetX;
         newGameObject.y = targetY;

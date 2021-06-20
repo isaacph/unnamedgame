@@ -1,5 +1,6 @@
 package game;
 
+import org.joml.Vector2f;
 import org.joml.Vector2i;
 
 import java.util.*;
@@ -19,6 +20,18 @@ public final class Pathfinding {
 
         public Vector2i getTileParent(Vector2i tile) {
             return tileParent.get(tile);
+        }
+
+        public Set<Vector2i> possiblities() {
+            Set<Vector2i> keys = speedLeft.keySet();
+            Collection<Vector2i> toRemove = new ArrayList<>();
+            for(Vector2i v : keys) {
+                if(speedLeft.get(v) < 0) {
+                    toRemove.add(v);
+                }
+            }
+            for(Vector2i v : toRemove) keys.remove(v);
+            return keys;
         }
     }
 

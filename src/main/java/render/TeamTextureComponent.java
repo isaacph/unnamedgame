@@ -21,18 +21,22 @@ public class TeamTextureComponent extends RenderComponent {
     private Vector2f centerOffset;
     private boolean forceVisible = false;
     private boolean forcedVisiblity = false;
+    private Vector2f circleOffset;
+    private float circleSize;
 
-    public TeamTextureComponent(GameObjectID gameObjectID, World world, GameData gameData, WorldRenderer.GameObjectTextures textureLibrary) {
+    public TeamTextureComponent(GameObjectID gameObjectID, World world, GameData gameData, WorldRenderer.GameObjectTextures textureLibrary,
+                                String texturePath, Vector2f texOffset, Vector2f texScale, Vector2f centerOffset, Vector2f circleOffset, float circleSize) {
         this.world = world;
         this.gameData = gameData;
         this.gameObjectID = gameObjectID;
         GameObject obj = world.gameObjects.get(gameObjectID);
-        GameObjectType type = gameData.getType(obj.type);
-        this.texture = textureLibrary.getTexture(type.getTexturePath());
-        this.renderOffset = type.getTextureOffset();
-        this.renderScale = type.getTextureScale();
+        this.texture = textureLibrary.getTexture(texturePath);
+        this.renderOffset = texOffset;
+        this.renderScale = texScale;
         this.position = new Vector2f(obj.x, obj.y);
-        this.centerOffset = type.getCenterOffset();
+        this.centerOffset = centerOffset;
+        this.circleOffset = circleOffset;
+        this.circleSize = circleSize;
     }
 
     private boolean visible(GameObject obj) {
@@ -47,10 +51,10 @@ public class TeamTextureComponent extends RenderComponent {
             if(fixedPosition) {
                 this.position = new Vector2f(gameObject.x, gameObject.y);
             }
-            Vector2f pos = Camera.worldToViewSpace(new Vector2f(position).add(0.5f, 0.5f).add(type.getCircleOffset()));
+            Vector2f pos = Camera.worldToViewSpace(new Vector2f(position).add(0.5f, 0.5f).add(circleOffset));
             Vector3f color = world.teams.getTeamColor(gameObject.team);
             renderer.ellipseRenderer.draw(new Matrix4f(orthoProj).translate(pos.x, pos.y, 0)
-                    .scale(1.0f * type.getCircleSize(), TileGridRenderer.TILE_RATIO * type.getCircleSize(), 0),
+                    .scale(1.0f * circleSize, TileGridRenderer.TILE_RATIO * circleSize, 0),
                     new Vector4f(color.x, color.y, color.z, 0.6f), 1.0f, TileGridRenderer.TILE_RATIO);
         }
     }

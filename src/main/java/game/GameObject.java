@@ -2,6 +2,7 @@ package game;
 
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
+import staticData.GameObjectTypeID;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -11,7 +12,7 @@ import java.util.Map;
 public class GameObject implements Serializable {
 
     public final GameObjectID uniqueID;
-    public final int type;
+    public final GameObjectTypeID type;
     public int x, y;
     public TeamID team;
     public float health;
@@ -19,7 +20,7 @@ public class GameObject implements Serializable {
     public double speedLeft;
     public boolean alive;
 
-    public GameObject(GameObjectID uniqueID, int type, TeamID team, float health, double totalSpeed) {
+    public GameObject(GameObjectID uniqueID, GameObjectTypeID type, TeamID team, float health, double totalSpeed) {
         this.uniqueID = uniqueID;
         this.type = type;
         this.team = team;

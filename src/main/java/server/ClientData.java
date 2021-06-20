@@ -11,4 +11,8 @@ public class ClientData {
         this.clientId = clientId;
         this.name = "Unnamed" + clientId.hashCode();
     }
+
+    public String toString() {
+        return "Client#" + clientId + ": " + name;
+    }
 }

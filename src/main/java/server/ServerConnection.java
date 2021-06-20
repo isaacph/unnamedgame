@@ -4,6 +4,7 @@ import game.ClientPayload;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.*;
@@ -91,6 +92,8 @@ public class ServerConnection<IncomingType, OutgoingType>
 			if(!sendErrorHandler.test(error) && error.clientID != -1) {
 				conToRemove.add(error.clientID);
 			}
+		} catch(ClosedChannelException e) {
+			System.err.println("Closed channel reported");
 		}
 		for(int conId : conToRemove) {
 			connections.remove(conId);

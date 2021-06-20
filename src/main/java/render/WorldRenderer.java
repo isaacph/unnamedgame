@@ -6,6 +6,7 @@ import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector4f;
+import staticData.GameObjectType;
 
 import java.util.*;
 
@@ -98,7 +99,8 @@ public class WorldRenderer {
     }
 
     private RenderComponent makeRenderComponent(GameObject gameObject) {
-        return new TeamTextureComponent(gameObject.uniqueID, world, gameData, textureLibrary);
+        GameObjectType type = gameData.getType(gameObject.type);
+        return type.makeRenderComponent(gameObject.uniqueID, world, gameData, textureLibrary);
     }
 
     public static class GameObjectTextures {
