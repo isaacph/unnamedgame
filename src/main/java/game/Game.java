@@ -153,6 +153,7 @@ public class Game {
 
         this.clickBoxManager = new ClickBoxManager(world, gameData, camera, worldRenderer);
         this.clientInfo = new ClientInfo();
+        this.clientInfo.clientID = ClientID.getPlaceholder();
 
         this.connection = new ClientConnection<>();
         this.connection.setOnConnectHandler(socketAddress -> {
@@ -365,7 +366,17 @@ public class Game {
                         }
                     }
                     if(key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
-                        connection.queueSend(new EndTurn());
+                        if(connection.isConnected()) {
+                            connection.queueSend(new EndTurn());
+                        } else {
+                            world.teams.endClientTurn(clientInfo.clientID);
+                            if(world.teams.teamEndedTurn(world.teams.getClientTeam(clientInfo.clientID))) {
+                                NextTurn.executeNextTurn(world, s -> chatbox.println(s), s -> chatbox.println(s));
+                                TeamID teamID = world.teams.getTurn();
+                                world.teams.setClientTeam(clientInfo.clientID, teamID);
+                                chatbox.println("Local team joined: " + teamID + ", name: " + world.teams.getTeamName(teamID));
+                            }
+                        }
                         currentCommand = UICommand.NONE;
                         worldRenderer.tileGridRenderer.buildSelect(new ArrayList<>());
                     }
@@ -474,7 +485,20 @@ public class Game {
                                 if(connection.isConnected()) {
                                     connection.queueSend(new JoinTeam(args[1]));
                                 } else {
-                                    chatbox.println("Must be connected");
+//                                    chatbox.println("Must be connected");
+                                    String targetTeam = args[1];
+                                    if(targetTeam == null || targetTeam.length() <= 1) {
+                                        chatbox.println("Invalid args");
+                                    } else {
+                                        TeamID teamID = world.teams.getTeamWithName(targetTeam);
+                                        if(teamID == null) {
+                                            teamID = world.teams.teamIDGenerator.generate();
+                                            world.teams.addTeam(teamID);
+                                            world.teams.setTeamName(teamID, targetTeam);
+                                        }
+                                        world.teams.setClientTeam(clientInfo.clientID, teamID);
+                                        chatbox.println("Local team joined: " + teamID + ", name: " + targetTeam);
+                                    }
                                 }
                             }
                         } else if(args[0].equals("teams")) {
@@ -515,9 +539,20 @@ public class Game {
                                 connection.queueSend(new SetTeamColor(teamName, color));
                             }
                         } else if(args[0].equals("nextturn")) {
-                            connection.queueSend(new NextTurn());
+                            if(connection.isConnected()) {
+                                connection.queueSend(new NextTurn());
+                            } else {
+                                NextTurn.executeNextTurn(world, s -> chatbox.println(s), s -> chatbox.println(s));
+                            }
                         } else if(args[0].equals("endturn")) {
-                            connection.queueSend(new EndTurn());
+                            if(connection.isConnected()) {
+                                connection.queueSend(new EndTurn());
+                            } else {
+                                world.teams.endClientTurn(clientInfo.clientID);
+                                if(world.teams.teamEndedTurn(world.teams.getClientTeam(clientInfo.clientID))) {
+                                    NextTurn.executeNextTurn(world, s -> chatbox.println(s), s -> chatbox.println(s));
+                                }
+                            }
                         } else if(args[0].equals("dead")) {
                             connection.queueSend(new DeadCommand());
                         } else if(args[0].equals("gamedata")) {

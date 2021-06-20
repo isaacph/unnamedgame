@@ -41,4 +41,8 @@ public class ClientID implements Serializable {
             return new ClientID(++generatorNumber);
         }
     }
+
+    public static ClientID getPlaceholder() {
+        return new ClientID(-1);
+    }
 }

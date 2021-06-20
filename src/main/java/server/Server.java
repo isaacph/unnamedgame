@@ -28,7 +28,6 @@ public class Server {
 
     public World world;
     public GameData gameData;
-    public final GameObjectFactory gameObjectFactory = new GameObjectFactory();
 
     public final Collection<ClientID> clientIDs = new ArrayList<>();
     public final Map<ClientID, ClientData> clientIdMap = new HashMap<>();
