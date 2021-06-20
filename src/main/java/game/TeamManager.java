@@ -19,17 +19,19 @@ public class TeamManager implements Serializable {
     };
     private int colorCounter = 0;
 
-    private List<TeamID> teams = new ArrayList<>();
-    private Map<TeamID, List<ClientID>> teamClients = new HashMap<>();
-    private Map<TeamID, String> teamName = new HashMap<>();
-    private Map<TeamID, Vector3f> teamColor = new HashMap<>();
+    private final List<TeamID> teams = new ArrayList<>();
+    private final Map<TeamID, List<ClientID>> teamClients = new HashMap<>();
+    private final Map<TeamID, String> teamName = new HashMap<>();
+    private final Map<TeamID, Vector3f> teamColor = new HashMap<>();
     private final ArrayList<TeamID> turnOrder = new ArrayList<>();
     private final Map<ClientID, Boolean> clientEndedTurn = new HashMap<>();
     private int currentTurn = -1;
     public final TeamID.Generator teamIDGenerator = new TeamID.Generator();
 
     public List<ClientID> getTeamClients(TeamID teamID) {
-        return new ArrayList<>(teamClients.get(teamID));
+        List<ClientID> list = teamClients.get(teamID);
+        if(list == null) return new ArrayList<>();
+        return new ArrayList<>(list);
     }
 
     public TeamID getClientTeam(ClientID clientID) {
@@ -57,6 +59,7 @@ public class TeamManager implements Serializable {
         teams.add(teamID);
         teamColor.put(teamID, DEFAULT_COLORS[colorCounter++ % DEFAULT_COLORS.length]);
         turnOrder.add(teamID);
+        teamName.put(teamID, teamID.toString());
     }
 
     public String getTeamName(TeamID team) {
@@ -131,9 +134,7 @@ public class TeamManager implements Serializable {
 
     public void setTurnOrder(List<TeamID> order) {
         this.turnOrder.clear();
-        for(TeamID id : order) {
-            turnOrder.add(id);
-        }
+        turnOrder.addAll(order);
     }
 
     public void startTurns() {
@@ -174,5 +175,15 @@ public class TeamManager implements Serializable {
         if(turn == null) return false;
         if(clientEndedTurn(client)) return false;
         return getClientTeam(client).equals(turn);
+    }
+
+    public void clear() {
+        teams.clear();
+        teamClients.clear();
+        teamName.clear();
+        teamColor.clear();
+        turnOrder.clear();
+        clientEndedTurn.clear();
+        currentTurn = -1;
     }
 }

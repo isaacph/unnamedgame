@@ -1,7 +1,8 @@
 package game;
 
-import org.joml.Vector2f;
 import org.joml.Vector2i;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import staticData.GameData;
 import staticData.GameObjectType;
 
@@ -83,9 +84,61 @@ public class World implements Serializable {
         return weight;
     }
 
-    public void resetGameObjectSpeeds() {
+    public void resetGameObjectSpeeds(GameData gameData) {
         for(GameObject gameObject : gameObjects.values()) {
-            gameObject.resetSpeed();
+            GameObjectType type = gameData.getType(gameObject.type);
+            gameObject.speedLeft = type.getSpeed();
+        }
+    }
+
+    public JSONObject toInitJSON() {
+        JSONObject obj = new JSONObject();
+        obj.put("grid", grid.toJSON());
+        JSONArray arr = new JSONArray();
+        for(GameObject go : gameObjects.values()) {
+            arr.put(go.toInitJSON());
+        }
+        obj.put("gameObjects", arr);
+        obj.put("gameObjectFactory", gameObjectFactory.toJSON());
+        JSONArray teamArr = new JSONArray();
+        for(TeamID team : teams.getTeams()) {
+            teamArr.put(team.toJSON());
+        }
+        obj.put("teams", teamArr);
+        return obj;
+    }
+
+    public void initFromJSON(JSONObject obj, GameData gameData) {
+        gameObjects.clear();
+        teams.clear();
+
+        grid.fromJSON(obj.getJSONObject("grid"));
+
+        JSONArray goArr = obj.getJSONArray("gameObjects");
+        for(int i = 0; i < goArr.length(); ++i) {
+            GameObject gameObj = new GameObject(goArr.getJSONObject(i));
+            gameObjects.put(gameObj.uniqueID, gameObj);
+        }
+
+        gameObjectFactory = new GameObjectFactory(obj.getJSONObject("gameObjectFactory"));
+
+        JSONArray teamArr = obj.getJSONArray("teams");
+
+        Map<GameObjectID, TeamID> chooseNewTeams = new HashMap<>();
+        for(int i = 0; i < teamArr.length(); ++i) {
+            TeamID oldTeam = new TeamID(teamArr.getJSONObject(i));
+            TeamID newTeam = teams.teamIDGenerator.generate();
+            teams.addTeam(newTeam);
+
+            for(GameObject gameObj : gameObjects.values()) {
+                if(gameObj.team.equals(oldTeam)) {
+                    chooseNewTeams.put(gameObj.uniqueID, newTeam);
+                }
+            }
+        }
+
+        for(GameObjectID key : chooseNewTeams.keySet()) {
+            gameObjects.get(key).team = chooseNewTeams.get(key);
         }
     }
 }

@@ -1,10 +1,8 @@
 package game;
 
+import org.json.JSONObject;
+
 import java.io.Serializable;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Queue;
-import java.util.UUID;
 
 public class GameObjectID implements Serializable {
 
@@ -18,9 +16,19 @@ public class GameObjectID implements Serializable {
         this.id = other.id;
     }
 
+    public GameObjectID(JSONObject obj) {
+        this.id = obj.getInt("id");
+    }
+
     @Override
     public int hashCode() {
         return id;
+    }
+
+    public JSONObject toJSON() {
+        JSONObject obj = new JSONObject();
+        obj.put("id", id);
+        return obj;
     }
 
     @Override
@@ -35,14 +43,24 @@ public class GameObjectID implements Serializable {
 
     public static class Generator implements Serializable {
 
-        public int number = 0;
+        private int nextID = 0;
 
         public Generator() {
 
         }
 
+        public Generator(JSONObject obj) {
+            nextID = obj.getInt("nextID");
+        }
+
         public GameObjectID generate() {
-            return new GameObjectID(number++);
+            return new GameObjectID(nextID++);
+        }
+
+        public JSONObject toJSON() {
+            JSONObject obj = new JSONObject();
+            obj.put("nextID", nextID);
+            return obj;
         }
     }
 }

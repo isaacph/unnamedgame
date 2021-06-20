@@ -193,6 +193,8 @@ public class Server {
     }
 
     public void send(ClientData client, ClientPayload payload) {
-        connection.send(getConnection(client.clientId), payload);
+        if(client != null) {
+            connection.send(getConnection(client.clientId), payload);
+        }
     }
 }

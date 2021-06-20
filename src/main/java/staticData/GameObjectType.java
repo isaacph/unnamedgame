@@ -71,7 +71,7 @@ public class GameObjectType implements Serializable {
         return uniqueID;
     }
 
-    public double getBaseSpeed() {
+    public double getSpeed() {
         return speed;
     }
 

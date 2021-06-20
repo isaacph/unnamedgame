@@ -1,9 +1,9 @@
 package game;
 
+import org.json.JSONObject;
 import staticData.GameObjectType;
 
 import java.io.Serializable;
-import java.util.Random;
 
 public class GameObjectFactory implements Serializable {
 
@@ -16,9 +16,20 @@ public class GameObjectFactory implements Serializable {
         if(team == null) return null;
         GameObjectID id = generator.generate();
         if(id == null) return null;
-        GameObject object = new GameObject(generator.generate(), type.getUniqueID(), team, type.getMaxHealth(), type.getBaseSpeed());
-        type.initialize(object);
-        object.resetSpeed();
+        GameObject object = new GameObject(generator.generate(), type.getUniqueID(), team);
+        object.alive = true;
+        object.health = type.getMaxHealth();
+        object.speedLeft = type.getSpeed();
         return object;
+    }
+
+    public GameObjectFactory() {}
+
+    public GameObjectFactory(JSONObject obj) {
+        generator = new GameObjectID.Generator(obj);
+    }
+
+    public JSONObject toJSON() {
+        return generator.toJSON();
     }
 }

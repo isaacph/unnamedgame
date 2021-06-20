@@ -1,5 +1,7 @@
 package staticData;
 
+import org.json.JSONObject;
+
 import java.io.Serializable;
 import java.util.UUID;
 
@@ -13,6 +15,10 @@ public class GameObjectTypeID implements Serializable {
 
     public GameObjectTypeID(GameObjectTypeID other) {
         this.nameID = other.nameID;
+    }
+
+    public GameObjectTypeID(JSONObject obj) {
+        this.nameID = obj.getString("nameID");
     }
 
     @Override
@@ -32,5 +38,11 @@ public class GameObjectTypeID implements Serializable {
     @Override
     public String toString() {
         return "GameObjectType:" + nameID.toString();
+    }
+
+    public JSONObject toJSON() {
+        JSONObject obj = new JSONObject();
+        obj.put("nameID", nameID);
+        return obj;
     }
 }

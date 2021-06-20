@@ -1,5 +1,7 @@
 package game;
 
+import org.json.JSONObject;
+
 import java.io.Serializable;
 import java.util.Random;
 
@@ -15,6 +17,10 @@ public class TeamID implements Serializable {
         this.id = other.id;
     }
 
+    public TeamID(JSONObject obj) {
+        this.id = obj.getInt("id");
+    }
+
     @Override
     public int hashCode() {
         return id;
@@ -28,6 +34,12 @@ public class TeamID implements Serializable {
     @Override
     public boolean equals(Object other) {
         return other instanceof TeamID && ((TeamID) other).id == id;
+    }
+
+    public JSONObject toJSON() {
+        JSONObject obj = new JSONObject();
+        obj.put("id", id);
+        return obj;
     }
 
     public static class Generator implements Serializable {

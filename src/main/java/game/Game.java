@@ -371,7 +371,7 @@ public class Game {
                         } else {
                             world.teams.endClientTurn(clientInfo.clientID);
                             if(world.teams.teamEndedTurn(world.teams.getClientTeam(clientInfo.clientID))) {
-                                NextTurn.executeNextTurn(world, s -> chatbox.println(s), s -> chatbox.println(s));
+                                NextTurn.executeNextTurn(world, gameData, s -> chatbox.println(s), s -> chatbox.println(s));
                                 TeamID teamID = world.teams.getTurn();
                                 world.teams.setClientTeam(clientInfo.clientID, teamID);
                                 chatbox.println("Local team joined: " + teamID + ", name: " + world.teams.getTeamName(teamID));
@@ -542,7 +542,7 @@ public class Game {
                             if(connection.isConnected()) {
                                 connection.queueSend(new NextTurn());
                             } else {
-                                NextTurn.executeNextTurn(world, s -> chatbox.println(s), s -> chatbox.println(s));
+                                NextTurn.executeNextTurn(world, gameData, s -> chatbox.println(s), s -> chatbox.println(s));
                             }
                         } else if(args[0].equals("endturn")) {
                             if(connection.isConnected()) {
@@ -550,7 +550,7 @@ public class Game {
                             } else {
                                 world.teams.endClientTurn(clientInfo.clientID);
                                 if(world.teams.teamEndedTurn(world.teams.getClientTeam(clientInfo.clientID))) {
-                                    NextTurn.executeNextTurn(world, s -> chatbox.println(s), s -> chatbox.println(s));
+                                    NextTurn.executeNextTurn(world, gameData, s -> chatbox.println(s), s -> chatbox.println(s));
                                 }
                             }
                         } else if(args[0].equals("dead")) {
@@ -599,6 +599,33 @@ public class Game {
                                         }
                                     }
                                 }
+                            }
+                        } else if(args[0].equals("save")) {
+                            if(args.length < 2) {
+                                chatbox.println("Requires file name");
+                            } else {
+                                String fileName = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+                                JSONObject obj = world.toInitJSON();
+                                MathUtil.writeFile(fileName, obj.toString(4));
+                            }
+                        } else if(args[0].equals("load")) {
+                            if(args.length < 2) {
+                                chatbox.println("Requires file name");
+                            } else {
+                                String fileName = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+                                JSONObject obj = new JSONObject(MathUtil.readFile(fileName));
+                                if(connection.isConnected()) {
+                                    connection.queueSend(new SetWorldJSON(obj.toString()));
+                                } else {
+                                    world.initFromJSON(obj, gameData);
+                                    chatbox.println("Successfully reinitialized world");
+                                }
+                            }
+                        } else if(args[0].equals("teamname")) {
+                            if(connection.isConnected() && args.length == 2) {
+                                connection.queueSend(new SetTeamName(args[1]));
+                            } else {
+                                chatbox.println("Invalid command/arguments");
                             }
                         } else {
                             chatbox.println("Unknown command!");
