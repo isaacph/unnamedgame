@@ -1,17 +1,15 @@
 package staticData;
 
-import game.ClickBox;
-import game.GameObject;
-import game.GameObjectID;
-import game.World;
+import game.*;
 import org.joml.Vector2i;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import render.RenderComponent;
 import render.TeamTextureComponent;
 import render.WorldRenderer;
 
 import java.io.Serializable;
-import java.util.Set;
+import java.util.*;
 
 public class GameObjectType implements Serializable {
 
@@ -22,11 +20,10 @@ public class GameObjectType implements Serializable {
     private Display display;
     private ClickBoxData clickbox;
     private Shape shape;
-    private float damage;
-    private boolean canMove;
-    private boolean canGrow;
-    private boolean canSpawn;
-    private GameObjectTypeID produce;
+    private List<AbilityComponent> abilities;
+    private Map<Integer, AbilityComponent> slotAbility;
+    private Map<AbilityID, AbilityComponent> abilityIDMap;
+    private Map<Class, AbilityID> classAbilityIDMap;
 
     /*private String texture;
     private Vector2f textureOffset;
@@ -52,15 +49,18 @@ public class GameObjectType implements Serializable {
         display = factory.makeDisplay(obj.getJSONObject("display"));
         clickbox = factory.makeClickbox(obj.getJSONObject("clickbox"));
         shape = factory.makeShape(obj.getJSONObject("shape"));
-        damage = obj.getFloat("damage");
-        canMove = obj.getBoolean("canMove");
-        canGrow = obj.getBoolean("canGrow");
-        canSpawn = obj.getBoolean("canSpawn");
-        produce = new GameObjectTypeID(obj.getString("produce"));
-    }
-
-    public void initialize(Object gameObject) {
-
+        abilities = new ArrayList<>();
+        slotAbility = new HashMap<>();
+        abilityIDMap = new HashMap<>();
+        classAbilityIDMap = new HashMap<>();
+        JSONArray arr = new JSONArray(obj.getJSONArray("abilities"));
+        for(int i = 0; i < arr.length(); ++i) {
+            AbilityComponent ability = factory.makeAbility(arr.getJSONObject(i));
+            abilities.add(ability);
+            slotAbility.put(ability.getSlot(), ability);
+            abilityIDMap.put(ability.getID(), ability);
+            classAbilityIDMap.put(ability.getClass(), ability.getID());
+        }
     }
 
     public String getName() {
@@ -77,23 +77,26 @@ public class GameObjectType implements Serializable {
 
     public float getMaxHealth() { return health; }
 
-    public boolean canMove() {
-        return canMove;
+    public AbilityComponent getAbility(int slot) {
+        if(!slotAbility.containsKey(slot)) return null;
+        return slotAbility.get(slot);
     }
 
-    public boolean canGrow() {
-        return canGrow;
+    public boolean hasAbility(AbilityID abilityID) {
+        return abilityIDMap.containsKey(abilityID);
     }
 
-    public boolean canSpawn() {
-        return canSpawn;
+    public AbilityComponent getAbility(AbilityID abilityID) {
+        if(!hasAbility(abilityID)) return null;
+        return abilityIDMap.get(abilityID);
     }
 
-    public GameObjectTypeID producedType() {
-        return produce;
+    @SuppressWarnings("unchecked")
+    public <T extends AbilityComponent> T getAbility(Class<T> tClass) {
+        AbilityID abilityID = classAbilityIDMap.get(tClass);
+        if(abilityID == null) return null;
+        return (T) getAbility(abilityID);
     }
-
-    public float getDamage() { return damage; }
 
     @Override
     public String toString() {
@@ -115,11 +118,13 @@ public class GameObjectType implements Serializable {
         obj.put("clickbox", clickbox.toJSON());
         obj.put("shape", shape.toJSON());
         obj.put("health", health);
-        obj.put("damage", damage);
-        obj.put("canMove", canMove);
-        obj.put("canGrow", canGrow);
-        obj.put("canSpawn", canSpawn);
-        obj.put("produce", produce.getName());
+
+        JSONArray abArray = new JSONArray();
+        for(AbilityComponent abilityComponent : abilities) {
+            abArray.put(abilityComponent.toJSON());
+        }
+        obj.put("abilities", abArray);
+
         return obj;
     }
 

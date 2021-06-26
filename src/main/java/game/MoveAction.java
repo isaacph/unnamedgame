@@ -1,13 +1,13 @@
 package game;
 
-import org.joml.Vector2f;
 import org.joml.Vector2i;
-import render.AnimationManager;
 import render.MoveAnimation;
-import render.WorldRenderer;
 import staticData.GameData;
+import staticData.MoveAbility;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class MoveAction implements Action {
 
@@ -32,7 +32,7 @@ public class MoveAction implements Action {
         if(world.teams.getClientTeam(actor) == null) {
             return false;
         }
-        if(!gameData.getType(object.type).canMove()) {
+        if(!gameData.getType(object.type).hasAbility(MoveAbility.ID)) {
             return false;
         }
         if(!object.team.equals(world.teams.getClientTeam(actor))) {
@@ -76,5 +76,39 @@ public class MoveAction implements Action {
         object.x = targetX;
         object.y = targetY;
         object.speedLeft -= Pathfinding.getPathWeight(shortestPath, ws);
+    }
+
+    public static class Arranger implements ActionArranger {
+
+        @Override
+        public boolean arrange(Game game) {
+            GameObject obj = game.world.gameObjects.get(game.clickBoxManager.selectedID);
+            if(obj != null &&
+                    obj.speedLeft > 0 &&
+                    !game.animationManager.isObjectOccupied(game.clickBoxManager.selectedID) &&
+                    obj.alive) {
+                MoveAbility ability = game.gameData.getType(obj.type).getAbility(MoveAbility.class);
+                if(ability == null) return false;
+                game.selectGridManager.regenerateSelect(game.clickBoxManager.selectedID);
+                game.worldRenderer.tileGridRenderer.buildSelect(
+                        new ArrayList<>(game.selectGridManager.getSelectionGrid().map.values()));
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public void clearArrangement(Game game) {
+            game.worldRenderer.tileGridRenderer.buildSelect(new ArrayList<>());
+        }
+
+        @Override
+        public void changeMouseSelection(Game game, Set<Vector2i> occupied) {
+        }
+
+        @Override
+        public Action createAction(Game game) {
+            return new MoveAction(game.clickBoxManager.selectedID, game.mouseWorldPosition.x, game.mouseWorldPosition.y);
+        }
     }
 }

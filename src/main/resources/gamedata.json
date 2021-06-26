@@ -4,15 +4,26 @@
       "name": "kid",
       "speed": 8.0,
       "health": 1.0,
-      "damage": 1.0,
-      "canMove": true,
-      "canGrow": true,
-      "canSpawn": false,
-      "produce": "building",
       "shape": {
         "type": "square",
         "size": 1
       },
+      "abilities": [
+        {
+          "id": "move",
+          "slot": 0
+        },
+        {
+          "id": "attack",
+          "damage": 1.0,
+          "slot": 2
+        },
+        {
+          "id": "grow",
+          "into": "building",
+          "slot": 3
+        }
+      ],
       "display": {
         "type": "simple",
         "texture": "kid.png",
@@ -38,15 +49,17 @@
       "name": "building",
       "speed": 1.0,
       "health": 2.0,
-      "damage": 0.0,
-      "canMove": false,
-      "canGrow": false,
-      "canSpawn": true,
-      "produce": "kid",
       "shape": {
         "type": "square",
         "size": 2
       },
+      "abilities": [
+        {
+          "id": "spawn",
+          "produce": "kid",
+          "slot": 1
+        }
+      ],
       "display": {
         "type": "simple",
         "texture": "kid.png",

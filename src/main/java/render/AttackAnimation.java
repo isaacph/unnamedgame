@@ -20,17 +20,15 @@ public class AttackAnimation implements Animation {
 
     private boolean victimDead;
 
-    public AttackAnimation(GameObjectID attackerID, GameObjectID victimID, Game gameResources) {
+    public AttackAnimation(GameObjectID attackerID, GameObjectID victimID, boolean victimDead, Game gameResources) {
         this.attackerID = attackerID;
         this.victimID = victimID;
         this.gameResources = gameResources;
+        this.victimDead = victimDead;
     }
 
     @Override
     public void onStart() {
-        GameObject attacker = gameResources.world.gameObjects.get(attackerID);
-        GameObject victim = gameResources.world.gameObjects.get(victimID);
-        GameObjectType attackerType = gameResources.gameData.getType(attacker.type);
         RenderComponent attackerRender = gameResources.worldRenderer.getGameObjectRenderer(attackerID);
         RenderComponent victimRender = gameResources.worldRenderer.getGameObjectRenderer(victimID);
 
@@ -38,8 +36,6 @@ public class AttackAnimation implements Animation {
         gameResources.animationManager.setObjectOccupied(victimID, true);
         gameResources.clickBoxManager.getGameObjectClickBox(attackerID).disabled = true;
         gameResources.clickBoxManager.getGameObjectClickBox(victimID).disabled = true;
-
-        victimDead = victim.health <= attackerType.getDamage();
 
         attackerStart = new Vector2f(attackerRender.getWorldCenter());
         attackerDirection = new Vector2f(victimRender.getWorldCenter()).sub(attackerStart);
@@ -52,9 +48,6 @@ public class AttackAnimation implements Animation {
 
     @Override
     public void onUpdate() {
-        GameObject attacker = gameResources.world.gameObjects.get(attackerID);
-        GameObject victim = gameResources.world.gameObjects.get(victimID);
-        GameObjectType attackerType = gameResources.gameData.getType(attacker.type);
         RenderComponent attackerRender = gameResources.worldRenderer.getGameObjectRenderer(attackerID);
         RenderComponent victimRender = gameResources.worldRenderer.getGameObjectRenderer(victimID);
 
@@ -76,9 +69,6 @@ public class AttackAnimation implements Animation {
 
     @Override
     public void onFinish() {
-        GameObject attacker = gameResources.world.gameObjects.get(attackerID);
-        GameObject victim = gameResources.world.gameObjects.get(victimID);
-        GameObjectType attackerType = gameResources.gameData.getType(attacker.type);
         RenderComponent attackerRender = gameResources.worldRenderer.getGameObjectRenderer(attackerID);
         RenderComponent victimRender = gameResources.worldRenderer.getGameObjectRenderer(victimID);
 

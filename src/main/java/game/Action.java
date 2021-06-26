@@ -11,6 +11,5 @@ public interface Action extends Serializable {
     /** Should call execute **/
     void animate(Game gameResources);
 
-
     void execute(World world, GameData gameData);
 }

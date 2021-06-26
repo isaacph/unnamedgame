@@ -1,12 +1,12 @@
 package game;
 
 import org.joml.Vector2i;
-import staticData.GameData;
-import staticData.GameObjectTypeID;
+import staticData.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 public class GrowAction implements Action {
 
@@ -29,11 +29,14 @@ public class GrowAction implements Action {
         TeamID team = world.teams.getClientTeam(actor);
         if(team == null) return false;
         Collection<Vector2i> square = new ArrayList<>();
-        GameObjectTypeID growInto = gameData.getType(gameObjects.get(0).type).producedType();
+        GrowAbility mainComp = gameData.getType(gameObjects.get(0).type).getAbility(GrowAbility.class);
+        if(mainComp == null) return false;
+        GameObjectTypeID growInto = mainComp.getGrowInto();
         for(GameObject gameObject : gameObjects) {
             if(!gameObject.alive || gameObject.team == null || !gameObject.team.equals(team)) return false;
-            if(!gameData.getType(gameObject.type).canGrow()) return false;
-            if(!gameData.getType(gameObject.type).producedType().equals(growInto)) return false;
+            GrowAbility ability = gameData.getType(gameObject.type).getAbility(GrowAbility.class);
+            if(ability == null) return false;
+            if(!ability.getGrowInto().equals(growInto)) return false;
             square.add(new Vector2i(gameObject.x, gameObject.y));
         }
         if(!MathUtil.isSquare(square)) return false;
@@ -61,15 +64,84 @@ public class GrowAction implements Action {
             square.add(new Vector2i(obj.x, obj.y));
         }
         Vector2i pos = MathUtil.squareTop(square);
+        GrowAbility ability = gameData.getType(world.gameObjects.get(seeds.get(0)).type).getAbility(GrowAbility.class);
         GameObject newObj = world.gameObjectFactory.createGameObject(
-                gameData.getType(
-                        gameData.getType(world.gameObjects.get(seeds.get(0)).type)
-                        .producedType()),
+                gameData.getType(ability.getGrowInto()),
                 team);
         world.gameObjects.put(newObj.uniqueID, newObj);
         newObj.x = pos.x;
         newObj.y = pos.y;
         newObj.speedLeft = 0;
         newGameObjectCache = newObj.uniqueID;
+    }
+
+    public static class Arranger implements ActionArranger {
+
+        @Override
+        public boolean arrange(Game game) {
+            GameObject obj = game.world.gameObjects.get(game.clickBoxManager.selectedID);
+            if(obj != null && !game.animationManager.isObjectOccupied(game.clickBoxManager.selectedID) && obj.alive) {
+                boolean squareExists = false;
+                for(Vector2i[] square : MathUtil.SQUARE_DIRECTIONS_DIAGONAL) {
+                    boolean allPresent = true;
+                    for(Vector2i tileOffset : square) {
+                        Vector2i tile = new Vector2i(tileOffset).add(obj.x, obj.y);
+                        GameObjectID id = game.world.occupied(tile.x, tile.y, game.gameData);
+                        if(id == null) {
+                            allPresent = false;
+                            break;
+                        }
+                        GameObject tileObj = game.world.gameObjects.get(id);
+                        GrowAbility ability = game.gameData.getType(tileObj.type).getAbility(GrowAbility.class);
+                        if(ability == null) {
+                            allPresent = false;
+                            break;
+                        }
+                    }
+                    if(allPresent) {
+                        squareExists = true;
+                    }
+                }
+                if(squareExists) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public void clearArrangement(Game game) {
+            game.worldRenderer.tileGridRenderer.buildSelect(new ArrayList<>());
+        }
+
+        @Override
+        public void changeMouseSelection(Game game, Set<Vector2i> occupied) {
+            occupied.add(new Vector2i(game.mouseWorldPosition.x, game.mouseWorldPosition.y));
+            occupied.add(new Vector2i(game.mouseWorldPosition.x + 1, game.mouseWorldPosition.y));
+            occupied.add(new Vector2i(game.mouseWorldPosition.x + 1, game.mouseWorldPosition.y + 1));
+            occupied.add(new Vector2i(game.mouseWorldPosition.x, game.mouseWorldPosition.y + 1));
+        }
+
+        @Override
+        public Action createAction(Game game) {
+            GameObject selectedObject = game.world.gameObjects.get(game.clickBoxManager.selectedID);
+            if(selectedObject == null) return null;
+            ArrayList<GameObjectID> seeds = new ArrayList<>();
+            seeds.add(game.world.occupied(game.mouseWorldPosition.x, game.mouseWorldPosition.y, game.gameData));
+            seeds.add(game.world.occupied(game.mouseWorldPosition.x + 1, game.mouseWorldPosition.y, game.gameData));
+            seeds.add(game.world.occupied(game.mouseWorldPosition.x + 1, game.mouseWorldPosition.y + 1, game.gameData));
+            seeds.add(game.world.occupied(game.mouseWorldPosition.x, game.mouseWorldPosition.y + 1, game.gameData));
+            boolean valid = true;
+            for(GameObjectID id : seeds) {
+                if(id == null || game.animationManager.isObjectOccupied(id)) {
+                    valid = false;
+                    break;
+                }
+            }
+            if(valid && seeds.contains(selectedObject.uniqueID)) {
+                return new GrowAction(seeds);
+            }
+            return null;
+        }
     }
 }
