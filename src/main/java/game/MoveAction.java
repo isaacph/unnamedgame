@@ -2,6 +2,7 @@ package game;
 
 import org.joml.Vector2i;
 import render.MoveAnimation;
+import staticData.AbilityID;
 import staticData.GameData;
 import staticData.MoveAbility;
 
@@ -11,8 +12,8 @@ import java.util.Set;
 
 public class MoveAction implements Action {
 
-    private GameObjectID objectID;
-    private int targetX, targetY;
+    public GameObjectID objectID;
+    public int targetX, targetY;
 
     public MoveAction(GameObjectID objectID, int targetX, int targetY) {
         this.objectID = objectID;
@@ -57,15 +58,6 @@ public class MoveAction implements Action {
     }
 
     @Override
-    public void animate(Game resources) {
-        if(resources.world.gameObjects.get(objectID) == null) {
-            throw new RuntimeException("Attempted to animate MoveAction on unknown game object:" + objectID);
-        }
-        resources.animationManager.startAnimation(new MoveAnimation(resources, objectID, new Vector2i(targetX, targetY)));
-        this.execute(resources.world, resources.gameData);
-    }
-
-    @Override
     public void execute(World world, GameData gameData) {
         if(world.gameObjects.get(objectID) == null) {
             throw new RuntimeException("Attempted to execute MoveAction on unknown game object:" + objectID);
@@ -76,6 +68,11 @@ public class MoveAction implements Action {
         object.x = targetX;
         object.y = targetY;
         object.speedLeft -= Pathfinding.getPathWeight(shortestPath, ws);
+    }
+
+    @Override
+    public AbilityID getID() {
+        return MoveAbility.ID;
     }
 
     public static class Arranger implements ActionArranger {

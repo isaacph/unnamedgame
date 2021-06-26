@@ -5,13 +5,12 @@ import staticData.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 
 public class GrowAction implements Action {
 
     public ArrayList<GameObjectID> seeds;
-    private GameObjectID newGameObjectCache = null;
+    public GameObjectID newGameObjectResult = null;
 
     public GrowAction(Collection<GameObjectID> seeds) {
         this.seeds = new ArrayList<>(seeds);
@@ -44,17 +43,6 @@ public class GrowAction implements Action {
     }
 
     @Override
-    public void animate(Game gameResources) {
-        execute(gameResources.world, gameResources.gameData);
-        gameResources.worldRenderer.resetGameObjectRenderCache();
-        gameResources.animationManager.resetWhereNeeded();
-        for(GameObjectID id : seeds) {
-            gameResources.clickBoxManager.resetGameObjectClickBox(id);
-        }
-        gameResources.clickBoxManager.resetGameObjectClickBox(newGameObjectCache);
-    }
-
-    @Override
     public void execute(World world, GameData gameData) {
         TeamID team = world.gameObjects.get(seeds.get(0)).team;
         Collection<Vector2i> square = new ArrayList<>();
@@ -72,7 +60,12 @@ public class GrowAction implements Action {
         newObj.x = pos.x;
         newObj.y = pos.y;
         newObj.speedLeft = 0;
-        newGameObjectCache = newObj.uniqueID;
+        newGameObjectResult = newObj.uniqueID;
+    }
+
+    @Override
+    public AbilityID getID() {
+        return GrowAbility.ID;
     }
 
     public static class Arranger implements ActionArranger {

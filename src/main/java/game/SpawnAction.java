@@ -1,6 +1,7 @@
 package game;
 
 import org.joml.Vector2i;
+import staticData.AbilityID;
 import staticData.GameData;
 import staticData.SpawnAbility;
 
@@ -10,10 +11,10 @@ import java.util.Set;
 
 public class SpawnAction implements Action {
 
-    private GameObjectID sourceID;
-    private int targetX, targetY;
+    public GameObjectID sourceID;
+    public int targetX, targetY;
 
-    private GameObjectID cachedNewGameObject = null;
+    public GameObjectID newGameObjectResult = null;
 
     public SpawnAction(GameObjectID sourceID, int targetX, int targetY) {
         this.sourceID = sourceID;
@@ -38,13 +39,6 @@ public class SpawnAction implements Action {
     }
 
     @Override
-    public void animate(Game gameResources) {
-        this.execute(gameResources.world, gameResources.gameData);
-        gameResources.worldRenderer.resetGameObjectRenderCache();
-        gameResources.clickBoxManager.resetGameObjectClickBox(cachedNewGameObject);
-    }
-
-    @Override
     public void execute(World world, GameData gameData) {
         if(world.gameObjects.get(sourceID) == null) {
             throw new RuntimeException("Attempted to execute SpawnAction on unknown game object:" + sourceID);
@@ -59,7 +53,12 @@ public class SpawnAction implements Action {
         newGameObject.x = targetX;
         newGameObject.y = targetY;
         newGameObject.speedLeft = 0;
-        cachedNewGameObject = newGameObject.uniqueID;
+        newGameObjectResult = newGameObject.uniqueID;
+    }
+
+    @Override
+    public AbilityID getID() {
+        return SpawnAbility.ID;
     }
 
     public static class Arranger implements ActionArranger {

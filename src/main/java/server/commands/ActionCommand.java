@@ -23,7 +23,7 @@ public class ActionCommand implements ServerPayload, ClientPayload {
 
     @Override
     public void execute(Game gameResources) {
-        action.animate(gameResources);
+        gameResources.runAction(action);
     }
 
     @Override

@@ -3,10 +3,7 @@ package game;
 import org.joml.Vector2i;
 import render.AttackAnimation;
 import render.MoveAnimation;
-import staticData.AbilityComponent;
-import staticData.AttackAbility;
-import staticData.GameData;
-import staticData.GameObjectType;
+import staticData.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,8 +11,8 @@ import java.util.Set;
 
 public class AttackAction implements Action {
 
-    private GameObjectID attackerID;
-    private GameObjectID victimID;
+    public GameObjectID attackerID;
+    public GameObjectID victimID;
 
     public AttackAction(GameObjectID attackerID, GameObjectID victimID) {
         this.attackerID = attackerID;
@@ -38,16 +35,6 @@ public class AttackAction implements Action {
     }
 
     @Override
-    public void animate(Game game) {
-        GameObject attacker = game.world.gameObjects.get(attackerID);
-        GameObject victim = game.world.gameObjects.get(victimID);
-        AttackAbility attackerType = game.gameData.getType(attacker.type).getAbility(AttackAbility.class);
-        boolean victimDead = victim.health <= attackerType.getDamage();
-        game.animationManager.startAnimation(new AttackAnimation(attackerID, victimID, victimDead, game));
-        this.execute(game.world, game.gameData);
-    }
-
-    @Override
     public void execute(World world, GameData gameData) {
         GameObject attacker = world.gameObjects.get(attackerID);
         GameObject victim = world.gameObjects.get(victimID);
@@ -59,6 +46,11 @@ public class AttackAction implements Action {
             victim.alive = false;
             victim.health = 0;
         }
+    }
+
+    @Override
+    public AbilityID getID() {
+        return AttackAbility.ID;
     }
 
     public static class Arranger implements ActionArranger {

@@ -14,6 +14,7 @@ import java.lang.Math;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.Random;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static org.lwjgl.glfw.Callbacks.*;
@@ -53,17 +54,6 @@ public class Game {
     private Mode mode = Mode.PLAY;
     public ActionArranger currentCommand = null;
     private KeyMapping keyMapping = new KeyMapping();
-
-    private Map<AbilityID, Supplier<ActionArranger>> abilityActionArranger = getAbilityActionArrangers();
-
-    private Map<AbilityID, Supplier<ActionArranger>> getAbilityActionArrangers() {
-        Map<AbilityID, Supplier<ActionArranger>> map = new HashMap<>();
-        map.put(MoveAbility.ID, MoveAction.Arranger::new);
-        map.put(GrowAbility.ID, GrowAction.Arranger::new);
-        map.put(AttackAbility.ID, AttackAction.Arranger::new);
-        map.put(SpawnAbility.ID, SpawnAction.Arranger::new);
-        return map;
-    }
 
     enum Mode {
         PLAY, EDIT
@@ -211,7 +201,7 @@ public class Game {
                         Action commandAction = currentCommand.createAction(this);
                         if(commandAction != null && commandAction.validate(clientInfo.clientID, world, gameData)) {
                             connection.queueSend(new ActionCommand(commandAction, world));
-                            commandAction.animate(this);
+                            runAction(commandAction);
                         }
                         currentCommand.clearArrangement(this);
                         currentCommand = null;
@@ -327,7 +317,7 @@ public class Game {
                             AbilityComponent abilityComponent = null;
                             ActionArranger arranger = null;
                             if(obj != null) abilityComponent = gameData.getType(obj.type).getAbility(slot);
-                            if(abilityComponent != null) arranger = abilityActionArranger.get(abilityComponent.getID()).get();
+                            if(abilityComponent != null) arranger = AbilityOrganizer.abilityActionArranger.get(abilityComponent.getID()).get();
                             if(arranger != null && arranger.arrange(this)) currentCommand = arranger;
                         }
                         /*if(key == GLFW_KEY_W && action == GLFW_PRESS) {
@@ -622,7 +612,7 @@ public class Game {
                                         }
                                         MoveAction action = new MoveAction(gameObject.uniqueID, target.x, target.y);
                                         if(action.validate(clientInfo.clientID, world, gameData)) {
-                                            action.animate(this);
+                                            runAction(action);
                                             connection.queueSend(new ActionCommand(action, world));
                                         }
                                     }
@@ -731,6 +721,20 @@ public class Game {
         boxRenderer.cleanUp();
         textureRenderer.cleanUp();
         connection.close();
+    }
+
+    /** Executes and animates an Action, if possible */
+    public void runAction(Action action) {
+        AnimatorSupplier supplier;
+        Animator animator = null;
+
+        supplier = AbilityOrganizer.abilityAnimatorSupplier.get(action.getID());
+        if(supplier != null) animator = supplier.get(action);
+        if(animator != null) animator.animate(this);
+        else {
+            chatbox.println("Failed to find animator for action with ability ID: " + action.getID());
+            action.execute(world, gameData);
+        }
     }
 
     public static void main(String[] args) throws Exception {
