@@ -1,6 +1,6 @@
 package game;
 
-import org.joml.Vector2f;
+import model.ByteGrid;
 import org.joml.Vector2i;
 
 import java.util.*;

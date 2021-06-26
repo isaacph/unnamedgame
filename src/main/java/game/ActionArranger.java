@@ -1,6 +1,7 @@
 package game;
 
 import org.joml.Vector2i;
+import model.Action;
 
 import java.util.Set;
 

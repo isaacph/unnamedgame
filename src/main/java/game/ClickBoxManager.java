@@ -1,9 +1,9 @@
 package game;
 
+import model.*;
 import org.joml.Vector2f;
 import render.WorldRenderer;
-import staticData.GameData;
-import staticData.GameObjectType;
+import util.MathUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,7 +13,7 @@ import java.util.Map;
 public class ClickBoxManager {
 
     private final World world;
-    private final GameData gameData;
+    private final VisualData visualData;
     private final Camera camera;
     private final WorldRenderer worldRenderer;
 
@@ -22,9 +22,9 @@ public class ClickBoxManager {
 
     public GameObjectID selectedID;
 
-    public ClickBoxManager(World world, GameData gameData, Camera camera, WorldRenderer worldRenderer) {
+    public ClickBoxManager(World world, VisualData visualData, Camera camera, WorldRenderer worldRenderer) {
         this.world = world;
-        this.gameData = gameData;
+        this.visualData = visualData;
         this.camera = camera;
         this.worldRenderer = worldRenderer;
         this.selectedID = null;
@@ -43,7 +43,7 @@ public class ClickBoxManager {
     }
 
     public ClickBox makeClickBox(GameObject obj) {
-        GameObjectType type = gameData.getType(obj.type);
+        VisualDataType type = visualData.getType(obj.type);
         return type.makeClickBox(obj);
     }
 

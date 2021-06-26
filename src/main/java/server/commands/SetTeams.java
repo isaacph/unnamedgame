@@ -2,7 +2,7 @@ package server.commands;
 
 import game.ClientPayload;
 import game.Game;
-import game.TeamManager;
+import model.TeamManager;
 
 public class SetTeams implements ClientPayload {
 

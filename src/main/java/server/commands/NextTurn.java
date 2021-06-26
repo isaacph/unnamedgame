@@ -1,11 +1,11 @@
 package server.commands;
 
-import game.TeamID;
-import game.World;
+import model.TeamID;
+import model.World;
 import server.ClientData;
 import server.Server;
 import server.ServerPayload;
-import staticData.GameData;
+import model.GameData;
 
 import java.util.function.Consumer;
 

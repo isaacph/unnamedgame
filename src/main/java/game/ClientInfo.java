@@ -1,6 +1,6 @@
 package game;
 
-import java.util.UUID;
+import model.ClientID;
 
 public class ClientInfo {
 

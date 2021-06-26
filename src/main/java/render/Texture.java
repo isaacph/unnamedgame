@@ -1,6 +1,6 @@
 package render;
 
-import game.MathUtil;
+import util.MathUtil;
 import org.joml.Vector2i;
 import org.lwjgl.stb.STBImage;
 import org.lwjgl.system.MemoryStack;

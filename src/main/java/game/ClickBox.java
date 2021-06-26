@@ -1,5 +1,7 @@
 package game;
 
+import model.GameObjectID;
+import model.TeamID;
 import org.joml.Vector2f;
 
 public class ClickBox {

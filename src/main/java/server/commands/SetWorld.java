@@ -2,8 +2,8 @@ package server.commands;
 
 import game.ClientPayload;
 import game.Game;
-import game.TeamManager;
-import game.World;
+import model.TeamManager;
+import model.World;
 import server.ClientData;
 import server.Server;
 import server.ServerPayload;

@@ -1,6 +1,6 @@
 package server;
 
-import game.ClientID;
+import model.ClientID;
 
 public class ClientData {
     public String name;

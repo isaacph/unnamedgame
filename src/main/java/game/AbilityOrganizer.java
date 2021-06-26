@@ -1,6 +1,7 @@
 package game;
 
-import staticData.*;
+import model.*;
+import model.abilities.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,10 +15,10 @@ public class AbilityOrganizer {
 
     private static Map<AbilityID, Supplier<ActionArranger>> getAbilityActionArrangers() {
         Map<AbilityID, Supplier<ActionArranger>> map = new HashMap<>();
-        map.put(MoveAbility.ID, MoveAction.Arranger::new);
-        map.put(GrowAbility.ID, GrowAction.Arranger::new);
-        map.put(AttackAbility.ID, AttackAction.Arranger::new);
-        map.put(SpawnAbility.ID, SpawnAction.Arranger::new);
+        map.put(MoveAbility.ID, MoveAnimator.Arranger::new);
+        map.put(GrowAbility.ID, GrowAnimator.Arranger::new);
+        map.put(AttackAbility.ID, AttackAnimator.Arranger::new);
+        map.put(SpawnAbility.ID, SpawnAnimator.Arranger::new);
         return map;
     }
 

@@ -23,27 +23,7 @@
           "into": "building",
           "slot": 3
         }
-      ],
-      "display": {
-        "type": "simple",
-        "texture": "kid.png",
-        "size": 1.0,
-        "offsetX": 0.0,
-        "offsetY": 0.0,
-        "circleSize": 1.0,
-        "circleOffsetX": 0.0,
-        "circleOffsetY": 0.0,
-        "centerOffsetX": 0.0,
-        "centerOffsetY": 0.0
-      },
-      "clickbox": {
-        "type": "aabb",
-        "sizeX": 1.0,
-        "sizeY": 1.0,
-        "offsetX": 0.0,
-        "offsetY": 0.0,
-        "depthOffset": 0.0
-      }
+      ]
     },
     {
       "name": "building",
@@ -59,27 +39,7 @@
           "produce": "kid",
           "slot": 1
         }
-      ],
-      "display": {
-        "type": "simple",
-        "texture": "kid.png",
-        "size": 2.0,
-        "offsetX": 0.0,
-        "offsetY": 0.0,
-        "circleSize": 1.5,
-        "circleOffsetX": 0.5,
-        "circleOffsetY": 0.5,
-        "centerOffsetX": 0.5,
-        "centerOffsetY": 0.5
-      },
-      "clickbox": {
-        "type": "aabb",
-        "sizeX": 1.4,
-        "sizeY": 2.0,
-        "offsetX": 0.0,
-        "offsetY": 0.0,
-        "depthOffset": 0.0
-      }
+      ]
     }
   ]
 }

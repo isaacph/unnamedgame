@@ -1,6 +1,6 @@
 package render;
 
-import game.MathUtil;
+import util.MathUtil;
 import org.lwjgl.BufferUtils;
 
 import java.io.BufferedReader;

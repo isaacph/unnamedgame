@@ -1,12 +1,12 @@
 package render;
 
 import game.Camera;
-import game.GameObjectID;
-import game.World;
+import model.GameObjectID;
+import model.World;
 import org.joml.*;
-import staticData.GameData;
-import game.GameObject;
-import staticData.GameObjectType;
+import model.GameData;
+import model.GameObject;
+import model.GameObjectType;
 
 public class TeamTextureComponent extends RenderComponent {
 

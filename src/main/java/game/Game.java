@@ -1,5 +1,6 @@
 package game;
 
+import model.abilities.MoveAction;
 import org.joml.*;
 import org.json.JSONObject;
 import org.lwjgl.glfw.*;
@@ -7,15 +8,14 @@ import org.lwjgl.opengl.*;
 import render.*;
 import server.*;
 import server.commands.*;
-import staticData.*;
+import model.*;
+import util.MathUtil;
 
 import java.io.IOException;
 import java.lang.Math;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.Random;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
@@ -47,6 +47,7 @@ public class Game {
     public SelectGridManager selectGridManager;
 
     public GameData gameData;
+    public VisualData visualData;
 
     public ClientConnection<ClientPayload, ServerPayload> connection;
     public ClientInfo clientInfo;
@@ -136,6 +137,7 @@ public class Game {
         this.camera = new Camera(gameTime, window);
 
         this.gameData = new GameData();
+        this.visualData = new VisualData();
         try {
             String file = MathUtil.readFile("gamedata.json");
             this.gameData.fromJSON(new JSONObject(file), e -> {
@@ -146,11 +148,21 @@ public class Game {
             chatbox.println("JSON file missing (probably)");
             e.printStackTrace();
         }
+        try {
+            String file = MathUtil.readFile("visualdata.json");
+            this.visualData.fromJSON(new JSONObject(file), e -> {
+                chatbox.println("Failed to parse JSON game data");
+                chatbox.println(e.getMessage());
+            });
+        } catch(IOException e) {
+            chatbox.println("JSON file missing (probably)");
+            e.printStackTrace();
+        }
         this.world = new World();
-        this.worldRenderer = new WorldRenderer(camera, gameData, world, gameTime);
+        this.worldRenderer = new WorldRenderer(camera, gameData, visualData, world, gameTime);
         this.animationManager = new AnimationManager();
 
-        this.clickBoxManager = new ClickBoxManager(world, gameData, camera, worldRenderer);
+        this.clickBoxManager = new ClickBoxManager(world, visualData, camera, worldRenderer);
         this.clientInfo = new ClientInfo();
         this.clientInfo.clientID = ClientID.getPlaceholder();
 
@@ -465,6 +477,29 @@ public class Game {
                                         e.printStackTrace();
                                     })) {
                                         chatbox.println("Game data loaded on client");
+                                    }
+                                }
+                            }
+                        } else if(args[0].equals("visualdata")) {
+                            if(args.length < 2) {
+                                chatbox.println("Invalid number of arguments");
+                            } else if(args[1].equalsIgnoreCase("send")) {
+                                //connection.queueSend(new SetGameData(gameData));
+                            } else if(args[1].equalsIgnoreCase("save")) {
+                                MathUtil.writeFile(String.join(" ", Arrays.copyOfRange(args, 2, args.length)), visualData.toJSON().toString(4));
+                            } else if(args[1].equalsIgnoreCase("load")) {
+                                if(args.length < 3) {
+                                    chatbox.println("Need file name to load");
+                                } else {
+                                    String path = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
+                                    String data = MathUtil.readFile(path);
+                                    JSONObject obj = new JSONObject(data);
+                                    if(visualData.fromJSON(obj, e -> {
+                                        chatbox.println("Failed to load JSON file " + path);
+                                        chatbox.println(e.getMessage());
+                                        e.printStackTrace();
+                                    })) {
+                                        chatbox.println("Visual data loaded");
                                     }
                                 }
                             }

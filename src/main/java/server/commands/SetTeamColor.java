@@ -1,6 +1,6 @@
 package server.commands;
 
-import game.TeamID;
+import model.TeamID;
 import org.joml.Vector3f;
 import server.ClientData;
 import server.Server;

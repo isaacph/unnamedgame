@@ -6,7 +6,7 @@ import org.json.JSONObject;
 import server.ClientData;
 import server.Server;
 import server.ServerPayload;
-import staticData.GameData;
+import model.GameData;
 
 public class SetGameData implements ServerPayload {
 

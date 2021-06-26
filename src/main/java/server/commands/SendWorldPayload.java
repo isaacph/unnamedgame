@@ -2,7 +2,7 @@ package server.commands;
 
 import game.ClientPayload;
 import game.Game;
-import game.World;
+import model.World;
 
 public class SendWorldPayload implements ClientPayload {
 

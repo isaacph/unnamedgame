@@ -1,6 +1,6 @@
 package render;
 
-import game.MathUtil;
+import util.MathUtil;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 import org.lwjgl.stb.*;

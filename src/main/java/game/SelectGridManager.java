@@ -1,8 +1,7 @@
 package game;
 
+import model.*;
 import org.joml.Vector2i;
-import staticData.GameData;
-import staticData.GameObjectType;
 
 import java.util.Collection;
 import java.util.Set;

@@ -1,12 +1,11 @@
 package render;
 
 import game.*;
-import staticData.GameData;
+import model.*;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector4f;
-import staticData.GameObjectType;
 
 import java.util.*;
 
@@ -23,6 +22,7 @@ public class WorldRenderer {
 
     private final Collection<Vector2i> mouseWorldPosition = new ArrayList<>();
     private final World world;
+    private final VisualData visualData;
     private final GameData gameData;
 
     private final ArrayList<RenderComponent> gameObjectRenderer = new ArrayList<>();
@@ -34,9 +34,10 @@ public class WorldRenderer {
 
     private final Font font;
 
-    public WorldRenderer(Camera camera, GameData gameData, World world, GameTime gameTime) {
+    public WorldRenderer(Camera camera, GameData gameData, VisualData visualData, World world, GameTime gameTime) {
         this.camera = camera;
         this.world = world;
+        this.visualData = visualData;
         this.gameData = gameData;
         this.boxRenderer = new BoxRenderer();
         this.textureRenderer = new TextureRenderer();
@@ -99,7 +100,7 @@ public class WorldRenderer {
     }
 
     private RenderComponent makeRenderComponent(GameObject gameObject) {
-        GameObjectType type = gameData.getType(gameObject.type);
+        VisualDataType type = visualData.getType(gameObject.type);
         return type.makeRenderComponent(gameObject.uniqueID, world, gameData, textureLibrary);
     }
 

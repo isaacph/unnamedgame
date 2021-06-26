@@ -1,9 +1,6 @@
 package render;
 
-import game.Action;
-import game.GameObjectID;
-import game.World;
-import staticData.GameData;
+import model.GameObjectID;
 
 import java.util.*;
 

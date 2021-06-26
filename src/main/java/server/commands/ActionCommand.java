@@ -1,9 +1,9 @@
 package server.commands;
 
-import game.Action;
+import model.Action;
 import game.ClientPayload;
 import game.Game;
-import game.World;
+import model.World;
 import game.error.InvalidWorld;
 import server.ClientData;
 import server.Server;

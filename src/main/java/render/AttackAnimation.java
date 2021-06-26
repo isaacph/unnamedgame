@@ -1,10 +1,8 @@
 package render;
 
 import game.Game;
-import game.GameObject;
-import game.GameObjectID;
+import model.GameObjectID;
 import org.joml.Vector2f;
-import staticData.GameObjectType;
 
 public class AttackAnimation implements Animation {
 
