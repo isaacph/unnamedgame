@@ -1,8 +1,8 @@
-package server.commands;
+package network.commands;
 
 import server.ClientData;
 import server.Server;
-import server.ServerPayload;
+import network.ServerPayload;
 
 public class GetWorld implements ServerPayload {
     @Override

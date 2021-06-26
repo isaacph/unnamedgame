@@ -1,10 +1,10 @@
-package server.commands;
+package network.commands;
 
 import model.TeamID;
 import model.World;
 import server.ClientData;
 import server.Server;
-import server.ServerPayload;
+import network.ServerPayload;
 import model.GameData;
 
 import java.util.function.Consumer;

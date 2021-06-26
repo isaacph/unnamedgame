@@ -1,10 +1,10 @@
-package server.commands;
+package network.commands;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import server.ClientData;
 import server.Server;
-import server.ServerPayload;
+import network.ServerPayload;
 
 public class SetWorldJSON implements ServerPayload {
 

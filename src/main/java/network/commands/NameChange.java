@@ -1,9 +1,9 @@
-package server.commands;
+package network.commands;
 
 import model.ClientID;
 import server.ClientData;
 import server.Server;
-import server.ServerPayload;
+import network.ServerPayload;
 
 public class NameChange implements ServerPayload {
 

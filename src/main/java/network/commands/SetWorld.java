@@ -1,4 +1,4 @@
-package server.commands;
+package network.commands;
 
 import game.ClientPayload;
 import game.Game;
@@ -6,7 +6,7 @@ import model.TeamManager;
 import model.World;
 import server.ClientData;
 import server.Server;
-import server.ServerPayload;
+import network.ServerPayload;
 
 public class SetWorld implements ClientPayload, ServerPayload {
 

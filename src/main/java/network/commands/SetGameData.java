@@ -1,11 +1,11 @@
-package server.commands;
+package network.commands;
 
 import game.ClientPayload;
 import game.Game;
 import org.json.JSONObject;
 import server.ClientData;
 import server.Server;
-import server.ServerPayload;
+import network.ServerPayload;
 import model.GameData;
 
 public class SetGameData implements ServerPayload {

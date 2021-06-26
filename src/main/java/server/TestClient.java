@@ -1,7 +1,8 @@
 package server;
 
-import game.ClientConnection;
+import network.ClientConnection;
 import game.ClientPayload;
+import network.ServerPayload;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;

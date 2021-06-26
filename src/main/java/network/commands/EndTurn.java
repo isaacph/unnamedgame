@@ -1,10 +1,10 @@
-package server.commands;
+package network.commands;
 
 import model.ClientID;
 import model.TeamID;
 import server.ClientData;
 import server.Server;
-import server.ServerPayload;
+import network.ServerPayload;
 
 public class EndTurn implements ServerPayload {
     @Override

@@ -2,7 +2,7 @@ package game.error;
 
 import game.ClientPayload;
 import game.Game;
-import server.commands.GetWorld;
+import network.commands.GetWorld;
 
 import java.util.UUID;
 

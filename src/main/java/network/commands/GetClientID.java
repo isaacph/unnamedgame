@@ -1,11 +1,11 @@
-package server.commands;
+package network.commands;
 
 import model.ClientID;
 import game.ClientPayload;
 import game.Game;
 import server.ClientData;
 import server.Server;
-import server.ServerPayload;
+import network.ServerPayload;
 
 public class GetClientID implements ServerPayload {
 

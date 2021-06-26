@@ -2,7 +2,7 @@ package game;
 
 import server.ClientData;
 import server.Server;
-import server.ServerPayload;
+import network.ServerPayload;
 
 public class EmptyServerPayload implements ServerPayload {
     @Override

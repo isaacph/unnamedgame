@@ -1,19 +1,12 @@
-package game;
+package network;
 
-import server.ServerPayload;
-import server.SocketChannelReader;
-import server.SocketChannelWriter;
+import network.SocketChannelReader;
+import network.SocketChannelWriter;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.net.InetAddress;
 import java.net.SocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.UnresolvedAddressException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.function.Consumer;

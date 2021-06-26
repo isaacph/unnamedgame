@@ -1,12 +1,9 @@
-package server.commands;
+package network.commands;
 
 import server.ClientData;
 import server.Server;
-import server.ServerPayload;
+import network.ServerPayload;
 
-import java.io.IOException;
-import java.io.Serializable;
-import java.nio.channels.SocketChannel;
 import java.util.Collections;
 
 public class EchoPayload implements ServerPayload {

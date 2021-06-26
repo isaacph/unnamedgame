@@ -1,4 +1,4 @@
-package server.commands;
+package network.commands;
 
 import game.ClientPayload;
 import game.EmptyServerPayload;

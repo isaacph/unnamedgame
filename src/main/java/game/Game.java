@@ -1,13 +1,15 @@
 package game;
 
 import model.abilities.MoveAction;
+import network.ClientConnection;
+import network.ServerPayload;
 import org.joml.*;
 import org.json.JSONObject;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 import render.*;
 import server.*;
-import server.commands.*;
+import network.commands.*;
 import model.*;
 import util.MathUtil;
 

@@ -1,6 +1,7 @@
 package server;
 
-import game.ClientPayload;
+import network.SocketChannelReader;
+import network.SocketChannelWriter;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

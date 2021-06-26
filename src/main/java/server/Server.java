@@ -2,9 +2,10 @@ package server;
 
 import game.*;
 import model.World;
+import network.ServerPayload;
 import org.json.JSONObject;
-import server.commands.ChatMessage;
-import server.commands.ConnectionLifeCheck;
+import network.commands.ChatMessage;
+import network.commands.ConnectionLifeCheck;
 import model.ClientID;
 import model.GameData;
 import util.MathUtil;

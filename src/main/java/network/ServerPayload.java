@@ -1,4 +1,7 @@
-package server;
+package network;
+
+import server.ClientData;
+import server.Server;
 
 import java.io.Serializable;
 
