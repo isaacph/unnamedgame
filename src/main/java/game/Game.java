@@ -207,72 +207,6 @@ public class Game {
                         currentCommand = null;
                     }
                 }
-//                if(currentCommand == UICommand.NONE) {
-//                    GameObject selectedObject = clickBoxManager.getGameObjectAtViewPosition(mouseViewPosition, world.teams.getClientTeam(clientInfo.clientID));
-//                    if(selectedObject != null && selectedObject.team.equals(world.teams.getClientTeam(clientInfo.clientID))) {
-//                        clickBoxManager.selectedID = selectedObject.uniqueID;
-//                    } else {
-//                        clickBoxManager.selectedID = null;
-//                    }
-//                } else if(currentCommand == UICommand.MOVE) {
-//                    if(!animationManager.isObjectOccupied(clickBoxManager.selectedID)) {
-//                        MoveAction moveAction = new MoveAction(clickBoxManager.selectedID, mouseWorldPosition.x, mouseWorldPosition.y);
-//                        if(moveAction.validate(clientInfo.clientID, world, gameData)) {
-//                            connection.queueSend(new ActionCommand(moveAction, world));
-//                            moveAction.animate(this);
-//                        }
-//                        currentCommand = UICommand.NONE;
-//                        worldRenderer.tileGridRenderer.buildSelect(new ArrayList<>());
-//                    }
-//                } else if(currentCommand == UICommand.SPAWN) {
-//                    if(!animationManager.isObjectOccupied(clickBoxManager.selectedID)) {
-//                        SpawnAction spawnAction = new SpawnAction(clickBoxManager.selectedID, mouseWorldPosition.x, mouseWorldPosition.y);
-//                        if(spawnAction.validate(clientInfo.clientID, world, gameData)) {
-//                            connection.queueSend(new ActionCommand(spawnAction, world));
-//                            spawnAction.animate(this);
-//                        }
-//                        currentCommand = UICommand.NONE;
-//                        worldRenderer.tileGridRenderer.buildSelect(new ArrayList<>());
-//                    }
-//                } else if(currentCommand == UICommand.ATTACK) {
-//                    GameObject selectedObject = clickBoxManager.getGameObjectAtViewPositionExcludeTeam(mouseViewPosition, world.teams.getClientTeam(clientInfo.clientID));
-//                    if(selectedObject != null && !selectedObject.team.equals(world.teams.getClientTeam(clientInfo.clientID)) && !animationManager.isObjectOccupied(selectedObject.uniqueID)) {
-//                        AttackAction attackAction = new AttackAction(clickBoxManager.selectedID, selectedObject.uniqueID);
-//                        if(attackAction.validate(clientInfo.clientID, world, gameData)) {
-//                            connection.queueSend(new ActionCommand(attackAction, world));
-//                            attackAction.animate(this);
-//                        }
-//                        currentCommand = UICommand.NONE;
-//                        worldRenderer.tileGridRenderer.buildSelect(new ArrayList<>());
-//                    } else {
-//                        currentCommand = UICommand.NONE;
-//                        worldRenderer.tileGridRenderer.buildSelect(new ArrayList<>());
-//                    }
-//                } else if(currentCommand == UICommand.GROW) {
-//                    GameObject selectedObject = world.gameObjects.get(clickBoxManager.selectedID);
-//                    if(selectedObject != null) {
-//                        ArrayList<GameObjectID> seeds = new ArrayList<>();
-//                        seeds.add(world.occupied(mouseWorldPosition.x, mouseWorldPosition.y, gameData));
-//                        seeds.add(world.occupied(mouseWorldPosition.x + 1, mouseWorldPosition.y, gameData));
-//                        seeds.add(world.occupied(mouseWorldPosition.x + 1, mouseWorldPosition.y + 1, gameData));
-//                        seeds.add(world.occupied(mouseWorldPosition.x, mouseWorldPosition.y + 1, gameData));
-//                        boolean valid = true;
-//                        for(GameObjectID id : seeds) {
-//                            if(id == null || animationManager.isObjectOccupied(id)) {
-//                                valid = false;
-//                                break;
-//                            }
-//                        }
-//                        if(valid && seeds.contains(selectedObject.uniqueID)) {
-//                            GrowAction growAction = new GrowAction(seeds);
-//                            if(growAction.validate(clientInfo.clientID, world, gameData)) {
-//                                connection.queueSend(new ActionCommand(growAction, world));
-//                                growAction.animate(this);
-//                            }
-//                        }
-//                    }
-//                    currentCommand = UICommand.NONE;
-//                }
             }
         } else if(mode == Mode.EDIT) {
             if(button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
@@ -320,68 +254,6 @@ public class Game {
                             if(abilityComponent != null) arranger = AbilityOrganizer.abilityActionArranger.get(abilityComponent.getID()).get();
                             if(arranger != null && arranger.arrange(this)) currentCommand = arranger;
                         }
-                        /*if(key == GLFW_KEY_W && action == GLFW_PRESS) {
-                            GameObject obj = world.gameObjects.get(clickBoxManager.selectedID);
-                            if(obj != null && gameData.getType(obj.type).canSpawn() && obj.speedLeft > 0 && !animationManager.isObjectOccupied(clickBoxManager.selectedID) && obj.alive) {
-                                currentCommand = UICommand.SPAWN;
-                                Set<Vector2i> options = MathUtil.adjacentTiles(MathUtil.addToAll(gameData.getType(obj.type).getRelativeOccupiedTiles(), new Vector2i(obj.x, obj.y)));
-                                List<Vector2i> newOptions = new ArrayList<>();
-                                for(Vector2i tile : options) {
-                                    if(world.occupied(tile.x, tile.y, gameData) == null && world.getTileWeight(gameData, tile.x, tile.y) < Double.POSITIVE_INFINITY) {
-                                        newOptions.add(tile);
-                                    }
-                                }
-                                selectGridManager.regenerateSelect(newOptions);
-                                worldRenderer.tileGridRenderer.buildSelect(new ArrayList<>(selectGridManager.getSelectionGrid().map.values()));
-                            }
-                        }
-                        if(key == GLFW_KEY_E && action == GLFW_PRESS) {
-                            GameObject obj = world.gameObjects.get(clickBoxManager.selectedID);
-                            if(obj != null && obj.speedLeft >= 5 && !animationManager.isObjectOccupied(clickBoxManager.selectedID) && obj.alive) {
-                                currentCommand = UICommand.ATTACK;
-                                Set<Vector2i> options = MathUtil.adjacentTiles(MathUtil.addToAll(gameData.getType(obj.type).getRelativeOccupiedTiles(), new Vector2i(obj.x, obj.y)));
-                                List<Vector2i> newOptions = new ArrayList<>();
-                                for(Vector2i tile : options) {
-                                    GameObjectID victimID = world.occupied(tile.x, tile.y, gameData);
-                                    if(victimID != null) {
-                                        GameObject victim = world.gameObjects.get(victimID);
-                                        if(victim.alive && (victim.team == null || !victim.team.equals(obj.team))) {
-                                            newOptions.add(tile);
-                                        }
-                                    }
-                                }
-                                selectGridManager.regenerateSelect(newOptions);
-                                worldRenderer.tileGridRenderer.buildSelect(new ArrayList<>(selectGridManager.getSelectionGrid().map.values()));
-                            }
-                        }
-                        if(key == GLFW_KEY_R && action == GLFW_PRESS) {
-                            GameObject obj = world.gameObjects.get(clickBoxManager.selectedID);
-                            if(obj != null && !animationManager.isObjectOccupied(clickBoxManager.selectedID) && obj.alive) {
-                                boolean squareExists = false;
-                                for(Vector2i[] square : MathUtil.SQUARE_DIRECTIONS_DIAGONAL) {
-                                    boolean allPresent = true;
-                                    for(Vector2i tileOffset : square) {
-                                        Vector2i tile = new Vector2i(tileOffset).add(obj.x, obj.y);
-                                        GameObjectID id = world.occupied(tile.x, tile.y, gameData);
-                                        if(id == null) {
-                                            allPresent = false;
-                                            break;
-                                        }
-                                        GameObject tileObj = world.gameObjects.get(id);
-                                        if(!gameData.getType(tileObj.type).canGrow()) {
-                                            allPresent = false;
-                                            break;
-                                        }
-                                    }
-                                    if(allPresent) {
-                                        squareExists = true;
-                                    }
-                                }
-                                if(squareExists) {
-                                    currentCommand = UICommand.GROW;
-                                }
-                            }
-                        }*/
                     }
                     if(key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
                         if(connection.isConnected()) {
@@ -679,17 +551,6 @@ public class Game {
                 if(currentCommand != null) {
                     currentCommand.changeMouseSelection(this, occupied);
                 }
-//                if(currentCommand == UICommand.ATTACK) {
-//                    GameObject targetObject = clickBoxManager.getGameObjectAtViewPositionExcludeTeam(mouseViewPosition, world.teams.getClientTeam(clientInfo.clientID));
-//                    if(targetObject != null && !targetObject.team.equals(world.teams.getClientTeam(clientInfo.clientID))) {
-//                        occupied.addAll(MathUtil.addToAll(gameData.getType(targetObject.type).getRelativeOccupiedTiles(), new Vector2i(targetObject.x, targetObject.y)));
-//                    }
-//                } else if(currentCommand == UICommand.GROW) {
-//                    occupied.add(new Vector2i(mouseWorldPosition.x, mouseWorldPosition.y));
-//                    occupied.add(new Vector2i(mouseWorldPosition.x + 1, mouseWorldPosition.y));
-//                    occupied.add(new Vector2i(mouseWorldPosition.x + 1, mouseWorldPosition.y + 1));
-//                    occupied.add(new Vector2i(mouseWorldPosition.x, mouseWorldPosition.y + 1));
-//                }
 
                 worldRenderer.setMouseWorldPosition(occupied);
             }
@@ -738,31 +599,6 @@ public class Game {
     }
 
     public static void main(String[] args) throws Exception {
-//        TeamID.Generator gen = new TeamID.Generator();
-//        ClientID.Generator gen2 = new ClientID.Generator();
-//        Map<TeamID, Integer> test = new HashMap<>();
-//        TeamID id = gen.generate();
-//        ClientID client = gen2.generate();
-//        test.put(id, 5);
-//        System.out.println(test.get(id));
-//
-//        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//        ObjectOutputStream oos = new ObjectOutputStream(baos);
-//        oos.writeObject(id);
-//        ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
-//        TeamID chadID = (TeamID) ois.readObject();
-//
-//        TeamManager manager = new TeamManager();
-//        manager.addTeam(id);
-//        System.out.println(manager.getClientTeam(client));
-//        manager.setClientTeam(client, id);
-//        System.out.println(manager.getClientTeam(client));
-//        manager.setClientTeam(client, chadID);
-//        System.out.println(manager.getClientTeam(client));
-//        System.out.println(manager.getTeamClients(chadID));
-//        System.out.println(manager.getTeamClients(id));
-//
-//        System.exit(0);
         new Game().run();
     }
 
