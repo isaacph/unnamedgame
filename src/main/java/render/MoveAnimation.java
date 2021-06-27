@@ -61,15 +61,16 @@ public class MoveAnimation implements Animation {
             return;
         }
         Vector2f move = new Vector2f(path.get(pathIndex).x, path.get(pathIndex).y).sub(position);
+        RenderComponent comp = renderer.getGameObjectRenderer(objectID);
         float distSq  = move.lengthSquared();
         move.normalize((float) time.getDelta() * TRAVEL_SPEED);
         if(distSq <= 0.001 || distSq <= move.lengthSquared()) {
             this.position.set(path.get(pathIndex).x, path.get(pathIndex).y);
-            renderer.getGameObjectRenderer(objectID).move(position);
+            comp.move(new Vector2f(position).add(comp.getCenterOffset()));
             ++this.pathIndex;
         } else {
             this.position.add(move);
-            renderer.getGameObjectRenderer(objectID).move(position);
+            comp.move(new Vector2f(position).add(comp.getCenterOffset()));
         }
     }
 

@@ -6,36 +6,23 @@ import java.io.Serializable;
 
 public class AbilityID implements Serializable {
 
-    private final String nameID;
+    public final GameObjectTypeID gameObjectTypeID;
+    public final AbilityTypeID abilityTypeID;
+    public final int slot;
 
-    public AbilityID(String nameID) {
-        this.nameID = nameID;
+    public AbilityID(GameObjectTypeID goType, AbilityTypeID atID, int slot) {
+        this.gameObjectTypeID = goType;
+        this.abilityTypeID = atID;
+        this.slot = slot;
+        if(gameObjectTypeID == null) throw new RuntimeException("Cannot make ability ID from null game object type ID");
+        if(abilityTypeID == null) throw new RuntimeException("Cannot make ability ID from null ability type ID");
     }
 
     public AbilityID(AbilityID other) {
-        this.nameID = other.nameID;
+        this(other.gameObjectTypeID, other.abilityTypeID, other.slot);
     }
 
-    public AbilityID(JSONObject obj) {
-        this.nameID = obj.getString("nameID");
-    }
-
-    @Override
-    public int hashCode() {
-        return nameID.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        return other instanceof AbilityID && ((AbilityID) other).nameID.equals(nameID);
-    }
-
-    public String getName() {
-        return nameID;
-    }
-
-    @Override
-    public String toString() {
-        return "AbilityID:" + nameID.toString();
+    public boolean checkNull() {
+        return gameObjectTypeID == null || abilityTypeID == null;
     }
 }

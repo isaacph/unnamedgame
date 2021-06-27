@@ -75,7 +75,7 @@ public class TeamTextureComponent extends RenderComponent {
         }
     }
 
-    public Vector2f getRenderPosition() {
+    public Vector2f getScreenRenderPosition() {
         GameObject gameObject = world.gameObjects.get(gameObjectID);
         if(gameObject == null) return new Vector2f(0);
         if(fixedPosition) {
@@ -84,13 +84,17 @@ public class TeamTextureComponent extends RenderComponent {
         return Camera.worldToViewSpace(position);
     }
 
+    public Vector2f getCenterOffset() {
+        return new Vector2f(centerOffset);
+    }
+
     public Vector2f getWorldCenter() {
         return new Vector2f(position).add(centerOffset);
     }
 
     public void move(Vector2f position) {
         this.fixedPosition = false;
-        this.position = new Vector2f(position);
+        this.position = new Vector2f(position).sub(centerOffset);
     }
 
     public void resetPosition() {

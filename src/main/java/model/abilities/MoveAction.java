@@ -4,14 +4,17 @@ import game.*;
 import model.*;
 import org.joml.Vector2i;
 
+import java.util.Collection;
 import java.util.List;
 
 public class MoveAction implements Action {
 
+    public AbilityID abilityID;
     public GameObjectID objectID;
     public int targetX, targetY;
 
-    public MoveAction(GameObjectID objectID, int targetX, int targetY) {
+    public MoveAction(AbilityID abilityID, GameObjectID objectID, int targetX, int targetY) {
+        this.abilityID = abilityID;
         this.objectID = objectID;
         this.targetX = targetX;
         this.targetY = targetY;
@@ -29,7 +32,12 @@ public class MoveAction implements Action {
         if(world.teams.getClientTeam(actor) == null) {
             return false;
         }
-        if(!gameData.getType(object.type).hasAbility(MoveAbility.ID)) {
+        GameObjectType type = gameData.getType(object.type);
+        if(type == null) {
+            return false;
+        }
+        if(abilityID == null || abilityID.checkNull()) return false;
+        if(gameData.getAbility(MoveAbility.class, abilityID) == null) {
             return false;
         }
         if(!object.team.equals(world.teams.getClientTeam(actor))) {
@@ -38,9 +46,12 @@ public class MoveAction implements Action {
         if(object.x == targetX && object.y == targetY) {
             return false;
         }
-        // at the moment we are only allowing move commands for 1x1 game objects, so that's all we consider here
-        if(world.occupied(targetX, targetY, gameData) != null) {
-            return false;
+        Collection<Vector2i> shape = type.getRelativeOccupiedTiles();
+        for(Vector2i offset : shape) {
+            GameObjectID obj = world.occupied(targetX + offset.x, targetY + offset.y, gameData);
+            if(obj != null && !obj.equals(objectID)) {
+                return false;
+            }
         }
         Pathfinding.WeightStorage ws = SelectGridManager.getWeightStorage(objectID, world, gameData);
         List<Vector2i> shortestPath = Pathfinding.shortestPath(ws, new Vector2i(object.x, object.y), new Vector2i(targetX, targetY), object.speedLeft);
@@ -67,7 +78,7 @@ public class MoveAction implements Action {
     }
 
     @Override
-    public AbilityID getID() {
+    public AbilityTypeID getID() {
         return MoveAbility.ID;
     }
 

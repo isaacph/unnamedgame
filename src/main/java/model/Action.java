@@ -8,5 +8,5 @@ public interface Action extends Serializable {
 
     void execute(World world, GameData gameData);
 
-    AbilityID getID();
+    AbilityTypeID getID();
 }

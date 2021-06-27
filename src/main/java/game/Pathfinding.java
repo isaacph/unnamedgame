@@ -1,6 +1,8 @@
 package game;
 
 import model.ByteGrid;
+import model.GameData;
+import model.Shape;
 import org.joml.Vector2i;
 
 import java.util.*;
@@ -22,7 +24,7 @@ public final class Pathfinding {
             return tileParent.get(tile);
         }
 
-        public Set<Vector2i> possiblities() {
+        public Set<Vector2i> possibilities() {
             Set<Vector2i> keys = speedLeft.keySet();
             Collection<Vector2i> toRemove = new ArrayList<>();
             for(Vector2i v : keys) {
@@ -40,8 +42,8 @@ public final class Pathfinding {
     }
 
     public static Paths pathPossibilities(WeightStorage weightStorage,
-                                         Vector2i position,
-                                         double speed) {
+                                          Vector2i position,
+                                          double speed) {
         final Vector2i[] directions = new Vector2i[] {
                 new Vector2i(1, 0),
                 new Vector2i(0, 1),
@@ -84,6 +86,17 @@ public final class Pathfinding {
             current.set(path.get(path.size() - 1));
         }
         return path;
+    }
+
+    public static Collection<Vector2i> fillPathToShape(Collection<Vector2i> shape, Collection<Vector2i> path) {
+        if(shape == null || shape.isEmpty() || path == null || path.isEmpty()) return Collections.emptyList();
+        Collection<Vector2i> newPath = new HashSet<>();
+        for(Vector2i center : path) {
+            for(Vector2i shapeOffset : shape) {
+                newPath.add(new Vector2i(center).add(shapeOffset));
+            }
+        }
+        return newPath;
     }
 
     public static void changeSelectGrid(ByteGrid.Group group, Paths paths) {

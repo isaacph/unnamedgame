@@ -1,30 +1,36 @@
 package model.abilities;
 
-import model.AbilityComponent;
-import model.AbilityID;
-import model.GameObjectType;
+import model.*;
 import org.json.JSONObject;
 
 public class MoveAbility implements AbilityComponent {
 
-    public static final AbilityID ID = new AbilityID("move");
+    public static final AbilityTypeID ID = new AbilityTypeID("move");
 
     private final int slot;
 
-    public MoveAbility(JSONObject obj) {
-        GameObjectType.assertString(obj.getString("id"), getID().getName());
+    private GameObjectTypeID gameObjectTypeID;
+
+    public MoveAbility(JSONObject obj, GameObjectTypeID objTypeID) {
+        GameObjectType.assertString(obj.getString("type"), getTypeID().getName());
         slot = obj.getInt("slot");
+        gameObjectTypeID = objTypeID;
+    }
+
+    @Override
+    public AbilityTypeID getTypeID() {
+        return ID;
     }
 
     @Override
     public AbilityID getID() {
-        return ID;
+        return new AbilityID(gameObjectTypeID, ID, slot);
     }
 
     @Override
     public JSONObject toJSON() {
         JSONObject obj = new JSONObject();
-        obj.put("id", getID().getName());
+        obj.put("type", getTypeID().getName());
         return obj;
     }
 

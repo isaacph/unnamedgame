@@ -12,7 +12,7 @@ import java.util.Map;
 public class GameObjectTypeFactory {
 
     private Map<String, ComponentCreator<Shape>> shapeCreators = new HashMap<>();
-    private Map<String, ComponentCreator<AbilityComponent>> abilityCreators = new HashMap<>();
+    private Map<String, AbilityCreator> abilityCreators = new HashMap<>();
 
     public GameObjectTypeFactory() {
         shapeCreators.put("square", SquareShape::new);
@@ -27,9 +27,9 @@ public class GameObjectTypeFactory {
         return shapeCreators.get(obj.getString("type")).makeComponent(obj);
     }
 
-    public AbilityComponent makeAbility(JSONObject obj) {
+    public AbilityComponent makeAbility(JSONObject obj, GameObjectTypeID type) {
         if(obj == null) throw new RuntimeException("Missing key: ability");
-        return abilityCreators.get(obj.getString("id")).makeComponent(obj);
+        return abilityCreators.get(obj.getString("type")).makeComponent(obj, type);
     }
 
     public GameObjectType makeGameObjectType(JSONObject obj) {
@@ -38,5 +38,9 @@ public class GameObjectTypeFactory {
 
     private interface ComponentCreator<ComponentType> {
         ComponentType makeComponent(JSONObject obj);
+    }
+
+    private interface AbilityCreator {
+        AbilityComponent makeComponent(JSONObject obj, GameObjectTypeID gameObjectTypeID);
     }
 }

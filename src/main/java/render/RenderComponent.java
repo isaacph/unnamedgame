@@ -9,10 +9,11 @@ public abstract class RenderComponent implements Comparable<RenderComponent>, IA
 
     public abstract void draw(WorldRenderer renderer, Matrix4f projView);
 
-    public abstract Vector2f getRenderPosition();
+    public abstract Vector2f getScreenRenderPosition();
     public abstract Vector2f getWorldCenter();
+    public abstract Vector2f getCenterOffset();
 
     public int compareTo(RenderComponent other) {
-        return Float.compare(this.getRenderPosition().y, other.getRenderPosition().y);
+        return Float.compare(this.getScreenRenderPosition().y, other.getScreenRenderPosition().y);
     }
 }

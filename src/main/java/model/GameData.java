@@ -11,8 +11,6 @@ public class GameData {
     private final ArrayList<GameObjectType> types = new ArrayList<>();
     private final Map<GameObjectTypeID, GameObjectType> typeMap = new HashMap<>();
 
-    private GameObjectTypeID kidID, buildingID;
-
     public GameData() {
         /*kidID = addType(new GameObjectType(new GameObjectTypeID("kid"),
                 "kid.png",
@@ -34,8 +32,6 @@ public class GameData {
                 new Vector2i(0), new Vector2i(1),
                 1.0, 1.5f, new Vector2f(0.5f), 2, false, 0,
                 new Vector2f(0.5f)));*/
-        kidID = new GameObjectTypeID("kid");
-        buildingID = new GameObjectTypeID("building");
     }
 
     private GameObjectTypeID addType(GameObjectType type) {
@@ -52,8 +48,14 @@ public class GameData {
         return new ArrayList<>(types);
     }
 
-    private void updateMap() {
-        typeMap.clear();
+    @SuppressWarnings("unchecked")
+    public <T extends AbilityComponent> T getAbility(Class<T> tClass, AbilityID abilityID) {
+        GameObjectType type = getType(abilityID.gameObjectTypeID);
+        if(type == null) return null;
+        AbilityComponent comp = type.getAbility(abilityID.slot);
+        if(comp == null) return null;
+        if(!comp.getClass().equals(tClass)) return null;
+        return (T) comp;
     }
 
     public boolean fromJSON(JSONObject json, Consumer<RuntimeException> errorHandler) {

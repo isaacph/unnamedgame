@@ -7,7 +7,7 @@ import java.util.Set;
 
 public interface ActionArranger {
 
-    boolean arrange(Game game);
+    boolean arrange(Game game, int slot);
 
     void clearArrangement(Game game);
 

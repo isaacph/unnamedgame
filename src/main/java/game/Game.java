@@ -1,5 +1,6 @@
 package game;
 
+import model.abilities.MoveAbility;
 import model.abilities.MoveAction;
 import network.ClientConnection;
 import network.ServerPayload;
@@ -145,6 +146,7 @@ public class Game {
             this.gameData.fromJSON(new JSONObject(file), e -> {
                 chatbox.println("Failed to parse JSON game data");
                 chatbox.println(e.getMessage());
+                e.printStackTrace();
             });
         } catch(IOException e) {
             chatbox.println("JSON file missing (probably)");
@@ -155,6 +157,7 @@ public class Game {
             this.visualData.fromJSON(new JSONObject(file), e -> {
                 chatbox.println("Failed to parse JSON game data");
                 chatbox.println(e.getMessage());
+                e.printStackTrace();
             });
         } catch(IOException e) {
             chatbox.println("JSON file missing (probably)");
@@ -265,8 +268,8 @@ public class Game {
                             AbilityComponent abilityComponent = null;
                             ActionArranger arranger = null;
                             if(obj != null) abilityComponent = gameData.getType(obj.type).getAbility(slot);
-                            if(abilityComponent != null) arranger = AbilityOrganizer.abilityActionArranger.get(abilityComponent.getID()).get();
-                            if(arranger != null && arranger.arrange(this)) currentCommand = arranger;
+                            if(abilityComponent != null) arranger = AbilityOrganizer.abilityActionArranger.get(abilityComponent.getTypeID()).get();
+                            if(arranger != null && arranger.arrange(this, slot)) currentCommand = arranger;
                         }
                     }
                     if(key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
@@ -406,7 +409,15 @@ public class Game {
                                 }
                             }
                         } else if(args[0].equals("teams")) {
-                            connection.queueSend(new ListTeams());
+                            if(connection.isConnected()) {
+                                connection.queueSend(new ListTeams());
+                            } else {
+                                StringBuilder str = new StringBuilder();
+                                for(TeamID id : world.teams.getTeams()) {
+                                    str.append(world.teams.getTeamName(id)).append(", ");
+                                }
+                                chatbox.println(str.toString());
+                            }
                         } else if(args[0].equals("delteam")) {
                             if(args.length != 2 || args[1].length() <= 1) {
                                 chatbox.println("Must use 2 arguments");
@@ -502,6 +513,11 @@ public class Game {
                                         e.printStackTrace();
                                     })) {
                                         chatbox.println("Visual data loaded");
+                                        clickBoxManager.resetGameObjectCache();
+                                        worldRenderer.resetGameObjectRenderCache();
+                                        animationManager.reset();
+                                        worldRenderer.rebuildTerrain();
+                                        clickBoxManager.selectedID = null;
                                     }
                                 }
                             }
@@ -510,7 +526,7 @@ public class Game {
                             if(team != null) {
                                 for(GameObject gameObject : world.gameObjects.values()) {
                                     if(gameObject.team.equals(team)) {
-                                        Set<Vector2i> targets = Pathfinding.pathPossibilities(SelectGridManager.getWeightStorage(gameObject.uniqueID, world, gameData), new Vector2i(gameObject.x, gameObject.y), gameObject.speedLeft).possiblities();
+                                        Set<Vector2i> targets = Pathfinding.pathPossibilities(SelectGridManager.getWeightStorage(gameObject.uniqueID, world, gameData), new Vector2i(gameObject.x, gameObject.y), gameObject.speedLeft).possibilities();
                                         int n = new Random().nextInt(targets.size());
                                         Vector2i target = new Vector2i();
                                         for(Vector2i v : targets) {
@@ -519,10 +535,14 @@ public class Game {
                                                 break;
                                             }
                                         }
-                                        MoveAction action = new MoveAction(gameObject.uniqueID, target.x, target.y);
-                                        if(action.validate(clientInfo.clientID, world, gameData)) {
-                                            runAction(action);
-                                            connection.queueSend(new ActionCommand(action, world));
+                                        GameObjectType type = gameData.getType(gameObject.type);
+                                        AbilityID id = type.getFirstAbilityWithType(MoveAbility.class);
+                                        if(id != null) {
+                                            MoveAction action = new MoveAction(id, gameObject.uniqueID, target.x, target.y);
+                                            if(action.validate(clientInfo.clientID, world, gameData)) {
+                                                runAction(action);
+                                                connection.queueSend(new ActionCommand(action, world));
+                                            }
                                         }
                                     }
                                 }
@@ -547,6 +567,11 @@ public class Game {
                                     world.initFromJSON(obj, gameData);
                                     chatbox.println("Successfully reinitialized world");
                                 }
+                                clickBoxManager.resetGameObjectCache();
+                                worldRenderer.resetGameObjectRenderCache();
+                                animationManager.reset();
+                                worldRenderer.rebuildTerrain();
+                                clickBoxManager.selectedID = null;
                             }
                         } else if(args[0].equals("teamname")) {
                             if(connection.isConnected() && args.length == 2) {
@@ -583,7 +608,9 @@ public class Game {
                 worldRenderer.setMouseWorldPosition(Collections.singletonList(new Vector2i(mouseWorldPosition)));
             } else {
                 GameObject selectedObject = world.gameObjects.get(clickBoxManager.selectedID);
-                Set<Vector2i> occupied = MathUtil.addToAll(gameData.getType(selectedObject.type).getRelativeOccupiedTiles(), new Vector2i(selectedObject.x, selectedObject.y));
+                Set<Vector2i> occupied = MathUtil.addToAll(
+                        gameData.getType(selectedObject.type).getRelativeOccupiedTiles(),
+                        new Vector2i(selectedObject.x, selectedObject.y));
 
                 if(currentCommand != null) {
                     currentCommand.changeMouseSelection(this, occupied);

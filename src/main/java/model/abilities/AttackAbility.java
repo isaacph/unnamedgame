@@ -1,33 +1,42 @@
 package model.abilities;
 
-import model.AbilityComponent;
-import model.AbilityID;
-import model.GameObjectType;
+import model.*;
 import org.json.JSONObject;
 
 public class AttackAbility implements AbilityComponent {
 
-    public static final AbilityID ID = new AbilityID("attack");
+    public static final AbilityTypeID ID = new AbilityTypeID("attack");
 
     private final int slot;
     private final double damage;
+    private final double cost;
 
-    public AttackAbility(JSONObject obj) {
-        GameObjectType.assertString(obj.getString("id"), getID().getName());
+    private final GameObjectTypeID gameObjectTypeID;
+
+    public AttackAbility(JSONObject obj, GameObjectTypeID objTypeID) {
+        GameObjectType.assertString(obj.getString("type"), getTypeID().getName());
         slot = obj.getInt("slot");
         damage = obj.getDouble("damage");
+        cost = obj.getDouble("cost");
+        gameObjectTypeID = objTypeID;
+    }
+
+    @Override
+    public AbilityTypeID getTypeID() {
+        return ID;
     }
 
     @Override
     public AbilityID getID() {
-        return ID;
+        return new AbilityID(gameObjectTypeID, ID, slot);
     }
 
     @Override
     public JSONObject toJSON() {
         JSONObject obj = new JSONObject();
-        obj.put("id", getID().getName());
+        obj.put("type", getTypeID().getName());
         obj.put("damage", damage);
+        obj.put("cost", cost);
         return obj;
     }
 
@@ -37,4 +46,8 @@ public class AttackAbility implements AbilityComponent {
     }
 
     public double getDamage() { return damage; }
+
+    public double getCost() {
+        return cost;
+    }
 }

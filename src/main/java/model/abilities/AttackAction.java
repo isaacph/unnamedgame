@@ -8,26 +8,41 @@ import java.util.Set;
 
 public class AttackAction implements Action {
 
+    public AbilityID abilityID;
     public GameObjectID attackerID;
     public GameObjectID victimID;
 
-    public AttackAction(GameObjectID attackerID, GameObjectID victimID) {
+    public AttackAction(AbilityID abilityID, GameObjectID attackerID, GameObjectID victimID) {
+        this.abilityID = abilityID;
         this.attackerID = attackerID;
         this.victimID = victimID;
     }
 
     @Override
     public boolean validate(ClientID actor, World world, GameData gameData) {
+        if(abilityID == null || abilityID.checkNull()) return false;
         if(attackerID.equals(victimID)) return false;
         GameObject attacker = world.gameObjects.get(attackerID);
         GameObject victim = world.gameObjects.get(victimID);
         if(attacker == null || victim == null || actor == null) return false;
         if(!attacker.alive || !victim.alive) return false;
-        Set<Vector2i> options = MathUtil.adjacentTiles(MathUtil.addToAll(gameData.getType(victim.type).getRelativeOccupiedTiles(), new Vector2i(victim.x, victim.y)));
-        if(!options.contains(new Vector2i(attacker.x, attacker.y))) return false;
-        if(attacker.speedLeft < 5) return false;
-        AttackAbility attackerType = gameData.getType(attacker.type).getAbility(AttackAbility.class);
-        if(attackerType.getDamage() <= 0) return false;
+        GameObjectType attackerType = gameData.getType(attacker.type);
+        GameObjectType victimType = gameData.getType(victim.type);
+        if(attackerType == null || victimType == null) return false;
+        Set<Vector2i> attackOptions = MathUtil.adjacentTiles(MathUtil.addToAll(victimType.getRelativeOccupiedTiles(), new Vector2i(victim.x, victim.y)));
+        boolean canAttack = false;
+        for(Vector2i attackerShapeOffset : attackerType.getRelativeOccupiedTiles()) {
+            Vector2i pos = new Vector2i(attackerShapeOffset).add(attacker.x, attacker.y);
+            if(attackOptions.contains(pos)) {
+                canAttack = true;
+                break;
+            }
+        }
+        if(!canAttack) return false;
+        AttackAbility ability = gameData.getAbility(AttackAbility.class, abilityID);
+        if(ability == null) return false;
+        if(attacker.speedLeft < ability.getCost()) return false;
+        if(ability.getDamage() <= 0) return false;
         return true;
     }
 
@@ -35,9 +50,9 @@ public class AttackAction implements Action {
     public void execute(World world, GameData gameData) {
         GameObject attacker = world.gameObjects.get(attackerID);
         GameObject victim = world.gameObjects.get(victimID);
-        AttackAbility attackerType = gameData.getType(attacker.type).getAbility(AttackAbility.class);
+        AttackAbility attackerType = gameData.getAbility(AttackAbility.class, abilityID);
         boolean victimDead = victim.health <= attackerType.getDamage();
-        attacker.speedLeft -= 5;
+        attacker.speedLeft -= attackerType.getCost();
         victim.health -= attackerType.getDamage();
         if(victimDead) {
             victim.alive = false;
@@ -46,7 +61,7 @@ public class AttackAction implements Action {
     }
 
     @Override
-    public AbilityID getID() {
+    public AbilityTypeID getID() {
         return AttackAbility.ID;
     }
 

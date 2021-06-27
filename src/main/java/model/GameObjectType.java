@@ -16,8 +16,6 @@ public class GameObjectType implements Serializable {
     private Shape shape;
     private List<AbilityComponent> abilities;
     private Map<Integer, AbilityComponent> slotAbility;
-    private Map<AbilityID, AbilityComponent> abilityIDMap;
-    private Map<Class, AbilityID> classAbilityIDMap;
 
     public GameObjectType(JSONObject obj, GameObjectTypeFactory factory) {
         name = obj.getString("name");
@@ -27,15 +25,11 @@ public class GameObjectType implements Serializable {
         shape = factory.makeShape(obj.getJSONObject("shape"));
         abilities = new ArrayList<>();
         slotAbility = new HashMap<>();
-        abilityIDMap = new HashMap<>();
-        classAbilityIDMap = new HashMap<>();
         JSONArray arr = new JSONArray(obj.getJSONArray("abilities"));
         for(int i = 0; i < arr.length(); ++i) {
-            AbilityComponent ability = factory.makeAbility(arr.getJSONObject(i));
+            AbilityComponent ability = factory.makeAbility(arr.getJSONObject(i), uniqueID);
             abilities.add(ability);
             slotAbility.put(ability.getSlot(), ability);
-            abilityIDMap.put(ability.getID(), ability);
-            classAbilityIDMap.put(ability.getClass(), ability.getID());
         }
     }
 
@@ -58,20 +52,30 @@ public class GameObjectType implements Serializable {
         return slotAbility.get(slot);
     }
 
-    public boolean hasAbility(AbilityID abilityID) {
-        return abilityIDMap.containsKey(abilityID);
-    }
+//    public boolean hasAbility(AbilityTypeID abilityTypeID) {
+//        return abilityIDMap.containsKey(abilityTypeID);
+//    }
+//
+//    public AbilityComponent getAbility(AbilityTypeID abilityTypeID) {
+//        if(!hasAbility(abilityTypeID)) return null;
+//        return abilityIDMap.get(abilityTypeID);
+//    }
+//
+//    @SuppressWarnings("unchecked")
+//    public <T extends AbilityComponent> T getAbility(Class<T> tClass) {
+//        AbilityTypeID abilityTypeID = classAbilityIDMap.get(tClass);
+//        if(abilityTypeID == null) return null;
+//        return (T) getAbility(abilityTypeID);
+//    }
 
-    public AbilityComponent getAbility(AbilityID abilityID) {
-        if(!hasAbility(abilityID)) return null;
-        return abilityIDMap.get(abilityID);
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T extends AbilityComponent> T getAbility(Class<T> tClass) {
-        AbilityID abilityID = classAbilityIDMap.get(tClass);
-        if(abilityID == null) return null;
-        return (T) getAbility(abilityID);
+    public <T extends AbilityComponent> AbilityID getFirstAbilityWithType(Class<T> tClass) {
+        for(int slot : slotAbility.keySet()) {
+            AbilityComponent comp = slotAbility.get(slot);
+            if(comp.getClass().equals(tClass)) {
+                return comp.getID();
+            }
+        }
+        return null;
     }
 
     @Override

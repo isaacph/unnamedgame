@@ -1,5 +1,6 @@
 package game;
 
+import model.AbilityID;
 import model.Action;
 import model.GameObject;
 import model.abilities.SpawnAbility;
@@ -28,12 +29,15 @@ public class SpawnAnimator implements Animator {
 
     public static class Arranger implements ActionArranger {
 
+        private AbilityID abilityID;
+
         @Override
-        public boolean arrange(Game game) {
+        public boolean arrange(Game game, int slot) {
             GameObject obj = game.world.gameObjects.get(game.clickBoxManager.selectedID);
             if(obj == null) return false;
-            SpawnAbility ability = game.gameData.getType(obj.type).getAbility(SpawnAbility.class);
-            if(ability != null && obj.speedLeft > 0 && !game.animationManager.isObjectOccupied(game.clickBoxManager.selectedID) && obj.alive) {
+            abilityID = new AbilityID(obj.type, SpawnAbility.ID, slot);
+            SpawnAbility ability = game.gameData.getAbility(SpawnAbility.class, abilityID);
+            if(ability != null && obj.speedLeft >= ability.getCost() && !game.animationManager.isObjectOccupied(game.clickBoxManager.selectedID) && obj.alive) {
                 Set<Vector2i> options = MathUtil.adjacentTiles(MathUtil.addToAll(game.gameData.getType(obj.type).getRelativeOccupiedTiles(), new Vector2i(obj.x, obj.y)));
                 List<Vector2i> newOptions = new ArrayList<>();
                 for(Vector2i tile : options) {
@@ -58,9 +62,10 @@ public class SpawnAnimator implements Animator {
 
         @Override
         public Action createAction(Game game) {
+            if(abilityID == null) throw new RuntimeException("Invalid: createAction() called before arrange() for an ability");
             GameObject selectedObject = game.world.gameObjects.get(game.clickBoxManager.selectedID);
             if(selectedObject != null && !game.animationManager.isObjectOccupied(selectedObject.uniqueID)) {
-                return new SpawnAction(game.clickBoxManager.selectedID, game.mouseWorldPosition.x, game.mouseWorldPosition.y);
+                return new SpawnAction(abilityID, game.clickBoxManager.selectedID, game.mouseWorldPosition.x, game.mouseWorldPosition.y);
             }
             return null;
         }

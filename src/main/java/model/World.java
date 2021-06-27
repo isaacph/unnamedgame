@@ -63,6 +63,12 @@ public class World implements Serializable {
         gameObjectFactory = other.gameObjectFactory;
     }
 
+    public double getPureTileWeight(GameData data, int x, int y) {
+        byte tile = grid.getTile(x, y);
+        double weight = tile == 1 ? 1 : Double.POSITIVE_INFINITY;
+        return weight;
+    }
+
     public double getTileWeight(GameData data, int x, int y) {
         byte tile = grid.getTile(x, y);
         double weight = tile == 1 ? 1 : Double.POSITIVE_INFINITY;

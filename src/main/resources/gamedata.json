@@ -10,24 +10,27 @@
       },
       "abilities": [
         {
-          "id": "move",
+          "type": "move",
           "slot": 0
         },
         {
-          "id": "attack",
-          "damage": 1.0,
-          "slot": 2
+          "type": "attack",
+          "slot": 2,
+          "cost": 5,
+          "damage": 1.0
         },
         {
-          "id": "grow",
-          "into": "building",
-          "slot": 3
+          "type": "grow",
+          "slot": 3,
+          "cost": 7,
+          "requiredCount": 4,
+          "into": "building"
         }
       ]
     },
     {
       "name": "building",
-      "speed": 1.0,
+      "speed": 10.0,
       "health": 2.0,
       "shape": {
         "type": "square",
@@ -35,9 +38,27 @@
       },
       "abilities": [
         {
-          "id": "spawn",
-          "produce": "kid",
-          "slot": 1
+          "type": "move",
+          "slot": 0
+        },
+        {
+          "type": "spawn",
+          "slot": 1,
+          "cost": 5,
+          "produce": "kid"
+        },
+        {
+          "type": "attack",
+          "slot": 2,
+          "cost": 5,
+          "damage": 2.0
+        },
+        {
+          "type": "grow",
+          "slot": 3,
+          "cost": 0,
+          "requiredCount": 4,
+          "into": "building"
         }
       ]
     }

@@ -1,7 +1,9 @@
 package game;
 
+import model.AbilityID;
 import model.Action;
 import model.GameObject;
+import model.GameObjectType;
 import model.abilities.MoveAbility;
 import org.joml.Vector2i;
 import render.MoveAnimation;
@@ -29,14 +31,17 @@ public class MoveAnimator implements Animator {
 
     public static class Arranger implements ActionArranger {
 
+        private AbilityID abilityID;
+
         @Override
-        public boolean arrange(Game game) {
+        public boolean arrange(Game game, int slot) {
             GameObject obj = game.world.gameObjects.get(game.clickBoxManager.selectedID);
             if(obj != null &&
                     obj.speedLeft > 0 &&
                     !game.animationManager.isObjectOccupied(game.clickBoxManager.selectedID) &&
                     obj.alive) {
-                MoveAbility ability = game.gameData.getType(obj.type).getAbility(MoveAbility.class);
+                abilityID = new AbilityID(obj.type, MoveAbility.ID, slot);
+                MoveAbility ability = game.gameData.getAbility(MoveAbility.class, abilityID);
                 if(ability == null) return false;
                 game.selectGridManager.regenerateSelect(game.clickBoxManager.selectedID);
                 game.worldRenderer.tileGridRenderer.buildSelect(
@@ -53,11 +58,17 @@ public class MoveAnimator implements Animator {
 
         @Override
         public void changeMouseSelection(Game game, Set<Vector2i> occupied) {
+            GameObjectType type = game.gameData.getType(game.world.gameObjects.get(game.clickBoxManager.selectedID).type);
+            Vector2i pos = game.mouseWorldPosition;
+            for(Vector2i offset : type.getRelativeOccupiedTiles()) {
+                occupied.add(new Vector2i(pos).add(offset));
+            }
         }
 
         @Override
         public Action createAction(Game game) {
-            return new MoveAction(game.clickBoxManager.selectedID, game.mouseWorldPosition.x, game.mouseWorldPosition.y);
+            if(abilityID == null) throw new RuntimeException("Invalid: createAction() called before arrange() for an ability");
+            return new MoveAction(abilityID, game.clickBoxManager.selectedID, game.mouseWorldPosition.x, game.mouseWorldPosition.y);
         }
     }
 }

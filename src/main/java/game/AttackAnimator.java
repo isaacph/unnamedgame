@@ -3,6 +3,7 @@ package game;
 import model.*;
 import model.abilities.AttackAbility;
 import model.abilities.AttackAction;
+import model.abilities.SpawnAbility;
 import org.joml.Vector2i;
 import render.AttackAnimation;
 import util.MathUtil;
@@ -21,9 +22,8 @@ public class AttackAnimator implements Animator {
 
     @Override
     public void animate(Game game) {
-        GameObject attacker = game.world.gameObjects.get(action.attackerID);
         GameObject victim = game.world.gameObjects.get(action.victimID);
-        AttackAbility attackerType = game.gameData.getType(attacker.type).getAbility(AttackAbility.class);
+        AttackAbility attackerType = game.gameData.getAbility(AttackAbility.class, action.abilityID);
         boolean victimDead = victim.health <= attackerType.getDamage();
         game.animationManager.startAnimation(new AttackAnimation(action.attackerID, action.victimID, victimDead, game));
         action.execute(game.world, game.gameData);
@@ -31,12 +31,16 @@ public class AttackAnimator implements Animator {
 
     public static class Arranger implements ActionArranger {
 
+        private AbilityID abilityID;
+
         @Override
-        public boolean arrange(Game game) {
+        public boolean arrange(Game game, int slot) {
             GameObject obj = game.world.gameObjects.get(game.clickBoxManager.selectedID);
-            if(obj != null && obj.speedLeft >= 5 && !game.animationManager.isObjectOccupied(game.clickBoxManager.selectedID) && obj.alive) {
-                AttackAbility ability = game.gameData.getType(obj.type).getAbility(AttackAbility.class);
+            if(obj != null && obj.speedLeft > 0 && !game.animationManager.isObjectOccupied(game.clickBoxManager.selectedID) && obj.alive) {
+                abilityID = new AbilityID(obj.type, AttackAbility.ID, slot);
+                AttackAbility ability = game.gameData.getAbility(AttackAbility.class, abilityID);
                 if(ability == null) return false;
+                if(obj.speedLeft < ability.getCost()) return false;
                 Set<Vector2i> options = MathUtil.adjacentTiles(MathUtil.addToAll(game.gameData.getType(obj.type).getRelativeOccupiedTiles(), new Vector2i(obj.x, obj.y)));
                 List<Vector2i> newOptions = new ArrayList<>();
                 for(Vector2i tile : options) {
@@ -72,7 +76,7 @@ public class AttackAnimator implements Animator {
         public Action createAction(Game game) {
             GameObject selectedObject = game.clickBoxManager.getGameObjectAtViewPositionExcludeTeam(game.mouseViewPosition, game.world.teams.getClientTeam(game.clientInfo.clientID));
             if(selectedObject != null && !selectedObject.team.equals(game.world.teams.getClientTeam(game.clientInfo.clientID)) && !game.animationManager.isObjectOccupied(selectedObject.uniqueID)) {
-                return new AttackAction(game.clickBoxManager.selectedID, selectedObject.uniqueID);
+                return new AttackAction(abilityID, game.clickBoxManager.selectedID, selectedObject.uniqueID);
             }
             return null;
         }

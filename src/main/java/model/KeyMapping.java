@@ -15,6 +15,10 @@ public class KeyMapping {
         keySlotMap.put(GLFW_KEY_W, 1);
         keySlotMap.put(GLFW_KEY_E, 2);
         keySlotMap.put(GLFW_KEY_R, 3);
+        keySlotMap.put(GLFW_KEY_T, 4);
+        keySlotMap.put(GLFW_KEY_Y, 5);
+        keySlotMap.put(GLFW_KEY_U, 6);
+        keySlotMap.put(GLFW_KEY_I, 7);
     }
 
     public Integer getKeyAbilitySlot(int key) {
