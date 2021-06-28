@@ -30,11 +30,34 @@
     },
     {
       "name": "building",
-      "speed": 10.0,
+      "speed": 1.0,
       "health": 2.0,
       "shape": {
         "type": "square",
         "size": 2
+      },
+      "abilities": [
+        {
+          "type": "spawn",
+          "slot": 0,
+          "cost": 1,
+          "produce": "kid"
+        },
+        {
+          "type": "spawn",
+          "slot": 1,
+          "cost": 1,
+          "produce": "builderkid"
+        }
+      ]
+    },
+    {
+      "name": "builderkid",
+      "speed": 6.0,
+      "health": 0.5,
+      "shape": {
+        "type": "square",
+        "size": 1
       },
       "abilities": [
         {
@@ -44,26 +67,24 @@
         {
           "type": "spawn",
           "slot": 1,
-          "cost": 5,
-          "produce": "kid"
-        },
-        {
-          "type": "attack",
-          "slot": 2,
-          "cost": 5,
-          "damage": 2.0
-        },
-        {
-          "type": "grow",
-          "slot": 3,
-          "cost": 0,
-          "requiredCount": 4,
-          "into": "building"
-        },
+          "cost": 4,
+          "produce": "wall"
+        }
+      ]
+    },
+    {
+      "name": "wall",
+      "speed": 0.0,
+      "health": 4.0,
+      "shape": {
+        "type": "square",
+        "size": 2
+      },
+      "abilities": [
         {
           "type": "dismiss",
-          "cost": 0,
-          "slot": 4
+          "slot": 0,
+          "cost": 0
         }
       ]
     }
