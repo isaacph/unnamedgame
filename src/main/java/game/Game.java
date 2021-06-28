@@ -252,6 +252,12 @@ public class Game {
                     chatbox.typing.deleteCharAt(chatbox.typing.length() - 1);
                 }
             }
+            if(key == GLFW_KEY_UP && action == GLFW_PRESS) {
+                chatbox.prevCommand();
+            }
+            else if(key == GLFW_KEY_DOWN && action == GLFW_PRESS) {
+                chatbox.nextCommand();
+            }
         } else {
             if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
                 currentCommand.clearArrangement(this);
@@ -308,7 +314,7 @@ public class Game {
             // Poll for window events. Invokes window callbacks
             pollMousePosition();
             glfwPollEvents();
-            camera.move();
+            if(!chatbox.focus) camera.move();
 
             if(mode == Mode.EDIT && !chatbox.focus) {
                 if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
@@ -591,6 +597,7 @@ public class Game {
                     e.printStackTrace();
                 }
             }
+            chatbox.prevCommands.addAll(chatbox.commands);
             chatbox.commands.clear();
 
             animationManager.update();

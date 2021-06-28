@@ -6,7 +6,9 @@ import org.joml.Vector4f;
 import render.BoxRenderer;
 import render.Font;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Queue;
 
 public class Chatbox {
 
@@ -25,8 +27,11 @@ public class Chatbox {
     public static final int CAPACITY = 40;
     public float focusTimer = 0;
     public float lineTimer = 0;
+    private int prevCommandsPosition = -1;
+    private String commandStorage = "";
 
-    public ArrayList<String> commands = new ArrayList<>();
+    public final ArrayList<String> commands = new ArrayList<>();
+    public final ArrayList<String> prevCommands = new ArrayList<>();
 
     public Chatbox(Font f, BoxRenderer b, GameTime gameTime) {
         lines = new ArrayList<>();
@@ -107,9 +112,36 @@ public class Chatbox {
         lineTimer = 0;
     }
     public boolean send() {
+        prevCommandsPosition = -1;
         if(typing.length() == 0) return false;
         commands.add(typing.toString());
         typing.delete(0, typing.length());
         return true;
+    }
+
+    public void prevCommand() {
+        if(prevCommandsPosition == -1) commandStorage = typing.toString();
+        prevCommandsPosition++;
+        if(prevCommandsPosition >= prevCommands.size()) prevCommandsPosition = prevCommands.size() - 1;
+        if(prevCommandsPosition < -1) prevCommandsPosition = -1;
+        typing.delete(0, typing.length());
+        if(prevCommandsPosition == -1) {
+            typing.append(commandStorage);
+        } else {
+            typing.append(prevCommands.get(prevCommands.size() - prevCommandsPosition - 1));
+        }
+    }
+
+    public void nextCommand() {
+        if(prevCommandsPosition == -1) commandStorage = typing.toString();
+        prevCommandsPosition--;
+        if(prevCommandsPosition >= prevCommands.size()) prevCommandsPosition = prevCommands.size() - 1;
+        if(prevCommandsPosition < -1) prevCommandsPosition = -1;
+        typing.delete(0, typing.length());
+        if(prevCommandsPosition == -1) {
+            typing.append(commandStorage);
+        } else {
+            typing.append(prevCommands.get(prevCommands.size() - prevCommandsPosition - 1));
+        }
     }
 }
