@@ -1,9 +1,6 @@
 package model;
 
-import model.abilities.AttackAbility;
-import model.abilities.GrowAbility;
-import model.abilities.MoveAbility;
-import model.abilities.SpawnAbility;
+import model.abilities.*;
 import org.json.JSONObject;
 
 import java.util.HashMap;
@@ -20,6 +17,7 @@ public class GameObjectTypeFactory {
         abilityCreators.put(GrowAbility.ID.getName(), GrowAbility::new);
         abilityCreators.put(SpawnAbility.ID.getName(), SpawnAbility::new);
         abilityCreators.put(AttackAbility.ID.getName(), AttackAbility::new);
+        abilityCreators.put(DismissAbility.ID.getName(), DismissAbility::new);
     }
 
     public Shape makeShape(JSONObject obj) {

@@ -19,6 +19,7 @@ public class AbilityOrganizer {
         map.put(GrowAbility.ID, GrowAnimator.Arranger::new);
         map.put(AttackAbility.ID, AttackAnimator.Arranger::new);
         map.put(SpawnAbility.ID, SpawnAnimator.Arranger::new);
+        map.put(DismissAbility.ID, DismissAnimator.Arranger::new);
         return map;
     }
 
@@ -28,6 +29,7 @@ public class AbilityOrganizer {
         map.put(AttackAbility.ID, makeAnimatorSupplier(AttackAbility.ID, AttackAction.class, AttackAnimator::new));
         map.put(GrowAbility.ID, makeAnimatorSupplier(GrowAbility.ID, GrowAction.class, GrowAnimator::new));
         map.put(SpawnAbility.ID, makeAnimatorSupplier(SpawnAbility.ID, SpawnAction.class, SpawnAnimator::new));
+        map.put(DismissAbility.ID, makeAnimatorSupplier(DismissAbility.ID, DismissAction.class, DismissAnimator::new));
         return map;
     }
 

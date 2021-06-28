@@ -59,6 +59,11 @@
           "cost": 0,
           "requiredCount": 4,
           "into": "building"
+        },
+        {
+          "type": "dismiss",
+          "cost": 0,
+          "slot": 4
         }
       ]
     }
