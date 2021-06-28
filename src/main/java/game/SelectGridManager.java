@@ -23,7 +23,7 @@ public class SelectGridManager {
         double speed = obj.speedLeft;
         Pathfinding.Paths paths = Pathfinding.pathPossibilities(getWeightStorage(object, world, gameData), new Vector2i(obj.x, obj.y), speed);
         Pathfinding.changeSelectGrid(selectionGrid,
-                Pathfinding.fillPathToShape(type.getRelativeOccupiedTiles(), paths.speedLeft.keySet()));
+                Pathfinding.fillTileSetToShape(type.getRelativeOccupiedTiles(), paths.speedLeft.keySet()));
     }
 
     public void regenerateSelect(Collection<Vector2i> tiles) {

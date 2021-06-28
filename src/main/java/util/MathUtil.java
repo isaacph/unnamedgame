@@ -147,6 +147,37 @@ public class MathUtil {
         return adjacent;
     }
 
+    public static Set<Vector2i> adjacentShapeOrigins(Set<Vector2i> collection, Collection<Vector2i> adjacentShape) {
+        Set<Vector2i> adjacent = new HashSet<>();
+        for(Vector2i tile : collection) {
+            for(Vector2i shapeTileOffset : adjacentShape) {
+                // generate a shape at tile - shapeTileOffset + direction
+                for(Vector2i direction : DIRECTIONS) {
+                    Vector2i next = new Vector2i(tile).sub(shapeTileOffset).add(direction);
+                    ArrayList<Vector2i> translatedShape = new ArrayList<>();
+                    for(Vector2i shapePos : adjacentShape) {
+                        translatedShape.add(new Vector2i(shapePos).add(tile).sub(shapeTileOffset).add(direction));
+                    }
+                    // check if translatedShape collides with collection
+                    if(shapesIntersect(collection, translatedShape)) continue;
+                    if(!collection.contains(next)) {
+                        adjacent.add(next);
+                    }
+                }
+            }
+        }
+        return adjacent;
+    }
+
+    public static boolean shapesIntersect(Collection<Vector2i> shape1, Collection<Vector2i> shape2) {
+        for(Vector2i v1 : shape1) {
+            for(Vector2i v2 : shape2) {
+                if(v1.equals(v2)) return true;
+            }
+        }
+        return false;
+    }
+
     public static boolean isSquare(Collection<Vector2i> square) {
         if(square == null) return false;
         if(square.size() != 4) return false;

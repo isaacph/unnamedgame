@@ -1,4 +1,4 @@
-package game;
+package model;
 
 import model.ByteGrid;
 import model.GameData;
@@ -88,7 +88,7 @@ public final class Pathfinding {
         return path;
     }
 
-    public static Collection<Vector2i> fillPathToShape(Collection<Vector2i> shape, Collection<Vector2i> path) {
+    public static Collection<Vector2i> fillTileSetToShape(Collection<Vector2i> shape, Collection<Vector2i> path) {
         if(shape == null || shape.isEmpty() || path == null || path.isEmpty()) return Collections.emptyList();
         Collection<Vector2i> newPath = new HashSet<>();
         for(Vector2i center : path) {

@@ -1,12 +1,9 @@
 package render;
 
 import game.*;
-import model.GameObject;
-import model.GameObjectID;
-import model.World;
+import model.*;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
-import model.GameData;
 
 import java.util.ArrayList;
 import java.util.List;

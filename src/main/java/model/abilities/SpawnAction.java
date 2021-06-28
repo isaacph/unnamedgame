@@ -29,11 +29,19 @@ public class SpawnAction implements Action {
         if(!source.alive) return false;
         SpawnAbility ability = gameData.getAbility(SpawnAbility.class, abilityID);
         if(ability == null) return false;
+        GameObjectType prodType = gameData.getType(ability.getProducedType());
+        if(prodType == null) return false;
         if(world.teams.getClientTeam(actor) == null) return false;
         if(!source.team.equals(world.teams.getClientTeam(actor))) return false;
-        if(world.occupied(targetX, targetY, gameData) != null) return false;
+        for(Vector2i tile : prodType.getRelativeOccupiedTiles()) {
+            if(world.occupied(targetX + tile.x, targetY + tile.y, gameData) != null) return false;
+            if(world.getPureTileWeight(gameData, targetX + tile.x, targetY + tile.y) == Double.POSITIVE_INFINITY) return false;
+        }
         if(world.getTileWeight(gameData, targetX, targetY) == Double.POSITIVE_INFINITY) return false;
-        Set<Vector2i> adjacent = MathUtil.adjacentTiles(MathUtil.addToAll(gameData.getType(source.type).getRelativeOccupiedTiles(), new Vector2i(source.x, source.y)));
+        Set<Vector2i> adjacent = MathUtil.adjacentShapeOrigins(
+                MathUtil.addToAll(gameData.getType(source.type).getRelativeOccupiedTiles(),
+                        new Vector2i(source.x, source.y)),
+                prodType.getRelativeOccupiedTiles());
         if(!adjacent.contains(new Vector2i(targetX, targetY))) return false;
         if(source.speedLeft < ability.getCost()) return false;
         return true;
