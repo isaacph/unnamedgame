@@ -176,7 +176,7 @@ public class Game {
             connection.queueSend(new GetWorld());
             connection.queueSend(new GetClientID());
         });
-        this.connection.connect(new InetSocketAddress("", Server.PORT));
+        this.connection.connect(new InetSocketAddress("24.247.145.133", Server.PORT));
         this.connection.queueSend(new EchoPayload("Connection succeeded"));
 
         this.selectGridManager = new SelectGridManager(world, gameData);
