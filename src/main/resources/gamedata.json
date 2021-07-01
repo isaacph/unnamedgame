@@ -48,6 +48,10 @@
           "slot": 1,
           "cost": 1,
           "produce": "builderkid"
+        },
+        {
+          "type": "move",
+          "slot": 2
         }
       ]
     },
@@ -85,6 +89,10 @@
           "type": "dismiss",
           "slot": 0,
           "cost": 0
+        },
+        {
+          "type": "move",
+          "slot": 1
         }
       ]
     }

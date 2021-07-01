@@ -12,6 +12,7 @@ import render.*;
 import server.*;
 import network.commands.*;
 import model.*;
+import util.FileUtil;
 import util.MathUtil;
 
 import java.io.IOException;
@@ -142,7 +143,7 @@ public class Game {
         this.gameData = new GameData();
         this.visualData = new VisualData();
         try {
-            String file = MathUtil.readFile("gamedata.json");
+            String file = FileUtil.readFile("gamedata.json");
             this.gameData.fromJSON(new JSONObject(file), e -> {
                 chatbox.println("Failed to parse JSON game data");
                 chatbox.println(e.getMessage());
@@ -153,7 +154,7 @@ public class Game {
             e.printStackTrace();
         }
         try {
-            String file = MathUtil.readFile("visualdata.json");
+            String file = FileUtil.readFile("visualdata.json");
             this.visualData.fromJSON(new JSONObject(file), e -> {
                 chatbox.println("Failed to parse JSON game data");
                 chatbox.println(e.getMessage());
@@ -482,13 +483,13 @@ public class Game {
                             } else if(args[1].equalsIgnoreCase("send")) {
                                 connection.queueSend(new SetGameData(gameData));
                             } else if(args[1].equalsIgnoreCase("save")) {
-                                MathUtil.writeFile(String.join(" ", Arrays.copyOfRange(args, 2, args.length)), gameData.toJSON().toString(4));
+                                FileUtil.writeFile(String.join(" ", Arrays.copyOfRange(args, 2, args.length)), gameData.toJSON().toString(4));
                             } else if(args[1].equalsIgnoreCase("load")) {
                                 if(args.length < 3) {
                                     chatbox.println("Need file name to load");
                                 } else {
                                     String path = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
-                                    String data = MathUtil.readFile(path);
+                                    String data = FileUtil.readFile(path);
                                     JSONObject obj = new JSONObject(data);
                                     if(gameData.fromJSON(obj, e -> {
                                         chatbox.println("Failed to load JSON file " + path);
@@ -505,13 +506,13 @@ public class Game {
                             } else if(args[1].equalsIgnoreCase("send")) {
                                 //connection.queueSend(new SetGameData(gameData));
                             } else if(args[1].equalsIgnoreCase("save")) {
-                                MathUtil.writeFile(String.join(" ", Arrays.copyOfRange(args, 2, args.length)), visualData.toJSON().toString(4));
+                                FileUtil.writeFile(String.join(" ", Arrays.copyOfRange(args, 2, args.length)), visualData.toJSON().toString(4));
                             } else if(args[1].equalsIgnoreCase("load")) {
                                 if(args.length < 3) {
                                     chatbox.println("Need file name to load");
                                 } else {
                                     String path = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
-                                    String data = MathUtil.readFile(path);
+                                    String data = FileUtil.readFile(path);
                                     JSONObject obj = new JSONObject(data);
                                     if(visualData.fromJSON(obj, e -> {
                                         chatbox.println("Failed to load JSON file " + path);
@@ -559,14 +560,14 @@ public class Game {
                             } else {
                                 String fileName = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
                                 JSONObject obj = world.toInitJSON();
-                                MathUtil.writeFile(fileName, obj.toString(4));
+                                FileUtil.writeFile(fileName, obj.toString(4));
                             }
                         } else if(args[0].equals("load")) {
                             if(args.length < 2) {
                                 chatbox.println("Requires file name");
                             } else {
                                 String fileName = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
-                                JSONObject obj = new JSONObject(MathUtil.readFile(fileName));
+                                JSONObject obj = new JSONObject(FileUtil.readFile(fileName));
                                 if(connection.isConnected()) {
                                     connection.queueSend(new SetWorldJSON(obj.toString()));
                                 } else {

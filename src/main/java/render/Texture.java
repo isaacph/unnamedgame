@@ -1,6 +1,6 @@
 package render;
 
-import util.MathUtil;
+import util.FileUtil;
 import org.joml.Vector2i;
 import org.lwjgl.stb.STBImage;
 import org.lwjgl.system.MemoryStack;
@@ -75,7 +75,7 @@ public class Texture {
             IntBuffer bpp = stack.ints(0);
             ByteBuffer data;
             try {
-                InputStream stream = MathUtil.getInputStream(path);
+                InputStream stream = FileUtil.getInputStream(path);
                 ReadableByteChannel channel = Channels.newChannel(stream);
                 data = MemoryUtil.memAlloc(stream.available());
                 channel.read(data);

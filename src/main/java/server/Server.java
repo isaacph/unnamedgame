@@ -8,7 +8,7 @@ import network.commands.ChatMessage;
 import network.commands.ConnectionLifeCheck;
 import model.ClientID;
 import model.GameData;
-import util.MathUtil;
+import util.FileUtil;
 
 import java.io.*;
 import java.util.*;
@@ -71,7 +71,7 @@ public class Server {
             }
             gameData = new GameData();
             try {
-                String file = MathUtil.readFile("gamedata.json");
+                String file = FileUtil.readFile("gamedata.json");
                 this.gameData.fromJSON(new JSONObject(file), e -> {
                     System.err.println("Failed to parse JSON game data");
                     System.err.println(e.getMessage());

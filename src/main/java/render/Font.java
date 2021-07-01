@@ -1,6 +1,6 @@
 package render;
 
-import util.MathUtil;
+import util.FileUtil;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 import org.lwjgl.stb.*;
@@ -57,7 +57,7 @@ public class Font {
 
         try {
             // NOTE: this font rendering code is taken from a previous project of mine
-            InputStream stream = MathUtil.getInputStream(source);
+            InputStream stream = FileUtil.getInputStream(source);
             ReadableByteChannel channel = Channels.newChannel(stream);
             ByteBuffer buffer = MemoryUtil.memAlloc(stream.available()); // plz be an int!
             channel.read(buffer);
