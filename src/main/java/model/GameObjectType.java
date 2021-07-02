@@ -9,7 +9,6 @@ import java.util.*;
 
 public class GameObjectType implements Serializable {
 
-    private String name;
     private GameObjectTypeID uniqueID;
     private float speed;
     private float health;
@@ -18,8 +17,7 @@ public class GameObjectType implements Serializable {
     private Map<Integer, AbilityComponent> slotAbility;
 
     public GameObjectType(JSONObject obj, GameObjectTypeFactory factory) {
-        name = obj.getString("name");
-        uniqueID = new GameObjectTypeID(name);
+        uniqueID = new GameObjectTypeID(obj.getString("name"));
         speed = obj.getFloat("speed");
         health = obj.getFloat("health");
         shape = factory.makeShape(obj.getJSONObject("shape"));
@@ -92,7 +90,7 @@ public class GameObjectType implements Serializable {
 
     public JSONObject toJSON() {
         JSONObject obj = new JSONObject();
-        obj.put("name", name);
+        obj.put("name", uniqueID.getName());
         obj.put("speed", speed);
         obj.put("shape", shape.toJSON());
         obj.put("health", health);

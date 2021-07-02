@@ -34,6 +34,7 @@ public class DismissAbility implements AbilityComponent {
         JSONObject obj = new JSONObject();
         obj.put("type", getTypeID().getName());
         obj.put("cost", cost);
+        obj.put("slot", slot);
         return obj;
     }
 

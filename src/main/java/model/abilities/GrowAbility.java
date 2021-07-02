@@ -40,6 +40,7 @@ public class GrowAbility implements AbilityComponent {
         obj.put("into", growInto.getName());
         obj.put("cost", cost);
         obj.put("requiredCount", requiredCount);
+        obj.put("slot", slot);
         return obj;
     }
 

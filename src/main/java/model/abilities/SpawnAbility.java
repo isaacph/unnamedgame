@@ -37,6 +37,7 @@ public class SpawnAbility implements AbilityComponent {
         obj.put("type", getTypeID().getName());
         obj.put("produce", producedType.getName());
         obj.put("cost", cost);
+        obj.put("slot", slot);
         return obj;
     }
 

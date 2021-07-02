@@ -37,6 +37,7 @@ public class AttackAbility implements AbilityComponent {
         obj.put("type", getTypeID().getName());
         obj.put("damage", damage);
         obj.put("cost", cost);
+        obj.put("slot", slot);
         return obj;
     }
 

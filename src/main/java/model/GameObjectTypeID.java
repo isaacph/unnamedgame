@@ -36,7 +36,7 @@ public class GameObjectTypeID implements Serializable {
 
     @Override
     public String toString() {
-        return "GameObjectType:" + nameID.toString();
+        return "GameObjectType:" + nameID;
     }
 
     public JSONObject toJSON() {

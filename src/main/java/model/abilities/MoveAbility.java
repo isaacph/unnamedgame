@@ -31,6 +31,7 @@ public class MoveAbility implements AbilityComponent {
     public JSONObject toJSON() {
         JSONObject obj = new JSONObject();
         obj.put("type", getTypeID().getName());
+        obj.put("slot", slot);
         return obj;
     }
 
