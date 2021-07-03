@@ -1,5 +1,6 @@
 package model;
 
+import model.abilities.AbilityComponent;
 import org.json.JSONArray;
 import org.json.JSONObject;
 

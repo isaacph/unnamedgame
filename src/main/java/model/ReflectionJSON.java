@@ -5,7 +5,9 @@ import org.json.JSONObject;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 
 public final class ReflectionJSON {
 
@@ -34,9 +36,11 @@ public final class ReflectionJSON {
     }
 
     public static void extract(JSONObject source, Object dest) {
-        for(Field field : dest.getClass().getDeclaredFields()) {
+        Collection<Field> fields = getAllFields(dest.getClass());
+        for(Field field : fields) {
             if(field.getAnnotation(Direct.class) != null) {
                 try {
+                    field.setAccessible(true);
                     if(field.getType().isPrimitive()) {
                         // extract primitive
                         if(field.getType().equals(Integer.TYPE)) {
@@ -80,8 +84,10 @@ public final class ReflectionJSON {
 
     public static JSONObject makeJSON(Object source) {
         JSONObject dest = new JSONObject();
-        for(Field field : source.getClass().getDeclaredFields()) {
+        Collection<Field> fields = getAllFields(source.getClass());
+        for(Field field : fields) {
             if(field.getAnnotation(Direct.class) != null) {
+                field.setAccessible(true);
                 try {
                     if(field.getType().isPrimitive()) {
                         // extract primitive
@@ -121,5 +127,13 @@ public final class ReflectionJSON {
             }
         }
         return dest;
+    }
+
+    private static Collection<Field> getAllFields(Class<?> c) {
+        ArrayList<Field> fields = new ArrayList<>();
+        do {
+            fields.addAll(Arrays.asList(c.getDeclaredFields()));
+        } while((c = c.getSuperclass()) != null);
+        return fields;
     }
 }
