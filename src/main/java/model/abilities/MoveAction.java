@@ -1,8 +1,8 @@
 package model.abilities;
 
-import game.*;
 import model.*;
 import org.joml.Vector2i;
+import util.GridUtil;
 
 import java.util.Collection;
 import java.util.List;
@@ -53,7 +53,7 @@ public class MoveAction implements Action {
                 return false;
             }
         }
-        Pathfinding.WeightStorage ws = SelectGridManager.getWeightStorage(objectID, world, gameData);
+        Pathfinding.WeightStorage ws = GridUtil.getWeightStorage(objectID, world, gameData);
         List<Vector2i> shortestPath = Pathfinding.shortestPath(ws, new Vector2i(object.x, object.y), new Vector2i(targetX, targetY), object.speedLeft);
         if(shortestPath.isEmpty()) {
             return false;
@@ -69,7 +69,7 @@ public class MoveAction implements Action {
         if(world.gameObjects.get(objectID) == null) {
             throw new RuntimeException("Attempted to execute MoveAction on unknown game object:" + objectID);
         }
-        Pathfinding.WeightStorage ws = SelectGridManager.getWeightStorage(objectID, world, gameData);
+        Pathfinding.WeightStorage ws = GridUtil.getWeightStorage(objectID, world, gameData);
         GameObject object = world.gameObjects.get(objectID);
         List<Vector2i> shortestPath = Pathfinding.shortestPath(ws, new Vector2i(object.x, object.y), new Vector2i(targetX, targetY), object.speedLeft);
         object.x = targetX;

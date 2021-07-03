@@ -7,14 +7,12 @@ public class MoveAbility implements AbilityComponent {
 
     public static final AbilityTypeID ID = new AbilityTypeID("move");
 
-    private final int slot;
-
-    private GameObjectTypeID gameObjectTypeID;
+    @Direct public int slot;
+    @Direct public GameObjectTypeID type;
 
     public MoveAbility(JSONObject obj, GameObjectTypeID objTypeID) {
         GameObjectType.assertString(obj.getString("type"), getTypeID().getName());
-        slot = obj.getInt("slot");
-        gameObjectTypeID = objTypeID;
+        ReflectionJSON.extract(obj, this);
     }
 
     @Override
@@ -24,15 +22,12 @@ public class MoveAbility implements AbilityComponent {
 
     @Override
     public AbilityID getID() {
-        return new AbilityID(gameObjectTypeID, ID, slot);
+        return new AbilityID(type, ID, slot);
     }
 
     @Override
     public JSONObject toJSON() {
-        JSONObject obj = new JSONObject();
-        obj.put("type", getTypeID().getName());
-        obj.put("slot", slot);
-        return obj;
+        return ReflectionJSON.makeJSON(this);
     }
 
     @Override

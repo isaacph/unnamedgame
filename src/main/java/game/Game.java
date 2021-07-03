@@ -13,6 +13,7 @@ import server.*;
 import network.commands.*;
 import model.*;
 import util.FileUtil;
+import util.GridUtil;
 import util.MathUtil;
 
 import java.io.IOException;
@@ -533,7 +534,7 @@ public class Game {
                             if(team != null) {
                                 for(GameObject gameObject : world.gameObjects.values()) {
                                     if(gameObject.team.equals(team)) {
-                                        Set<Vector2i> targets = Pathfinding.pathPossibilities(SelectGridManager.getWeightStorage(gameObject.uniqueID, world, gameData), new Vector2i(gameObject.x, gameObject.y), gameObject.speedLeft).possibilities();
+                                        Set<Vector2i> targets = Pathfinding.pathPossibilities(GridUtil.getWeightStorage(gameObject.uniqueID, world, gameData), new Vector2i(gameObject.x, gameObject.y), gameObject.speedLeft).possibilities();
                                         int n = new Random().nextInt(targets.size());
                                         Vector2i target = new Vector2i();
                                         for(Vector2i v : targets) {
