@@ -1,5 +1,6 @@
 package game;
 
+import model.abilities.AbilityComponent;
 import model.abilities.MoveAbility;
 import model.abilities.MoveAction;
 import network.ClientConnection;

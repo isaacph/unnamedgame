@@ -8,10 +8,6 @@
       <sourceFolder url="file://$MODULE_DIR$/src/main/resources" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/src/main/serverres" type="java-resource" />
-      <excludeFolder url="file://$MODULE_DIR$/src/main/java/game" />
-      <excludeFolder url="file://$MODULE_DIR$/src/main/java/network" />
-      <excludeFolder url="file://$MODULE_DIR$/src/main/java/render" />
-      <excludeFolder url="file://$MODULE_DIR$/src/main/java/server" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
