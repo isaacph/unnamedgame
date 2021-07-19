@@ -1,4 +1,4 @@
-package model;
+package model.grid;
 
 import util.MathUtil;
 import org.joml.Vector2i;

@@ -13,6 +13,7 @@ public class GameObject implements Serializable {
     public float health;
     public double speedLeft;
     public boolean alive;
+    public boolean targetable;
 
     public GameObject(GameObjectID uniqueID, GameObjectTypeID type, TeamID team) {
         this.uniqueID = uniqueID;
@@ -21,6 +22,7 @@ public class GameObject implements Serializable {
         this.health = 0;
         this.speedLeft = 0;
         this.alive = false;
+        this.targetable = true;
     }
 
     public GameObject(JSONObject initObj) {
@@ -32,6 +34,7 @@ public class GameObject implements Serializable {
         this.health = initObj.getFloat("health");
         this.speedLeft = initObj.getDouble("speedLeft");
         this.alive = initObj.getBoolean("alive");
+        this.targetable = initObj.getBoolean("targetable");
     }
 
     public JSONObject toInitJSON() {
@@ -44,6 +47,14 @@ public class GameObject implements Serializable {
         obj.put("health", health);
         obj.put("speedLeft", speedLeft);
         obj.put("alive", alive);
+        obj.put("targetable", targetable);
         return obj;
+    }
+
+    public boolean equals(Object other) {
+        if(other instanceof GameObject) {
+            return uniqueID.equals(((GameObject) other).uniqueID);
+        }
+        return false;
     }
 }

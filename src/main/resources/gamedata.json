@@ -8,6 +8,7 @@
         "type": "square",
         "size": 1
       },
+      "collider": {"type": "block"},
       "abilities": [
         {
           "type": "move",
@@ -36,6 +37,7 @@
         "type": "square",
         "size": 2
       },
+      "collider": {"type": "block"},
       "abilities": [
         {
           "type": "spawn",
@@ -48,10 +50,6 @@
           "slot": 1,
           "cost": 1,
           "produce": "builderkid"
-        },
-        {
-          "type": "move",
-          "slot": 2
         }
       ]
     },
@@ -63,6 +61,7 @@
         "type": "square",
         "size": 1
       },
+      "collider": {"type": "block"},
       "abilities": [
         {
           "type": "move",
@@ -84,17 +83,23 @@
         "type": "square",
         "size": 2
       },
+      "collider": {"type": "block"},
       "abilities": [
         {
           "type": "dismiss",
           "slot": 0,
           "cost": 0
-        },
-        {
-          "type": "move",
-          "slot": 1
         }
       ]
+    },
+    {
+      "name": "rock",
+      "shape": {
+        "type": "square",
+        "size": 2
+      },
+      "collider": {"type": "block"},
+      "neutral": true
     }
   ]
 }

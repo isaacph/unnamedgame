@@ -53,7 +53,7 @@ public class SpawnAnimator implements Animator {
                     Collection<Vector2i> shape = spawnedType.getRelativeOccupiedTiles();
                     for(Vector2i t : shape) {
                         Vector2i tile = new Vector2i(t).add(option);
-                        if(game.world.occupied(tile.x, tile.y, game.gameData) != null || game.world.getTileWeight(game.gameData, tile.x, tile.y) == Double.POSITIVE_INFINITY) {
+                        if(!game.world.occupied(tile.x, tile.y, game.gameData).isEmpty() || game.world.getTileWeight(game.gameData, tile.x, tile.y) == Double.POSITIVE_INFINITY) {
                             roomForNewObj = false;
                         }
                     }

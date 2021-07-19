@@ -11,14 +11,15 @@ public class GameObjectFactory implements Serializable {
     /** Will eventually only be used by server. The client should only create
      * objects when it already knows the ID that the server set for it
      */
-    public GameObject createGameObject(GameObjectType type, TeamID team) {
-        if(team == null) return null;
+    public GameObject createGameObject(GameObjectType type, TeamID team, GameData gameData) {
+        if(team == null && !type.isNeutral()) return null;
         GameObjectID id = generator.generate();
         if(id == null) return null;
-        GameObject object = new GameObject(generator.generate(), type.getUniqueID(), team);
+        GameObject object = new GameObject(generator.generate(), type.getUniqueID(), type.isNeutral() ? TeamID.NEUTRAL : team);
         object.alive = true;
         object.health = type.getMaxHealth();
         object.speedLeft = type.getSpeed();
+        object.targetable = !type.isNeutral();
         return object;
     }
 

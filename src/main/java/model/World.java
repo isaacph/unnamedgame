@@ -1,5 +1,6 @@
 package model;
 
+import model.grid.ByteGrid;
 import org.joml.Vector2i;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -20,7 +21,8 @@ public class World implements Serializable {
 
     }
 
-    public GameObjectID occupied(int x, int y, GameData gameData) {
+    public Collection<GameObjectID> occupied(int x, int y, GameData gameData) {
+        ArrayList<GameObjectID> ids = new ArrayList<>();
         for(GameObject object : gameObjects.values()) {
             if(object.alive) {
                 Set<Vector2i> occTiles = gameData.getType(object.type).getRelativeOccupiedTiles();
@@ -28,18 +30,35 @@ public class World implements Serializable {
                     int ox = object.x + occ.x;
                     int oy = object.y + occ.y;
                     if(ox == x && oy == y) {
-                        return object.uniqueID;
+                        ids.add(object.uniqueID);
                     }
                 }
             }
         }
-        return null;
+        return ids;
+    }
+
+    public Collection<GameObject> occupiedObjects(int x, int y, GameData gameData) {
+        ArrayList<GameObject> objs = new ArrayList<>();
+        for(GameObject object : gameObjects.values()) {
+            if(object.alive) {
+                Set<Vector2i> occTiles = gameData.getType(object.type).getRelativeOccupiedTiles();
+                for(Vector2i occ : occTiles) {
+                    int ox = object.x + occ.x;
+                    int oy = object.y + occ.y;
+                    if(ox == x && oy == y) {
+                        objs.add(object);
+                    }
+                }
+            }
+        }
+        return objs;
     }
 
     public boolean add(GameObject object, GameData gameData) {
         Collection<Vector2i> positions = MathUtil.addToAll(gameData.getType(object.type).getRelativeOccupiedTiles(), new Vector2i(object.x, object.y));
         for(Vector2i p : positions) {
-            if(occupied(p.x, p.y, gameData) != null) {
+            if(!occupied(p.x, p.y, gameData).isEmpty()) {
                 return false;
             }
         }
@@ -89,6 +108,14 @@ public class World implements Serializable {
         return weight;
     }
 
+    public double getShapeWeightOnTiles(GameData data, int x, int y, Collection<Vector2i> shape) {
+        double weight = Double.MIN_VALUE;
+        for(Vector2i offset : shape) {
+            weight = Math.max(weight, getPureTileWeight(data, x + offset.x, y + offset.y));
+        }
+        return weight;
+    }
+
     public void resetGameObjectSpeeds(GameData gameData) {
         for(GameObject gameObject : gameObjects.values()) {
             GameObjectType type = gameData.getType(gameObject.type);
@@ -132,12 +159,14 @@ public class World implements Serializable {
         Map<GameObjectID, TeamID> chooseNewTeams = new HashMap<>();
         for(int i = 0; i < teamArr.length(); ++i) {
             TeamID oldTeam = new TeamID(teamArr.getJSONObject(i));
-            TeamID newTeam = teams.teamIDGenerator.generate();
-            teams.addTeam(newTeam);
+            if(!oldTeam.equals(TeamID.NEUTRAL)) {
+                TeamID newTeam = teams.teamIDGenerator.generate();
+                teams.addTeam(newTeam);
 
-            for(GameObject gameObj : gameObjects.values()) {
-                if(gameObj.team.equals(oldTeam)) {
-                    chooseNewTeams.put(gameObj.uniqueID, newTeam);
+                for(GameObject gameObj : gameObjects.values()) {
+                    if(gameObj.team.equals(oldTeam)) {
+                        chooseNewTeams.put(gameObj.uniqueID, newTeam);
+                    }
                 }
             }
         }

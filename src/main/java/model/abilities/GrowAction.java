@@ -27,6 +27,7 @@ public class GrowAction implements Action {
         ArrayList<GameObject> gameObjects = new ArrayList<>();
         for(GameObjectID id : seeds) {
             GameObject go = world.gameObjects.get(id);
+            if(gameObjects.contains(go)) return false;
             gameObjects.add(go);
             if(go == null) return false;
         }
@@ -46,11 +47,24 @@ public class GrowAction implements Action {
         GameObjectTypeID growIntoID = ability.getGrowInto();
         GameObjectType growInto = gameData.getType(growIntoID);
         if(growInto == null) return false;
+        boolean[] goFound = new boolean[seeds.size()];
+        int numFound = 0;
         for(Vector2i tile : growInto.getRelativeOccupiedTiles()) {
             if(world.getPureTileWeight(gameData, growX + tile.x, growY + tile.y) == Double.POSITIVE_INFINITY) {
                 return false;
             }
+            Collection<GameObjectID> occupiers = world.occupied(tile.x, tile.y, gameData);
+            for(GameObjectID occupier : occupiers) {
+                int index = seeds.indexOf(occupier);
+                if(index == -1) return false;
+                if(!goFound[index]) {
+                    goFound[index] = true;
+                    ++numFound;
+                    break;
+                }
+            }
         }
+        if(numFound != seeds.size()) return false;
         return true;
     }
 
@@ -67,7 +81,7 @@ public class GrowAction implements Action {
         GrowAbility ability = gameData.getAbility(GrowAbility.class, abilityID);
         GameObject newObj = world.gameObjectFactory.createGameObject(
                 gameData.getType(ability.getGrowInto()),
-                team);
+                team, gameData);
         world.gameObjects.put(newObj.uniqueID, newObj);
         newObj.x = pos.x;
         newObj.y = pos.y;

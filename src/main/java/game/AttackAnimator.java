@@ -9,6 +9,7 @@ import render.AttackAnimation;
 import util.MathUtil;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -36,7 +37,7 @@ public class AttackAnimator implements Animator {
         @Override
         public boolean arrange(Game game, int slot) {
             GameObject obj = game.world.gameObjects.get(game.clickBoxManager.selectedID);
-            if(obj != null && obj.speedLeft > 0 && !game.animationManager.isObjectOccupied(game.clickBoxManager.selectedID) && obj.alive) {
+            if(obj != null && obj.speedLeft > 0 && !game.animationManager.isObjectOccupied(game.clickBoxManager.selectedID) && obj.alive && obj.team != null) {
                 abilityID = new AbilityID(obj.type, AttackAbility.ID, slot);
                 AttackAbility ability = game.gameData.getAbility(AttackAbility.class, abilityID);
                 if(ability == null) return false;
@@ -44,11 +45,12 @@ public class AttackAnimator implements Animator {
                 Set<Vector2i> options = MathUtil.adjacentTiles(MathUtil.addToAll(game.gameData.getType(obj.type).getRelativeOccupiedTiles(), new Vector2i(obj.x, obj.y)));
                 List<Vector2i> newOptions = new ArrayList<>();
                 for(Vector2i tile : options) {
-                    GameObjectID victimID = game.world.occupied(tile.x, tile.y, game.gameData);
-                    if(victimID != null) {
+                    Collection<GameObjectID> victimIDs = game.world.occupied(tile.x, tile.y, game.gameData);
+                    for(GameObjectID victimID : victimIDs) {
                         GameObject victim = game.world.gameObjects.get(victimID);
-                        if(victim.alive && (victim.team == null || !victim.team.equals(obj.team))) {
+                        if(victim.alive && (victim.team != null && victim.targetable && !victim.team.equals(obj.team))) {
                             newOptions.add(tile);
+                            break;
                         }
                     }
                 }

@@ -2,6 +2,7 @@ package render;
 
 import game.*;
 import model.*;
+import model.grid.ByteGrid;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector2i;

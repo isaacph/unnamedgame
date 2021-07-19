@@ -10,9 +10,11 @@ public class GameObjectTypeFactory {
 
     private Map<String, ComponentCreator<Shape>> shapeCreators = new HashMap<>();
     private Map<String, AbilityCreator> abilityCreators = new HashMap<>();
+    private Map<String, ComponentCreator<TypeCollider>> colliderCreators = new HashMap<>();
 
     public GameObjectTypeFactory() {
         shapeCreators.put("square", SquareShape::new);
+        colliderCreators.put("block", BlockCollider::new);
         abilityCreators.put(MoveAbility.ID.getName(), MoveAbility::new);
         abilityCreators.put(GrowAbility.ID.getName(), GrowAbility::new);
         abilityCreators.put(SpawnAbility.ID.getName(), SpawnAbility::new);
@@ -23,6 +25,11 @@ public class GameObjectTypeFactory {
     public Shape makeShape(JSONObject obj) {
         if(obj == null) throw new RuntimeException("Missing key: shape");
         return shapeCreators.get(obj.getString("type")).makeComponent(obj);
+    }
+
+    public TypeCollider makeCollider(JSONObject obj) {
+        if(obj == null) throw new RuntimeException("Missing key: block");
+        return colliderCreators.get(obj.getString("type")).makeComponent(obj);
     }
 
     public AbilityComponent makeAbility(JSONObject obj, GameObjectTypeID type) {

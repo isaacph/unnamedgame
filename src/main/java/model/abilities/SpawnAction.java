@@ -34,7 +34,7 @@ public class SpawnAction implements Action {
         if(world.teams.getClientTeam(actor) == null) return false;
         if(!source.team.equals(world.teams.getClientTeam(actor))) return false;
         for(Vector2i tile : prodType.getRelativeOccupiedTiles()) {
-            if(world.occupied(targetX + tile.x, targetY + tile.y, gameData) != null) return false;
+            if(!world.occupied(targetX + tile.x, targetY + tile.y, gameData).isEmpty()) return false;
             if(world.getPureTileWeight(gameData, targetX + tile.x, targetY + tile.y) == Double.POSITIVE_INFINITY) return false;
         }
         if(world.getTileWeight(gameData, targetX, targetY) == Double.POSITIVE_INFINITY) return false;
@@ -57,7 +57,7 @@ public class SpawnAction implements Action {
         object.speedLeft -= ability.getCost();
         GameObject newGameObject = world.gameObjectFactory.createGameObject(
                 gameData.getType(ability.getProducedType()),
-                object.team);
+                object.team, gameData);
         world.gameObjects.put(newGameObject.uniqueID, newGameObject);
         newGameObject.x = targetX;
         newGameObject.y = targetY;

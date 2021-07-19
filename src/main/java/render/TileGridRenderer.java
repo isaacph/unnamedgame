@@ -1,6 +1,6 @@
 package render;
 
-import model.ByteGrid;
+import model.grid.ByteGrid;
 import game.Camera;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;

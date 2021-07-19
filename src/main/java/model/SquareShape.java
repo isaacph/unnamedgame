@@ -37,4 +37,12 @@ public class SquareShape implements Shape {
         }
         return tiles;
     }
+
+    public Vector2i getMinBound() {
+        return new Vector2i(-(size-1)/2);
+    }
+
+    public Vector2i getMaxBound() {
+        return new Vector2i(size/2);
+    }
 }

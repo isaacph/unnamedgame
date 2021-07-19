@@ -28,6 +28,10 @@ public class TeamManager implements Serializable {
     private int currentTurn = -1;
     public final TeamID.Generator teamIDGenerator = new TeamID.Generator();
 
+    public TeamManager() {
+        clear();
+    }
+
     public List<ClientID> getTeamClients(TeamID teamID) {
         List<ClientID> list = teamClients.get(teamID);
         if(list == null) return new ArrayList<>();
@@ -185,5 +189,8 @@ public class TeamManager implements Serializable {
         turnOrder.clear();
         clientEndedTurn.clear();
         currentTurn = -1;
+        addTeam(TeamID.NEUTRAL);
+        turnOrder.remove(TeamID.NEUTRAL);
+        setTeamName(TeamID.NEUTRAL, "Neutral");
     }
 }

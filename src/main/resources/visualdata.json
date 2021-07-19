@@ -74,9 +74,9 @@
       "display": {
         "type": "simple",
         "texture": "cube.png",
-        "size": 2.0,
+        "size": 4.0,
         "offsetX": 0.0,
-        "offsetY": -0.5,
+        "offsetY": -0.3,
         "circleSize": 1.5,
         "circleOffsetX": 0.5,
         "circleOffsetY": 0.5,
@@ -90,6 +90,29 @@
         "offsetX": 0.0,
         "offsetY": 0.0,
         "depthOffset": 0.0
+      }
+    },
+    {
+      "name": "rock",
+      "display": {
+        "type": "simple",
+        "texture": "rock.png",
+        "size": 2.0,
+        "offsetX": 0.0,
+        "offsetY": 0.4,
+        "circleSize": 1.5,
+        "circleOffsetX": 0.5,
+        "circleOffsetY": 0.5,
+        "centerOffsetX": 0.5,
+        "centerOffsetY": 0.5
+      },
+      "clickbox": {
+        "type": "aabb",
+        "sizeX": 0,
+        "sizeY": 0,
+        "offsetX": 0,
+        "offsetY": 0,
+        "depthOffset": 0
       }
     }
   ]

@@ -3,9 +3,10 @@ package model;
 import org.json.JSONObject;
 
 import java.io.Serializable;
-import java.util.Random;
 
 public class TeamID implements Serializable {
+
+    public static final TeamID NEUTRAL = new TeamID(0);
 
     private final int id;
 
@@ -53,9 +54,5 @@ public class TeamID implements Serializable {
         public TeamID generate() {
             return new TeamID(++generatorNumber);
         }
-    }
-
-    public static TeamID getLocalPlaceholder() {
-        return new TeamID(new Random().nextInt());
     }
 }

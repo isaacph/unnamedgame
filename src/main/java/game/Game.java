@@ -3,6 +3,9 @@ package game;
 import model.abilities.AbilityComponent;
 import model.abilities.MoveAbility;
 import model.abilities.MoveAction;
+import model.grid.ByteGrid;
+import model.grid.Pathfinding;
+import model.grid.TileGrid;
 import network.ClientConnection;
 import network.ServerPayload;
 import org.joml.*;
@@ -14,7 +17,6 @@ import server.*;
 import network.commands.*;
 import model.*;
 import util.FileUtil;
-import util.GridUtil;
 import util.MathUtil;
 
 import java.io.IOException;
@@ -61,6 +63,14 @@ public class Game {
     private Mode mode = Mode.PLAY;
     public ActionArranger currentCommand = null;
     private KeyMapping keyMapping = new KeyMapping();
+
+    private List<Integer> editorObjectPlacementKeys = Arrays.asList(
+            GLFW_KEY_1, GLFW_KEY_2, GLFW_KEY_3, GLFW_KEY_4, GLFW_KEY_5,
+            GLFW_KEY_6, GLFW_KEY_7, GLFW_KEY_8, GLFW_KEY_9, GLFW_KEY_0,
+            GLFW_KEY_MINUS, GLFW_KEY_EQUAL, GLFW_KEY_Q, GLFW_KEY_W,
+            GLFW_KEY_E, GLFW_KEY_R, GLFW_KEY_T, GLFW_KEY_Y,
+            GLFW_KEY_U, GLFW_KEY_I, GLFW_KEY_O, GLFW_KEY_P
+    );
 
     enum Mode {
         PLAY, EDIT
@@ -331,20 +341,23 @@ public class Game {
                         worldRenderer.tileGridRenderer.build(updateGrid);
                     }
                 }
-                for(int i = GLFW_KEY_1; i <= GLFW_KEY_9; ++i) {
-                    if(glfwGetKey(window, i) == GLFW_PRESS) {
-                        ClientID clientID = clientInfo.clientID;
-                        TeamID team = world.teams.getClientTeam(clientID);
-                        if(team == null) chatbox.println("Need to have team");
-                        GameObject obj = null;
-                        if(i - GLFW_KEY_1 >= gameData.getTypes().size()) chatbox.println("Missing entity type");
-                        else obj = world.gameObjectFactory.createGameObject(gameData.getTypes().get(i - GLFW_KEY_1), team);
-                        if(obj != null) {
-                            obj.x = mouseWorldPosition.x;
-                            obj.y = mouseWorldPosition.y;
-                            if(world.add(obj, gameData)) {
-                                worldRenderer.resetGameObjectRenderCache();
-                                clickBoxManager.resetGameObjectCache();
+                for(int i = 0; i < editorObjectPlacementKeys.size(); ++i) {
+                    if(glfwGetKey(window, editorObjectPlacementKeys.get(i)) == GLFW_PRESS) {
+                        if(i >= gameData.getTypes().size()) {
+                            chatbox.println("Missing entity type");
+                        } else {
+                            GameObjectType type = gameData.getTypes().get(i);
+                            ClientID clientID = clientInfo.clientID;
+                            TeamID team = world.teams.getClientTeam(clientID);
+                            if(!type.isNeutral() && team == null) chatbox.println("Need to have team");
+                            GameObject obj = world.gameObjectFactory.createGameObject(type, team, gameData);
+                            if(obj != null) {
+                                obj.x = mouseWorldPosition.x;
+                                obj.y = mouseWorldPosition.y;
+                                if(world.add(obj, gameData)) {
+                                    worldRenderer.resetGameObjectRenderCache();
+                                    clickBoxManager.resetGameObjectCache();
+                                }
                             }
                         }
                     }
@@ -414,6 +427,7 @@ public class Game {
                                         }
                                         world.teams.setClientTeam(clientInfo.clientID, teamID);
                                         chatbox.println("Local team joined: " + teamID + ", name: " + targetTeam);
+                                        NextTurn.executeNextTurn(world, gameData, s -> chatbox.println(s), s -> chatbox.println(s));
                                     }
                                 }
                             }
@@ -533,9 +547,10 @@ public class Game {
                         } else if(args[0].equals("moveall")) {
                             TeamID team = world.teams.getClientTeam(clientInfo.clientID);
                             if(team != null) {
+                                TileGrid grid = new TileGrid(gameData, world);
                                 for(GameObject gameObject : world.gameObjects.values()) {
                                     if(gameObject.team.equals(team)) {
-                                        Set<Vector2i> targets = Pathfinding.pathPossibilities(GridUtil.getWeightStorage(gameObject.uniqueID, world, gameData), new Vector2i(gameObject.x, gameObject.y), gameObject.speedLeft).possibilities();
+                                        Collection<Vector2i> targets = Pathfinding.pathPossibilities(grid, gameObject.uniqueID, new Vector2i(gameObject.x, gameObject.y), gameObject.speedLeft).possibilities();
                                         int n = new Random().nextInt(targets.size());
                                         Vector2i target = new Vector2i();
                                         for(Vector2i v : targets) {

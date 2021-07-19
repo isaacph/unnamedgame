@@ -1,12 +1,8 @@
 package render;
 
 import game.Camera;
-import model.GameObjectID;
-import model.World;
+import model.*;
 import org.joml.*;
-import model.GameData;
-import model.GameObject;
-import model.GameObjectType;
 
 public class TeamTextureComponent extends RenderComponent {
 
@@ -46,7 +42,7 @@ public class TeamTextureComponent extends RenderComponent {
     @Override
     public void drawGround(WorldRenderer renderer, Matrix4f orthoProj) {
         GameObject gameObject = world.gameObjects.get(gameObjectID);
-        if(gameObject != null && visible(gameObject)) {
+        if(gameObject != null && visible(gameObject) && !gameObject.team.equals(TeamID.NEUTRAL)) {
             GameObjectType type = gameData.getType(gameObject.type);
             if(fixedPosition) {
                 this.position = new Vector2f(gameObject.x, gameObject.y);

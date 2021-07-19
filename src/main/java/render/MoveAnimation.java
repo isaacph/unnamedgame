@@ -2,9 +2,10 @@ package render;
 
 import game.*;
 import model.*;
+import model.grid.Pathfinding;
+import model.grid.TileGrid;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
-import util.GridUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +49,13 @@ public class MoveAnimation implements Animation {
         this.position = new Vector2f(object.x, object.y);
         clickBoxManager.getGameObjectClickBox(objectID).disabled = true;
         this.animationManager.setObjectOccupied(objectID, true);
-        this.path = Pathfinding.shortestPath(GridUtil.getWeightStorage(object.uniqueID, world, gameData), new Vector2i(object.x, object.y), this.targetInt, gameData.getType(object.type).getSpeed());
+        this.path = Pathfinding.getPathTiles(
+                Pathfinding.shortestPath(
+                        new TileGrid(gameData, world),
+                        objectID,
+                        new Vector2i(object.x, object.y),
+                        this.targetInt,
+                        gameData.getType(object.type).getSpeed()));
         this.pathIndex = 0;
     }
 

@@ -7,6 +7,7 @@ import org.joml.Vector2i;
 import util.MathUtil;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -79,7 +80,13 @@ public class GrowAnimator implements Animator {
             Set<GameObjectID> seeds = new HashSet<>();
             for(Vector2i tileOffset : intoType.getRelativeOccupiedTiles()) {
                 Vector2i tile = new Vector2i(game.mouseWorldPosition).add(tileOffset);
-                seeds.add(game.world.occupied(tile.x, tile.y, game.gameData));
+                Collection<GameObjectID> ids = game.world.occupied(tile.x, tile.y, game.gameData);
+                for(GameObjectID id : ids) {
+                    GameObject obj = game.world.gameObjects.get(id);
+                    if(obj.type.equals(selectedObject.type)) {
+                        seeds.add(id);
+                    }
+                }
             }
             if(!seeds.contains(selectedObject.uniqueID)) return null;
             return new GrowAction(abilityID, seeds, game.mouseWorldPosition.x, game.mouseWorldPosition.y);

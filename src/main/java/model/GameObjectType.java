@@ -16,19 +16,27 @@ public class GameObjectType implements Serializable {
     private Shape shape;
     private List<AbilityComponent> abilities;
     private Map<Integer, AbilityComponent> slotAbility;
+    private boolean neutral;
+    private TypeCollider collider;
 
     public GameObjectType(JSONObject obj, GameObjectTypeFactory factory) {
         uniqueID = new GameObjectTypeID(obj.getString("name"));
-        speed = obj.getFloat("speed");
-        health = obj.getFloat("health");
         shape = factory.makeShape(obj.getJSONObject("shape"));
-        abilities = new ArrayList<>();
-        slotAbility = new HashMap<>();
-        JSONArray arr = new JSONArray(obj.getJSONArray("abilities"));
-        for(int i = 0; i < arr.length(); ++i) {
-            AbilityComponent ability = factory.makeAbility(arr.getJSONObject(i), uniqueID);
-            abilities.add(ability);
-            slotAbility.put(ability.getSlot(), ability);
+        collider = factory.makeCollider(obj.getJSONObject("collider"));
+        if(obj.has("neutral")) {
+            neutral = obj.getBoolean("neutral");
+        } else neutral = false;
+        if(!neutral) {
+            speed = obj.getFloat("speed");
+            health = obj.getFloat("health");
+            abilities = new ArrayList<>();
+            slotAbility = new HashMap<>();
+            JSONArray arr = new JSONArray(obj.getJSONArray("abilities"));
+            for(int i = 0; i < arr.length(); ++i) {
+                AbilityComponent ability = factory.makeAbility(arr.getJSONObject(i), uniqueID);
+                abilities.add(ability);
+                slotAbility.put(ability.getSlot(), ability);
+            }
         }
     }
 
@@ -49,6 +57,14 @@ public class GameObjectType implements Serializable {
     public AbilityComponent getAbility(int slot) {
         if(!slotAbility.containsKey(slot)) return null;
         return slotAbility.get(slot);
+    }
+
+    public boolean isNeutral() {
+        return neutral;
+    }
+
+    public Collider getCollider() {
+        return collider;
     }
 
 //    public boolean hasAbility(AbilityTypeID abilityTypeID) {
@@ -94,6 +110,7 @@ public class GameObjectType implements Serializable {
         obj.put("name", uniqueID.getName());
         obj.put("speed", speed);
         obj.put("shape", shape.toJSON());
+        obj.put("collider", collider.toJSON());
         obj.put("health", health);
 
         JSONArray abArray = new JSONArray();
