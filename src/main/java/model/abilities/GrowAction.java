@@ -2,9 +2,11 @@ package model.abilities;
 
 import model.*;
 import org.joml.Vector2i;
+import util.MathUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Set;
 
 public class GrowAction implements Action {
 
@@ -49,8 +51,9 @@ public class GrowAction implements Action {
         if(growInto == null) return false;
         boolean[] goFound = new boolean[seeds.size()];
         int numFound = 0;
-        for(Vector2i tile : growInto.getRelativeOccupiedTiles()) {
-            if(world.getPureTileWeight(gameData, growX + tile.x, growY + tile.y) == Double.POSITIVE_INFINITY) {
+        Set<Vector2i> tilesToOccupy = MathUtil.addToAll(growInto.getRelativeOccupiedTiles(), new Vector2i(growX, growY));
+        for(Vector2i tile : tilesToOccupy) {
+            if(world.getPureTileWeight(gameData, tile.x, tile.y) == Double.POSITIVE_INFINITY) {
                 return false;
             }
             Collection<GameObjectID> occupiers = world.occupied(tile.x, tile.y, gameData);

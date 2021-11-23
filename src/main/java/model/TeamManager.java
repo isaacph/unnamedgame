@@ -1,10 +1,12 @@
 package model;
 
 import org.joml.Vector3f;
+import org.joml.Vector3fc;
 
 import java.io.Serializable;
 import java.util.*;
 
+/** Also the "turn manager" */
 public class TeamManager implements Serializable {
 
     private static final Vector3f[] DEFAULT_COLORS = {
@@ -19,10 +21,11 @@ public class TeamManager implements Serializable {
     };
     private int colorCounter = 0;
 
-    private final List<TeamID> teams = new ArrayList<>();
-    private final Map<TeamID, List<ClientID>> teamClients = new HashMap<>();
-    private final Map<TeamID, String> teamName = new HashMap<>();
-    private final Map<TeamID, Vector3f> teamColor = new HashMap<>();
+//    private final List<TeamID> teams = new ArrayList<>();
+    private final Map<TeamID, Team> teams = new HashMap<>();
+//    private final Map<TeamID, List<ClientID>> teamClients = new HashMap<>();
+//    private final Map<TeamID, String> teamName = new HashMap<>();
+//    private final Map<TeamID, Vector3f> teamColor = new HashMap<>();
     private final ArrayList<TeamID> turnOrder = new ArrayList<>();
     private final Map<ClientID, Boolean> clientEndedTurn = new HashMap<>();
     private int currentTurn = -1;
@@ -33,16 +36,16 @@ public class TeamManager implements Serializable {
     }
 
     public List<ClientID> getTeamClients(TeamID teamID) {
-        List<ClientID> list = teamClients.get(teamID);
-        if(list == null) return new ArrayList<>();
-        return new ArrayList<>(list);
+        Team team = teams.get(teamID);
+        if(team == null) return new ArrayList<>();
+        return team.getClients();
     }
 
     public TeamID getClientTeam(ClientID clientID) {
         if(clientID == null) return null;
-        for(TeamID team : teams) {
-            if(teamClients.get(team) != null && teamClients.get(team).contains(clientID)) {
-                return team;
+        for(Team team : teams.values()) {
+            if(team.hasClient(clientID)) {
+                return team.getID();
             }
         }
         return null;
@@ -51,55 +54,60 @@ public class TeamManager implements Serializable {
     public void setClientTeam(ClientID clientID, TeamID teamID) {
         TeamID currentTeam = getClientTeam(clientID);
         if(currentTeam != null) {
-            teamClients.get(currentTeam).remove(clientID);
+            teams.get(currentTeam).removeClients(Collections.singletonList(clientID));
         }
+
         if(teamID != null) {
-            teamClients.computeIfAbsent(teamID, k -> new ArrayList<>());
-            teamClients.get(teamID).add(clientID);
+            Team team = teams.get(teamID);
+            if(team == null) {
+                addTeam(teamID);
+                team = teams.get(teamID);
+            }
+            team.addClient(clientID);
         }
     }
 
     public void addTeam(TeamID teamID) {
-        teams.add(teamID);
-        teamColor.put(teamID, DEFAULT_COLORS[colorCounter++ % DEFAULT_COLORS.length]);
+        teams.put(teamID, new Team(teamID, nextDefaultColor()));
         turnOrder.add(teamID);
-        teamName.put(teamID, teamID.toString());
     }
 
-    public String getTeamName(TeamID team) {
-        return teamName.get(team);
+    private Vector3fc nextDefaultColor() {
+        return DEFAULT_COLORS[colorCounter++ % DEFAULT_COLORS.length];
     }
 
-    public void setTeamName(TeamID team, String name) {
-        teamName.put(team, name);
+    public String getTeamName(TeamID teamID) {
+        Team team = teams.get(teamID);
+        if(team == null) return null;
+        return team.getName();
     }
 
-    public void setTeamColor(TeamID team, Vector3f color) {
-        teamColor.put(team, color);
+    public void setTeamName(TeamID teamID, String name) {
+        Team team = teams.get(teamID);
+        if(team != null) team.setName(name);
     }
 
-    public Vector3f getTeamColor(TeamID team) {
-        if(team == null) return new Vector3f(1.0f);
-        Vector3f color = teamColor.get(team);
-        if(color != null) {
-            return color;
-        }
-        return new Vector3f(1.0f);
+    public void setTeamColor(TeamID teamID, Vector3fc color) {
+        Team team = teams.get(teamID);
+        if(team != null) team.setColor(color);
+    }
+
+    public Vector3f getTeamColor(TeamID teamID) {
+        Team team = teams.get(teamID);
+        if(team != null) return team.getColor();
+        return new Vector3f(1);
     }
 
     public Collection<TeamID> getTeams() {
-        return new ArrayList<>(teams);
+        return new ArrayList<>(teams.keySet());
     }
 
-    public boolean removeTeam(TeamID team) {
-        boolean removed = teams.remove(team);
-        teamColor.remove(team);
-        teamName.remove(team);
-        teamClients.remove(team);
+    public boolean removeTeam(TeamID teamID) {
+        Team removed = teams.remove(teamID);
         if(!turnOrder.isEmpty()) {
             List<Integer> toRemove = new ArrayList<>();
             for(int i = 0; i < turnOrder.size(); ++i) {
-                if(turnOrder.get(i).equals(team)) {
+                if(turnOrder.get(i).equals(teamID)) {
                     toRemove.add(i);
                 }
             }
@@ -107,14 +115,14 @@ public class TeamManager implements Serializable {
                 turnOrder.remove((int) toRemove.get(i));
             }
         }
-        return removed;
+        return removed != null;
     }
 
     public TeamID getTeamWithName(String name) {
         if(name == null) return null;
-        for(TeamID team : teams) {
-            if(teamName.get(team) != null && teamName.get(team).equalsIgnoreCase(name)) {
-                return team;
+        for(Team team : teams.values()) {
+            if(team.getName().equalsIgnoreCase(name)) {
+                return team.getID();
             }
         }
         return null;
@@ -161,7 +169,7 @@ public class TeamManager implements Serializable {
 
     public boolean teamEndedTurn(TeamID team) {
         if(team == null) return true;
-        List<ClientID> clients = teamClients.get(team);
+        List<ClientID> clients = getTeamClients(team);
         if(clients == null || clients.isEmpty()) return true;
         for(ClientID client : clients) {
             if(!clientEndedTurn(client)) {
@@ -183,9 +191,6 @@ public class TeamManager implements Serializable {
 
     public void clear() {
         teams.clear();
-        teamClients.clear();
-        teamName.clear();
-        teamColor.clear();
         turnOrder.clear();
         clientEndedTurn.clear();
         currentTurn = -1;

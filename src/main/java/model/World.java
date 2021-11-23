@@ -21,6 +21,8 @@ public class World implements Serializable {
 
     }
 
+    /** Pretty scuffed that this function exists here,
+     * TODO: move this function to an outside class */
     public Collection<GameObjectID> occupied(int x, int y, GameData gameData) {
         ArrayList<GameObjectID> ids = new ArrayList<>();
         for(GameObject object : gameObjects.values()) {

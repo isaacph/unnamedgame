@@ -350,13 +350,27 @@ public class Game {
                             ClientID clientID = clientInfo.clientID;
                             TeamID team = world.teams.getClientTeam(clientID);
                             if(!type.isNeutral() && team == null) chatbox.println("Need to have team");
-                            GameObject obj = world.gameObjectFactory.createGameObject(type, team, gameData);
-                            if(obj != null) {
-                                obj.x = mouseWorldPosition.x;
-                                obj.y = mouseWorldPosition.y;
-                                if(world.add(obj, gameData)) {
-                                    worldRenderer.resetGameObjectRenderCache();
-                                    clickBoxManager.resetGameObjectCache();
+                            Set<Vector2i> tiles = MathUtil.addToAll(type.getRelativeOccupiedTiles(), mouseWorldPosition);
+                            boolean canPlace = true;
+                            for(Vector2i tile : tiles) {
+                                if(!world.occupied(tile.x, tile.y, gameData).isEmpty()) {
+                                    canPlace = false;
+                                }
+                            }
+                            if(canPlace) {
+                                GameObject obj = world.gameObjectFactory.createGameObject(type, team, gameData);
+                                if(obj != null) {
+                                    obj.x = mouseWorldPosition.x;
+                                    obj.y = mouseWorldPosition.y;
+                                    if(world.add(obj, gameData)) {
+                                        worldRenderer.resetGameObjectRenderCache();
+                                        clickBoxManager.resetGameObjectCache();
+                                    } else {
+                                        // Should never happen since the routine above to check "canPlace"
+                                        // is identical to what world.add does
+                                        // TODO: optimize world.add to not check if something else is already there
+                                        System.err.println("Failed to place object: " + obj.uniqueID);
+                                    }
                                 }
                             }
                         }
