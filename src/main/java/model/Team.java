@@ -15,12 +15,14 @@ public class Team {
     private String name;
     private final Set<ClientID> clients;
     private final Vector3f color;
+    private Map<ResourceID, Integer> resources;
 
     public Team(TeamID teamID, Vector3fc defaultColor) {
         this.name = teamID.toString();
         this.teamID = teamID;
         this.clients = new HashSet<>();
         this.color = new Vector3f(defaultColor); // TODO correctly default initialize
+        this.resources = new HashMap<>();
     }
 
     public List<ClientID> getClients() {
@@ -57,5 +59,19 @@ public class Team {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public void setResource(ResourceID resID, int amount) {
+        this.resources.put(resID, amount);
+    }
+
+    public int getResource(ResourceID resID) {
+        Integer count = this.resources.get(resID);
+        if(count == null) return 0;
+        return count;
+    }
+
+    public Map<ResourceID, Integer> getResources() {
+        return Collections.unmodifiableMap(resources);
     }
 }

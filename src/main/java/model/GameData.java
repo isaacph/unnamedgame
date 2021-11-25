@@ -11,28 +11,16 @@ public class GameData {
 
     private final ArrayList<GameObjectType> types = new ArrayList<>();
     private final Map<GameObjectTypeID, GameObjectType> typeMap = new HashMap<>();
+    private final Map<ResourceID, Resource> resourceTypes = new HashMap<>();
 
     public GameData() {
-        /*kidID = addType(new GameObjectType(new GameObjectTypeID("kid"),
-                "kid.png",
-                new Vector2f(0),
-                new Vector2f(1),
-                new Vector2f(0),
-                new Vector2f(1),
-                new Vector2f(0),
-                new Vector2i(0), new Vector2i(0),
-                8.0, 1, new Vector2f(0), 1, true, 1.2f,
-                new Vector2f(0.0f)));
-        buildingID = addType(new GameObjectType(new GameObjectTypeID("building"),
-                "kid.png",
-                new Vector2f(0.0f, 0.0f),
-                new Vector2f(2),
-                new Vector2f(0.0f, 0.0f),
-                new Vector2f(1.4f, 2.0f),
-                new Vector2f(0.0f, 0.0f),
-                new Vector2i(0), new Vector2i(1),
-                1.0, 1.5f, new Vector2f(0.5f), 2, false, 0,
-                new Vector2f(0.5f)));*/
+        this.clear();
+    }
+
+    private void clear() {
+        typeMap.clear();
+        types.clear();
+        resourceTypes.clear();
     }
 
     private GameObjectTypeID addType(GameObjectType type) {
@@ -41,12 +29,29 @@ public class GameData {
         return type.getUniqueID();
     }
 
+    private ResourceID addResource(Resource resource) {
+        resourceTypes.put(resource.getUniqueID(), resource);
+        return resource.getUniqueID();
+    }
+
     public GameObjectType getType(GameObjectTypeID id) {
         return typeMap.get(id);
     }
 
     public List<GameObjectType> getTypes() {
         return new ArrayList<>(types);
+    }
+
+    public Collection<Resource> getResourceTypes() {
+        return new ArrayList<>(resourceTypes.values());
+    }
+
+    public Collection<ResourceID> getResourceIDs() {
+        return new ArrayList<>(resourceTypes.keySet());
+    }
+
+    public Resource getResourceType(ResourceID resourceID) {
+        return resourceTypes.get(resourceID);
     }
 
     @SuppressWarnings("unchecked")
@@ -61,14 +66,19 @@ public class GameData {
 
     public boolean fromJSON(JSONObject json, Consumer<RuntimeException> errorHandler) {
         try {
-            typeMap.clear();
-            types.clear();
+            this.clear();
             GameObjectTypeFactory factory = new GameObjectTypeFactory();
 
             JSONArray types = json.getJSONArray("types");
             for(int i = 0; i < types.length(); ++i) {
                 JSONObject obj = types.getJSONObject(i);
                 addType(factory.makeGameObjectType(obj));
+            }
+
+            JSONArray resourceTypes = json.getJSONArray("resources");
+            for(int i = 0; i < resourceTypes.length(); ++i) {
+                JSONObject obj = resourceTypes.getJSONObject(i);
+                addResource(factory.makeResource(obj));
             }
             return true;
         } catch(RuntimeException e) {
@@ -87,6 +97,18 @@ public class GameData {
             array.put(type.toJSON());
         }
         obj.put("types", array);
+        JSONArray resArray = new JSONArray();
+        for(Resource resource : resourceTypes.values()) {
+            resArray.put(resource.toJSON());
+        }
+        obj.put("resources", resArray);
         return obj;
+    }
+
+    public ResourceID getResourceID(String name) {
+        if(resourceTypes.get(new ResourceID(name)) != null) {
+            return new ResourceID(name);
+        }
+        return null;
     }
 }

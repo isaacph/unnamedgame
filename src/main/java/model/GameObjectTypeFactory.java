@@ -37,6 +37,11 @@ public class GameObjectTypeFactory {
         return abilityCreators.get(obj.getString("type")).makeComponent(obj, type);
     }
 
+    public Resource makeResource(JSONObject obj) {
+        if(obj == null) throw new RuntimeException("Empty resource?");
+        return new Resource(obj);
+    }
+
     public GameObjectType makeGameObjectType(JSONObject obj) {
         return new GameObjectType(obj, this);
     }

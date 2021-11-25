@@ -98,6 +98,8 @@ public class GameObjectType implements Serializable {
         return uniqueID.toString();
     }
 
+    /** Used by contained object constructors to ensure that the "types" of the json objects passed
+     * to their constructors match their class required types */
     public static void assertString(String givenType, String assertType) throws AssertionError {
         if(!givenType.equals(assertType)) {
             throw new AssertionError("Wrong object type! Should have been checked earlier! (type: "

@@ -1,5 +1,6 @@
 package render;
 
+import org.joml.Vector2ic;
 import util.FileUtil;
 import org.joml.Vector2i;
 import org.lwjgl.stb.STBImage;
@@ -28,10 +29,12 @@ public class Texture {
         }
     }
 
-    public int texture;
+    public final int texture;
+    public final Vector2ic size;
 
-    public Texture(int texture) {
+    public Texture(int texture, Vector2ic size) {
         this.texture = texture;
+        this.size = new Vector2i(size);
     }
 
     public void bind() {
@@ -52,7 +55,7 @@ public class Texture {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, settings.filter);
         glGenerateMipmap(GL_TEXTURE_2D);
         Shaders.checkGLError("Create image " + width + " x " + height);
-        return new Texture(texture);
+        return new Texture(texture, new Vector2i(width, height));
     }
 
     public static Texture makeTexture(int width, int height, ByteBuffer bytes, Settings settings) {
@@ -65,7 +68,7 @@ public class Texture {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, settings.filter);
         glGenerateMipmap(GL_TEXTURE_2D);
         Shaders.checkGLError("Create image " + width + " x " + height);
-        return new Texture(texture);
+        return new Texture(texture, new Vector2i(width, height));
     }
 
     public static ByteBuffer loadFromFile(String path, Vector2i destSize) {

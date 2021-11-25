@@ -1,0 +1,105 @@
+{
+  "types": [
+    {
+      "name": "kid",
+      "speed": 8.0,
+      "health": 1.0,
+      "shape": {
+        "type": "square",
+        "size": 1
+      },
+      "collider": {"type": "block"},
+      "abilities": [
+        {
+          "type": "move",
+          "slot": 0
+        },
+        {
+          "type": "attack",
+          "slot": 2,
+          "cost": 5,
+          "damage": 1.0
+        },
+        {
+          "type": "grow",
+          "slot": 3,
+          "cost": 7,
+          "requiredCount": 4,
+          "into": "building"
+        }
+      ]
+    },
+    {
+      "name": "building",
+      "speed": 1.0,
+      "health": 2.0,
+      "shape": {
+        "type": "square",
+        "size": 2
+      },
+      "collider": {"type": "block"},
+      "abilities": [
+        {
+          "type": "spawn",
+          "slot": 0,
+          "cost": 1,
+          "produce": "kid"
+        },
+        {
+          "type": "spawn",
+          "slot": 1,
+          "cost": 1,
+          "produce": "builderkid"
+        }
+      ]
+    },
+    {
+      "name": "builderkid",
+      "speed": 6.0,
+      "health": 0.5,
+      "shape": {
+        "type": "square",
+        "size": 1
+      },
+      "collider": {"type": "block"},
+      "abilities": [
+        {
+          "type": "move",
+          "slot": 0
+        },
+        {
+          "type": "spawn",
+          "slot": 1,
+          "cost": 4,
+          "produce": "wall"
+        }
+      ]
+    },
+    {
+      "name": "wall",
+      "speed": 0.0,
+      "health": 4.0,
+      "shape": {
+        "type": "square",
+        "size": 2
+      },
+      "collider": {"type": "block"},
+      "abilities": [
+        {
+          "type": "dismiss",
+          "slot": 0,
+          "cost": 0
+        }
+      ]
+    },
+    {
+      "name": "rock",
+      "shape": {
+        "type": "square",
+        "size": 2
+      },
+      "collider": {"type": "block"},
+      "neutral": true
+    }
+  ]
+}

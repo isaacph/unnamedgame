@@ -1,8 +1,9 @@
 package util;
 
-import org.joml.Vector2i;
+import org.joml.*;
 
 import java.io.*;
+import java.lang.Math;
 import java.util.*;
 
 public class MathUtil {
@@ -195,5 +196,9 @@ public class MathUtil {
             }
         }
         return top;
+    }
+
+    public static Matrix4f getDisplayMatrix(float sizeMultiplier, Vector2fc offset, Vector2ic imageSize) {
+        return new Matrix4f().translate(offset.x() * imageSize.x(), offset.y() * imageSize.y(), 0).scale(sizeMultiplier);
     }
 }

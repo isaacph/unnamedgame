@@ -64,6 +64,8 @@ public class Game {
     public ActionArranger currentCommand = null;
     private KeyMapping keyMapping = new KeyMapping();
 
+    private final Map<ResourceID, Texture> resourceTexture = new HashMap<>();
+
     private List<Integer> editorObjectPlacementKeys = Arrays.asList(
             GLFW_KEY_1, GLFW_KEY_2, GLFW_KEY_3, GLFW_KEY_4, GLFW_KEY_5,
             GLFW_KEY_6, GLFW_KEY_7, GLFW_KEY_8, GLFW_KEY_9, GLFW_KEY_0,
@@ -172,6 +174,9 @@ public class Game {
                 chatbox.println(e.getMessage());
                 e.printStackTrace();
             });
+            for(ResourceID resourceID : visualData.getLoadedResources()) {
+                this.resourceTexture.put(resourceID, Texture.makeTexture(visualData.getResourceType(resourceID).getDisplay().getTexture()));
+            }
         } catch(IOException e) {
             chatbox.println("JSON file missing (probably)");
             e.printStackTrace();
@@ -555,6 +560,9 @@ public class Game {
                                         animationManager.reset();
                                         worldRenderer.rebuildTerrain();
                                         clickBoxManager.selectedID = null;
+                                        for(ResourceID resourceID : visualData.getLoadedResources()) {
+                                            this.resourceTexture.put(resourceID, Texture.makeTexture(visualData.getResourceType(resourceID).getDisplay().getTexture()));
+                                        }
                                     }
                                 }
                             }
@@ -617,6 +625,31 @@ public class Game {
                             } else {
                                 chatbox.println("Invalid command/arguments");
                             }
+                        } else if(args[0].equals("setres")) {
+                            if(args.length != 3 && args.length != 4) {
+                                chatbox.println("Invalid arguments");
+                            } else {
+                                TeamID teamID = world.teams.getClientTeam(clientInfo.clientID);
+                                ResourceID resourceID;
+                                int amount;
+                                if(args.length == 3) {
+                                    resourceID = gameData.getResourceID(args[1]);
+                                    amount = Integer.parseInt(args[2]);
+                                } else {
+                                    teamID = world.teams.getTeamWithName(args[1]);
+                                    resourceID = gameData.getResourceID(args[2]);
+                                    amount = Integer.parseInt(args[3]);
+                                }
+                                if(teamID == null || resourceID == null || amount < 0) {
+                                    chatbox.println("Invalid arguments");
+                                } else {
+                                    SetResources setResources = new SetResources(teamID, resourceID, amount);
+                                    setResources.execute(this);
+                                    if(connection.isConnected()) {
+                                        connection.queueSend(setResources);
+                                    }
+                                }
+                            }
                         } else {
                             chatbox.println("Unknown command!");
                         }
@@ -674,6 +707,38 @@ public class Game {
 //            }
 //            boxRenderer.draw(new Matrix4f(camera.getProjView()).translate(mouseViewPosition.x, mouseViewPosition.y, 0).scale(0.25f),
 //                new Vector4f(0.5f));
+
+            float rightMargin = 8;
+            float offsetX = 0;
+            float resSize = 32;
+            float textWidth = font.textWidth(" 00000");
+            float totalWidth = (textWidth + resSize + rightMargin) * gameData.getResourceIDs().size();
+            Matrix4f background = new Matrix4f(camera.getProjection());
+            background.translate(screenWidth - totalWidth / 2.0f, font.getSize() / 2.0f + 4, 0);
+            background.scale(totalWidth, font.getSize() + 8, 0);
+            boxRenderer.draw(background, new Vector4f(0, 0, 0, 0.4f));
+            for(ResourceID resourceID : gameData.getResourceIDs()) {
+                // get resource visual
+                VisualDataResourceType type = visualData.getResourceType(resourceID);
+                ResourceDisplay display = type.getDisplay();
+                Texture texture = resourceTexture.get(resourceID);
+                texture.bind();
+                Matrix4f mat4 = new Matrix4f(camera.getProjection());
+                mat4.translate(screenWidth - textWidth - resSize / 2.0f - offsetX - rightMargin, resSize / 2.0f, 0);
+                mat4.scale(resSize);
+                mat4.mul(MathUtil.getDisplayMatrix(display.getSizeMultiplier(), display.getOffset(), texture.size));
+                textureRenderer.draw(mat4, new Vector4f(1));
+
+                // draw text
+                String text = ""+world.teams.getTeamResource(world.teams.getClientTeam(clientInfo.clientID), resourceID);
+                float currTextWidth = font.textWidth(text);
+                this.font.draw(text,
+                        screenWidth - currTextWidth - offsetX - rightMargin,
+                        font.getSize(),
+                        new Matrix4f(camera.getProjection()));
+
+                offsetX += textWidth + resSize + rightMargin;
+            }
 
             glfwSwapBuffers(window); // swap the color buffers, rendering what was drawn to the screen
         }

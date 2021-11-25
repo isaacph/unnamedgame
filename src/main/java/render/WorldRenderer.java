@@ -102,6 +102,7 @@ public class WorldRenderer {
 
     private RenderComponent makeRenderComponent(GameObject gameObject) {
         VisualDataType type = visualData.getType(gameObject.type);
+        if(type == null) throw new RuntimeException("No visual data found for " + gameObject.type.getName());
         return type.makeRenderComponent(gameObject.uniqueID, world, gameData, textureLibrary);
     }
 

@@ -98,6 +98,27 @@ public class TeamManager implements Serializable {
         return new Vector3f(1);
     }
 
+    public Map<ResourceID, Integer> getTeamResources(TeamID teamID) {
+        Team team = teams.get(teamID);
+        if(team != null) return team.getResources();
+        return Collections.emptyMap();
+    }
+
+    public int getTeamResource(TeamID teamID, ResourceID resourceID) {
+        Team team = teams.get(teamID);
+        if(team == null) return 0;
+        return team.getResource(resourceID);
+    }
+
+    public void setTeamResource(TeamID teamID, ResourceID resourceID, int amount) {
+        Team team = teams.get(teamID);
+        if(team != null) team.setResource(resourceID, amount);
+    }
+
+    public boolean isTeam(TeamID teamID) {
+        return teams.get(teamID) != null;
+    }
+
     public Collection<TeamID> getTeams() {
         return new ArrayList<>(teams.keySet());
     }

@@ -1,41 +1,9 @@
 {
-  "resources": [
-    {
-      "name": "gems",
-      "display": {
-        "type": "simple",
-        "texture": "gem.png",
-        "size": 1.46,
-        "offsetX": 0.0,
-        "offsetY": 0.0
-      }
-    },
-    {
-      "name": "cubes",
-      "display": {
-        "type": "simple",
-        "texture": "cube.png",
-        "size": 1.0,
-        "offsetX": 0.0,
-        "offsetY": 0.0
-      }
-    },
-    {
-      "name": "carpet",
-      "display": {
-        "type": "simple",
-        "texture": "carpet.png",
-        "size": 1.0,
-        "offsetX": 0.0,
-        "offsetY": 0.0
-      }
-    }
-  ],
   "types": [
     {
-      "name": "basic",
+      "name": "kid",
       "display": {
-        "type": "simple",
+        "type": "simple_circle",
         "texture": "kid.png",
         "size": 1.0,
         "offsetX": 0.0,
@@ -58,7 +26,7 @@
     {
       "name": "building",
       "display": {
-        "type": "simple",
+        "type": "simple_circle",
         "texture": "kid.png",
         "size": 2.0,
         "offsetX": 0.0,
@@ -81,7 +49,7 @@
     {
       "name": "builderkid",
       "display": {
-        "type": "simple",
+        "type": "simple_circle",
         "texture": "builderkid.png",
         "size": 1.0,
         "offsetX": 0.0,
@@ -104,7 +72,7 @@
     {
       "name": "wall",
       "display": {
-        "type": "simple",
+        "type": "simple_circle",
         "texture": "cube.png",
         "size": 4.0,
         "offsetX": 0.0,
