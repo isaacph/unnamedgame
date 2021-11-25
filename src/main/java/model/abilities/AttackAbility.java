@@ -8,15 +8,10 @@ public class AttackAbility extends AbilityImpl implements AbilityComponent {
     public static final AbilityTypeID ID = new AbilityTypeID("attack");
 
     @Direct private double damage;
-    @Direct private double cost;
 
     public AttackAbility(JSONObject obj, GameObjectTypeID objTypeID) {
         super(obj, ID, objTypeID);
     }
 
     public double getDamage() { return damage; }
-
-    public double getCost() {
-        return cost;
-    }
 }

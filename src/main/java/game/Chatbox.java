@@ -85,6 +85,7 @@ public class Chatbox {
     }
 
     public void println(String s) {
+        if(s == null) s = "null";
         focusTimer = FOCUS_TIME;
         int index = 0, start = 0;
         while(index < s.length()) {

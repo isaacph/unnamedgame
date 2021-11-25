@@ -41,7 +41,7 @@ public class SpawnAnimator implements Animator {
             if(type == null) return false;
             abilityID = new AbilityID(obj.type, SpawnAbility.ID, slot);
             SpawnAbility ability = game.gameData.getAbility(SpawnAbility.class, abilityID);
-            if(ability != null && obj.speedLeft >= ability.getCost() && !game.animationManager.isObjectOccupied(game.clickBoxManager.selectedID) && obj.alive) {
+            if(ability != null && obj.speedLeft >= ability.getSpeedCost() && !game.animationManager.isObjectOccupied(game.clickBoxManager.selectedID) && obj.alive) {
                 GameObjectType spawnedType = game.gameData.getType(ability.getProducedType());
                 if(spawnedType == null) return false;
 

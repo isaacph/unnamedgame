@@ -41,7 +41,7 @@ public class AttackAction implements Action {
         if(!canAttack) return false;
         AttackAbility ability = gameData.getAbility(AttackAbility.class, abilityID);
         if(ability == null) return false;
-        if(attacker.speedLeft < ability.getCost()) return false;
+        if(attacker.speedLeft < ability.getSpeedCost()) return false;
         if(ability.getDamage() <= 0) return false;
         return true;
     }
@@ -52,7 +52,7 @@ public class AttackAction implements Action {
         GameObject victim = world.gameObjects.get(victimID);
         AttackAbility attackerType = gameData.getAbility(AttackAbility.class, abilityID);
         boolean victimDead = victim.health <= attackerType.getDamage();
-        attacker.speedLeft -= attackerType.getCost();
+        attacker.speedLeft -= attackerType.getSpeedCost();
         victim.health -= attackerType.getDamage();
         if(victimDead) {
             victim.alive = false;

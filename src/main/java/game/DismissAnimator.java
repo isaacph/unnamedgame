@@ -39,7 +39,7 @@ public class DismissAnimator implements Animator {
                 abilityID = new AbilityID(obj.type, DismissAbility.ID, slot);
                 ability = game.gameData.getAbility(DismissAbility.class, abilityID);
             }
-            if(ability != null && obj.speedLeft >= ability.getCost() &&
+            if(ability != null && obj.speedLeft >= ability.getSpeedCost() &&
                     !game.animationManager.isObjectOccupied(game.clickBoxManager.selectedID) && obj.alive) {
                 return true;
             }

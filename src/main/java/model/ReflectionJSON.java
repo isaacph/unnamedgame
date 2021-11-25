@@ -1,5 +1,6 @@
 package model;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.reflect.Field;
@@ -35,7 +36,7 @@ public final class ReflectionJSON {
         return conv;
     }
 
-    public static void extract(JSONObject source, Object dest) {
+    public static void extract(JSONObject source, Object dest, String errorContext) {
         Collection<Field> fields = getAllFields(dest.getClass());
         for(Field field : fields) {
             if(field.getAnnotation(Direct.class) != null) {
@@ -77,6 +78,8 @@ public final class ReflectionJSON {
                     }
                 } catch(IllegalAccessException e) {
                     throw new Error("Field (" + field.getName() + ") marked @Direct was inaccessible for extraction");
+                } catch(JSONException e) {
+                    throw new JSONException(e.getMessage() + " " + errorContext, e.getCause());
                 }
             }
         }

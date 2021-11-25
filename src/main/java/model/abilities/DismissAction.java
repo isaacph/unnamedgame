@@ -21,7 +21,7 @@ public class DismissAction implements Action {
         if(ability == null) return false;
         if(!obj.alive) return false;
         if(!obj.team.equals(world.teams.getClientTeam(actor))) return false;
-        if(obj.speedLeft < ability.getCost()) return false;
+        if(obj.speedLeft < ability.getSpeedCost()) return false;
         return true;
     }
 
@@ -29,7 +29,7 @@ public class DismissAction implements Action {
     public void execute(World world, GameData gameData) {
         DismissAbility ability = gameData.getAbility(DismissAbility.class, abilityID);
         GameObject obj = world.gameObjects.get(objectID);
-        obj.speedLeft -= ability.getCost();
+        obj.speedLeft -= ability.getSpeedCost();
         obj.alive = false;
     }
 

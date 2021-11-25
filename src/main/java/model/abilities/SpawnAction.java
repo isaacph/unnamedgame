@@ -43,7 +43,7 @@ public class SpawnAction implements Action {
                         new Vector2i(source.x, source.y)),
                 prodType.getRelativeOccupiedTiles());
         if(!adjacent.contains(new Vector2i(targetX, targetY))) return false;
-        if(source.speedLeft < ability.getCost()) return false;
+        if(source.speedLeft < ability.getSpeedCost()) return false;
         return true;
     }
 
@@ -54,7 +54,7 @@ public class SpawnAction implements Action {
         }
         GameObject object = world.gameObjects.get(sourceID);
         SpawnAbility ability = gameData.getAbility(SpawnAbility.class, abilityID);
-        object.speedLeft -= ability.getCost();
+        object.speedLeft -= ability.getSpeedCost();
         GameObject newGameObject = world.gameObjectFactory.createGameObject(
                 gameData.getType(ability.getProducedType()),
                 object.team, gameData);

@@ -6,6 +6,7 @@ import util.MathUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 
 public class GrowAction implements Action {
@@ -25,6 +26,8 @@ public class GrowAction implements Action {
     @Override
     public boolean validate(ClientID actor, World world, GameData gameData) {
         if(actor == null) return false;
+
+        // Get game objects
         TeamID growerTeamID = world.teams.getClientTeam(actor);
         ArrayList<GameObject> gameObjects = new ArrayList<>();
         for(GameObjectID id : seeds) {
@@ -34,21 +37,35 @@ public class GrowAction implements Action {
             if(go == null) return false;
         }
         if(gameObjects.isEmpty()) return false;
-        if(abilityID == null || abilityID.checkNull()) return false;
 
+        // get ability
+        if(abilityID == null || abilityID.checkNull()) return false;
         GameObjectTypeID growerTypeID = abilityID.gameObjectTypeID;
         GrowAbility ability = gameData.getAbility(GrowAbility.class, abilityID);
         if(ability == null) return false;
+
+        // check if can afford ability
+        Map<ResourceID, Integer> resourceCost = ability.getResourceCost();
+        for(ResourceID key : resourceCost.keySet()) {
+            if(world.teams.getTeamResource(growerTeamID, key) < resourceCost.get(key)) return false;
+        }
+
+        // check game objects meet ability requirements
         if(gameObjects.size() != ability.getRequiredCount()) return false;
         for(GameObject go : gameObjects) {
             if(!go.type.equals(growerTypeID)) return false;
-            if(go.speedLeft < ability.getCost()) return false;
+            if(go.speedLeft < ability.getSpeedCost()) return false;
             if(!go.team.equals(growerTeamID)) return false;
             if(!go.alive) return false;
         }
+
+        // find what to grow into
         GameObjectTypeID growIntoID = ability.getGrowInto();
         GameObjectType growInto = gameData.getType(growIntoID);
         if(growInto == null) return false;
+
+        // determine if growInto object is properly formed by game objects
+        // and make sure there's room for growInto object
         boolean[] goFound = new boolean[seeds.size()];
         int numFound = 0;
         Set<Vector2i> tilesToOccupy = MathUtil.addToAll(growInto.getRelativeOccupiedTiles(), new Vector2i(growX, growY));
@@ -73,15 +90,26 @@ public class GrowAction implements Action {
 
     @Override
     public void execute(World world, GameData gameData) {
+        GrowAbility ability = gameData.getAbility(GrowAbility.class, abilityID);
+
+        // change team resources
         TeamID team = world.gameObjects.get(seeds.get(0)).team;
+        Map<ResourceID, Integer> resourceCost = ability.getResourceCost();
+        for(ResourceID key : resourceCost.keySet()) {
+            int currentAmount = world.teams.getTeamResource(team, key);
+            currentAmount -= resourceCost.get(key);
+            world.teams.setTeamResource(team, key, currentAmount);
+        }
+
+        // change old game objects
         for(GameObjectID id : seeds) {
             GameObject obj = world.gameObjects.get(id);
-            GrowAbility specificAbility = gameData.getAbility(GrowAbility.class, abilityID);
-            obj.speedLeft -= specificAbility.getCost();
+            obj.speedLeft -= ability.getSpeedCost();
             obj.alive = false;
         }
+
+        // prepare object to grow into
         Vector2i pos = new Vector2i(growX, growY);
-        GrowAbility ability = gameData.getAbility(GrowAbility.class, abilityID);
         GameObject newObj = world.gameObjectFactory.createGameObject(
                 gameData.getType(ability.getGrowInto()),
                 team, gameData);
