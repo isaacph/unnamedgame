@@ -298,13 +298,14 @@ public class Game {
                     }
                     if(key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
                         if(connection.isConnected()) {
-                            connection.queueSend(new EndTurn());
+                            connection.queueSend(new EndTurn(world.teams.getClientTeam(clientInfo.clientID)));
                         } else {
                             world.teams.endClientTurn(clientInfo.clientID);
                             if(world.teams.teamEndedTurn(world.teams.getClientTeam(clientInfo.clientID))) {
                                 NextTurn.executeNextTurn(world, gameData, s -> chatbox.println(s), s -> chatbox.println(s));
                                 TeamID teamID = world.teams.getTurn();
                                 world.teams.setClientTeam(clientInfo.clientID, teamID);
+                                this.animatePassives(teamID);
                                 chatbox.println("Local team joined: " + teamID + ", name: " + world.teams.getTeamName(teamID));
                             }
                         }
@@ -500,15 +501,6 @@ public class Game {
                                 connection.queueSend(new NextTurn());
                             } else {
                                 NextTurn.executeNextTurn(world, gameData, s -> chatbox.println(s), s -> chatbox.println(s));
-                            }
-                        } else if(args[0].equals("endturn")) {
-                            if(connection.isConnected()) {
-                                connection.queueSend(new EndTurn());
-                            } else {
-                                world.teams.endClientTurn(clientInfo.clientID);
-                                if(world.teams.teamEndedTurn(world.teams.getClientTeam(clientInfo.clientID))) {
-                                    NextTurn.executeNextTurn(world, gameData, s -> chatbox.println(s), s -> chatbox.println(s));
-                                }
                             }
                         } else if(args[0].equals("dead")) {
                             connection.queueSend(new DeadCommand());
@@ -763,6 +755,24 @@ public class Game {
         else {
             chatbox.println("Failed to find animator for action with ability ID: " + action.getID());
             action.execute(world, gameData);
+        }
+    }
+
+    public void animatePassives(TeamID teamID) {
+        List<GameObjectID> passivers = World.getTeamPassives(teamID, world, gameData);
+        for(GameObjectID id : passivers) {
+            Set<AbilityComponent> passives = gameData.getType(world.gameObjects.get(id).type).getPassives();
+            for(AbilityComponent passive : passives) {
+                Action action = AbilityOrganizer.abilityPassiveCreator.get(passive.getTypeID()).create(passive.getID(), id);
+                if(action.validate(null, world, gameData)) {
+                    runAction(action);
+                } else {
+                    chatbox.println("Error: could not validate passive action: " + passive.getID().toString());
+                    if(connection.isConnected()) {
+                        connection.queueSend(new GetWorld());
+                    }
+                }
+            }
         }
     }
 

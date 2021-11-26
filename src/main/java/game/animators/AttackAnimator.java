@@ -1,5 +1,8 @@
-package game;
+package game.animators;
 
+import game.ActionArranger;
+import game.Animator;
+import game.Game;
 import model.*;
 import model.abilities.AttackAbility;
 import model.abilities.AttackAction;

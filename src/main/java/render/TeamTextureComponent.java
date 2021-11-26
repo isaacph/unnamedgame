@@ -4,12 +4,15 @@ import game.Camera;
 import model.*;
 import org.joml.*;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
 public class TeamTextureComponent extends RenderComponent {
 
     private World world;
-    private Texture texture, textureOutline;
-    private Vector2f renderOffset;
-    private Vector2f renderScale;
+    private List<RenderInfo> renderInfo;
     private GameObjectID gameObjectID;
     private GameData gameData;
     private Vector2f position;
@@ -20,15 +23,13 @@ public class TeamTextureComponent extends RenderComponent {
     private Vector2f circleOffset;
     private float circleSize;
 
-    public TeamTextureComponent(GameObjectID gameObjectID, World world, GameData gameData, WorldRenderer.GameObjectTextures textureLibrary,
-                                String texturePath, Vector2f texOffset, Vector2f texScale, Vector2f centerOffset, Vector2f circleOffset, float circleSize) {
+    public TeamTextureComponent(GameObjectID gameObjectID, World world, GameData gameData,
+                                Collection<RenderInfo> renderInfo, Vector2f centerOffset, Vector2f circleOffset, float circleSize) {
         this.world = world;
         this.gameData = gameData;
         this.gameObjectID = gameObjectID;
         GameObject obj = world.gameObjects.get(gameObjectID);
-        this.texture = textureLibrary.getTexture(texturePath);
-        this.renderOffset = texOffset;
-        this.renderScale = texScale;
+        this.renderInfo = new ArrayList<>(renderInfo);
         this.position = new Vector2f(obj.x, obj.y);
         this.centerOffset = centerOffset;
         this.circleOffset = circleOffset;
@@ -56,28 +57,51 @@ public class TeamTextureComponent extends RenderComponent {
     }
 
     @Override
-    public void draw(WorldRenderer renderer, Matrix4f orthoProj) {
-        GameObject gameObject = world.gameObjects.get(gameObjectID);
-        if(gameObject != null && visible(gameObject)) {
-            if(fixedPosition) {
-                this.position = new Vector2f(gameObject.x, gameObject.y);
-            }
-            Vector2f pos = Camera.worldToViewSpace(position);
-            texture.bind();
-            renderer.textureRenderer.draw(new Matrix4f(orthoProj)
-                    .translate(renderOffset.x + pos.x, renderOffset.y + pos.y, 0)
-                    .scale(renderScale.x, renderScale.y, 0),
-                    new Vector4f(1));
+    public Collection<OrderedDrawCall> draw(WorldRenderer renderer, Matrix4f orthoProj) {
+        List<OrderedDrawCall> drawCalls = new ArrayList<>();
+        for(RenderInfo info : renderInfo) {
+            drawCalls.add(new OrderedDrawCall() {
+                @Override
+                public void draw() {
+                    Texture texture = info.texture;
+                    Vector2f renderOffset = info.offset;
+                    Vector2f renderScale = new Vector2f(info.size);
+                    GameObject gameObject = world.gameObjects.get(gameObjectID);
+                    if(gameObject != null && visible(gameObject)) {
+                        if(fixedPosition) {
+                            position = new Vector2f(gameObject.x, gameObject.y);
+                        }
+                        Vector2f pos = Camera.worldToViewSpace(position);
+                        texture.bind();
+                        renderer.textureRenderer.draw(new Matrix4f(orthoProj)
+                                        .translate(renderOffset.x + pos.x, renderOffset.y + pos.y, 0)
+                                        .scale(renderScale.x, renderScale.y, 0),
+                                new Vector4f(1));
+                    }
+                }
+
+                @Override
+                public float getScreenPositionY() {
+                    return getScreenRenderPosition(info.depthOffset).y();
+                }
+            });
         }
+        return drawCalls;
     }
 
-    public Vector2f getScreenRenderPosition() {
+    public Vector2f getScreenRenderPosition(float depthOffset) {
         GameObject gameObject = world.gameObjects.get(gameObjectID);
         if(gameObject == null) return new Vector2f(0);
         if(fixedPosition) {
             this.position = new Vector2f(gameObject.x, gameObject.y);
         }
-        return Camera.worldToViewSpace(position);
+        Vector2f output = Camera.worldToViewSpace(position);
+        output.y += depthOffset;
+        return output;
+    }
+
+    public Vector2f getScreenRenderPosition() {
+        return getScreenRenderPosition(0);
     }
 
     public Vector2f getCenterOffset() {
@@ -106,5 +130,19 @@ public class TeamTextureComponent extends RenderComponent {
     @Override
     public void resetVisible() {
         this.forceVisible = false;
+    }
+
+    public static class RenderInfo {
+        public Texture texture;
+        public float size;
+        public Vector2f offset;
+        public float depthOffset;
+
+        public RenderInfo(Texture texture, float size, Vector2fc offset, float depthOffset) {
+            this.texture = texture;
+            this.size = size;
+            this.offset = new Vector2f(offset);
+            this.depthOffset = depthOffset;
+        }
     }
 }

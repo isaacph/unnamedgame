@@ -1,5 +1,6 @@
 package model;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class CustomConversionJSON{
@@ -11,6 +12,8 @@ public class CustomConversionJSON{
             return new AbilityTypeID(source.getString(fieldName));
         } else if(type.equals(JSONObject.class)) {
             return source.getJSONObject(fieldName);
+        } else if(type.equals(JSONArray.class)) {
+            return source.getJSONArray(fieldName);
         }
         throw new Error("Field (" + fieldName + ") marked @Direct was of unsupported Object type: " + type.toString());
     }
@@ -28,6 +31,11 @@ public class CustomConversionJSON{
         }
         if(type.equals(JSONObject.class)) {
             JSONObject json = (JSONObject) obj;
+            dest.put(fieldName, json);
+            return;
+        }
+        if(type.equals(JSONArray.class)) {
+            JSONArray json = (JSONArray) obj;
             dest.put(fieldName, json);
             return;
         }

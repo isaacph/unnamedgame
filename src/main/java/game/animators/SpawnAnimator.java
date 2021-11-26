@@ -1,9 +1,9 @@
-package game;
+package game.animators;
 
-import model.AbilityID;
-import model.Action;
-import model.GameObject;
-import model.GameObjectType;
+import game.ActionArranger;
+import game.Animator;
+import game.Game;
+import model.*;
 import model.abilities.SpawnAbility;
 import model.abilities.SpawnAction;
 import org.joml.Vector2i;
@@ -48,16 +48,31 @@ public class SpawnAnimator implements Animator {
                 Set<Vector2i> options = MathUtil.adjacentShapeOrigins(MathUtil.addToAll(game.gameData.getType(obj.type).getRelativeOccupiedTiles(), new Vector2i(obj.x, obj.y)),
                         game.gameData.getType(ability.getProducedType()).getRelativeOccupiedTiles());
                 List<Vector2i> newOptions = new ArrayList<>();
+                boolean restricted = ability.isRestricted();
                 for(Vector2i option : options) {
                     boolean roomForNewObj = true;
+                    boolean foundRequirement = false;
                     Collection<Vector2i> shape = spawnedType.getRelativeOccupiedTiles();
                     for(Vector2i t : shape) {
                         Vector2i tile = new Vector2i(t).add(option);
-                        if(!game.world.occupied(tile.x, tile.y, game.gameData).isEmpty() || game.world.getTileWeight(game.gameData, tile.x, tile.y) == Double.POSITIVE_INFINITY) {
+                        Collection<GameObjectID> occupying = game.world.occupied(tile.x, tile.y, game.gameData);
+                        for(GameObjectID occID : occupying) {
+                            if(!restricted) {
+                                roomForNewObj = false;
+                            } else {
+                                GameObject occObj = game.world.gameObjects.get(occID);
+                                if(ability.getRestrictedObjects().contains(occObj.type)) {
+                                    foundRequirement = true;
+                                } else {
+                                    roomForNewObj = false;
+                                }
+                            }
+                        }
+                        if(game.world.getPureTileWeight(game.gameData, tile.x, tile.y) == Double.POSITIVE_INFINITY) {
                             roomForNewObj = false;
                         }
                     }
-                    if(roomForNewObj) {
+                    if(roomForNewObj && (!restricted || foundRequirement)) {
                         for(Vector2i t : shape) {
                             Vector2i tile = new Vector2i(t).add(option);
                             newOptions.add(tile);

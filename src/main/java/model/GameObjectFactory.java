@@ -19,7 +19,7 @@ public class GameObjectFactory implements Serializable {
         object.alive = true;
         object.health = type.getMaxHealth();
         object.speedLeft = type.getSpeed();
-        object.targetable = !type.isNeutral();
+        object.targetable = type.isTargetable();
         return object;
     }
 

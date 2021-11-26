@@ -65,6 +65,12 @@ public class Team {
         this.resources.put(resID, amount);
     }
 
+    public void setResources(Map<ResourceID, Integer> newRes) {
+        for(ResourceID resourceID : newRes.keySet()) {
+            resources.put(resourceID, newRes.get(resourceID));
+        }
+    }
+
     public int getResource(ResourceID resID) {
         Integer count = this.resources.get(resID);
         if(count == null) return 0;

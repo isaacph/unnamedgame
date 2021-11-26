@@ -25,4 +25,25 @@ public class AbilityID implements Serializable {
     public boolean checkNull() {
         return gameObjectTypeID == null || abilityTypeID == null;
     }
+
+    @Override
+    public String toString() {
+        return gameObjectTypeID.getName() + ":" + abilityTypeID.getName() + slot;
+    }
+
+    @Override
+    public int hashCode() {
+        return toString().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if(other instanceof AbilityID) {
+            AbilityID obj = (AbilityID) other;
+            if(obj.toString().equals(toString())) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

@@ -115,6 +115,11 @@ public class TeamManager implements Serializable {
         if(team != null) team.setResource(resourceID, amount);
     }
 
+    public void setTeamResources(TeamID teamID, Map<ResourceID, Integer> newResources) {
+        Team team = teams.get(teamID);
+        if(team != null) team.setResources(newResources);
+    }
+
     public boolean isTeam(TeamID teamID) {
         return teams.get(teamID) != null;
     }

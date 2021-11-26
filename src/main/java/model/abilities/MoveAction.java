@@ -15,6 +15,7 @@ public class MoveAction implements Action {
     public int targetX, targetY;
 
     public MoveAction(AbilityID abilityID, GameObjectID objectID, int targetX, int targetY) {
+        assert abilityID.abilityTypeID.equals(MoveAbility.ID);
         this.abilityID = abilityID;
         this.objectID = objectID;
         this.targetX = targetX;

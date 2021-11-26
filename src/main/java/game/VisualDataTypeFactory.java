@@ -13,6 +13,7 @@ public class VisualDataTypeFactory {
 
     public VisualDataTypeFactory() {
         displayCreators.put("simple", SimpleDisplay::new);
+        displayCreators.put("multi", MultiDisplay::new);
         clickboxCreators.put("aabb", AABBClickBox::new);
         resourceCreators.put("simple", ResourceSimpleDisplay::new);
     }

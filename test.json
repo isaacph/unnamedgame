@@ -1,5 +1,5 @@
 {
-    "gameObjectFactory": {"nextID": 18},
+    "gameObjectFactory": {"nextID": 46},
     "teams": [
         {"id": 0},
         {"id": 1}
@@ -269,25 +269,256 @@
     "gameObjects": [
         {
             "alive": true,
-            "x": -8,
-            "y": -8,
-            "health": 2,
-            "team": {"id": 1},
-            "speedLeft": 1,
-            "type": {"nameID": "building"},
+            "x": -10,
+            "y": -9,
+            "health": 1,
+            "team": {"id": 0},
+            "speedLeft": 0,
+            "type": {"nameID": "gem_rock"},
             "targetable": true,
             "uniqueID": {"id": 1}
         },
         {
             "alive": true,
+            "x": -9,
+            "y": -9,
+            "health": 2,
+            "team": {"id": 1},
+            "speedLeft": 0,
+            "type": {"nameID": "drill"},
+            "targetable": true,
+            "uniqueID": {"id": 33}
+        },
+        {
+            "alive": true,
+            "x": -9,
+            "y": -9,
+            "health": 1,
+            "team": {"id": 0},
+            "speedLeft": 0,
+            "type": {"nameID": "gem_rock"},
+            "targetable": true,
+            "uniqueID": {"id": 3}
+        },
+        {
+            "alive": true,
+            "x": -10,
+            "y": -9,
+            "health": 2,
+            "team": {"id": 1},
+            "speedLeft": 0,
+            "type": {"nameID": "drill"},
+            "targetable": true,
+            "uniqueID": {"id": 35}
+        },
+        {
+            "alive": true,
+            "x": -8,
+            "y": -9,
+            "health": 1,
+            "team": {"id": 0},
+            "speedLeft": 0,
+            "type": {"nameID": "gem_rock"},
+            "targetable": true,
+            "uniqueID": {"id": 5}
+        },
+        {
+            "alive": true,
+            "x": -8,
+            "y": -9,
+            "health": 2,
+            "team": {"id": 1},
+            "speedLeft": 0,
+            "type": {"nameID": "drill"},
+            "targetable": true,
+            "uniqueID": {"id": 37}
+        },
+        {
+            "alive": true,
+            "x": -7,
+            "y": -9,
+            "health": 1,
+            "team": {"id": 0},
+            "speedLeft": 0,
+            "type": {"nameID": "gem_rock"},
+            "targetable": true,
+            "uniqueID": {"id": 7}
+        },
+        {
+            "alive": true,
+            "x": -7,
+            "y": -9,
+            "health": 2,
+            "team": {"id": 1},
+            "speedLeft": 0,
+            "type": {"nameID": "drill"},
+            "targetable": true,
+            "uniqueID": {"id": 39}
+        },
+        {
+            "alive": true,
             "x": -6,
-            "y": -7,
+            "y": -9,
+            "health": 1,
+            "team": {"id": 0},
+            "speedLeft": 0,
+            "type": {"nameID": "gem_rock"},
+            "targetable": true,
+            "uniqueID": {"id": 9}
+        },
+        {
+            "alive": true,
+            "x": -6,
+            "y": -9,
+            "health": 2,
+            "team": {"id": 1},
+            "speedLeft": 0,
+            "type": {"nameID": "drill"},
+            "targetable": true,
+            "uniqueID": {"id": 41}
+        },
+        {
+            "alive": true,
+            "x": -5,
+            "y": -9,
+            "health": 1,
+            "team": {"id": 0},
+            "speedLeft": 0,
+            "type": {"nameID": "gem_rock"},
+            "targetable": true,
+            "uniqueID": {"id": 11}
+        },
+        {
+            "alive": true,
+            "x": -5,
+            "y": -9,
+            "health": 2,
+            "team": {"id": 1},
+            "speedLeft": 0,
+            "type": {"nameID": "drill"},
+            "targetable": true,
+            "uniqueID": {"id": 43}
+        },
+        {
+            "alive": true,
+            "x": -7,
+            "y": -8,
             "health": 1,
             "team": {"id": 1},
-            "speedLeft": 8,
-            "type": {"nameID": "kid"},
+            "speedLeft": 4,
+            "type": {"nameID": "basic"},
+            "targetable": true,
+            "uniqueID": {"id": 13}
+        },
+        {
+            "alive": true,
+            "x": -1,
+            "y": -11,
+            "health": 1,
+            "team": {"id": 0},
+            "speedLeft": 0,
+            "type": {"nameID": "gem_rock"},
+            "targetable": true,
+            "uniqueID": {"id": 45}
+        },
+        {
+            "alive": true,
+            "x": -7,
+            "y": -6,
+            "health": 1,
+            "team": {"id": 1},
+            "speedLeft": 4,
+            "type": {"nameID": "basic"},
+            "targetable": true,
+            "uniqueID": {"id": 15}
+        },
+        {
+            "alive": true,
+            "x": -6,
+            "y": -6,
+            "health": 1,
+            "team": {"id": 1},
+            "speedLeft": 4,
+            "type": {"nameID": "basic"},
             "targetable": true,
             "uniqueID": {"id": 17}
+        },
+        {
+            "alive": true,
+            "x": -5,
+            "y": -6,
+            "health": 1,
+            "team": {"id": 1},
+            "speedLeft": 4,
+            "type": {"nameID": "basic"},
+            "targetable": true,
+            "uniqueID": {"id": 19}
+        },
+        {
+            "alive": true,
+            "x": -5,
+            "y": -5,
+            "health": 1,
+            "team": {"id": 1},
+            "speedLeft": 4,
+            "type": {"nameID": "basic"},
+            "targetable": true,
+            "uniqueID": {"id": 21}
+        },
+        {
+            "alive": true,
+            "x": -4,
+            "y": -5,
+            "health": 1,
+            "team": {"id": 1},
+            "speedLeft": 4,
+            "type": {"nameID": "basic"},
+            "targetable": true,
+            "uniqueID": {"id": 23}
+        },
+        {
+            "alive": true,
+            "x": -3,
+            "y": -5,
+            "health": 1,
+            "team": {"id": 1},
+            "speedLeft": 4,
+            "type": {"nameID": "basic"},
+            "targetable": true,
+            "uniqueID": {"id": 25}
+        },
+        {
+            "alive": true,
+            "x": -5,
+            "y": -4,
+            "health": 1,
+            "team": {"id": 1},
+            "speedLeft": 4,
+            "type": {"nameID": "basic"},
+            "targetable": true,
+            "uniqueID": {"id": 27}
+        },
+        {
+            "alive": true,
+            "x": -5,
+            "y": -3,
+            "health": 1,
+            "team": {"id": 1},
+            "speedLeft": 4,
+            "type": {"nameID": "basic"},
+            "targetable": true,
+            "uniqueID": {"id": 29}
+        },
+        {
+            "alive": true,
+            "x": -6,
+            "y": -5,
+            "health": 1,
+            "team": {"id": 1},
+            "speedLeft": 4,
+            "type": {"nameID": "basic"},
+            "targetable": true,
+            "uniqueID": {"id": 31}
         }
     ]
 }

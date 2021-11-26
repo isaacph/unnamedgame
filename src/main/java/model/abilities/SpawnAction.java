@@ -4,7 +4,7 @@ import model.*;
 import org.joml.Vector2i;
 import util.MathUtil;
 
-import java.util.Set;
+import java.util.*;
 
 public class SpawnAction implements Action {
 
@@ -23,27 +23,58 @@ public class SpawnAction implements Action {
 
     @Override
     public boolean validate(ClientID actor, World world, GameData gameData) {
+        // get source object
         GameObject source = world.gameObjects.get(sourceID);
-        if(abilityID == null || abilityID.checkNull()) return false;
         if(actor == null || source == null) return false;
         if(!source.alive) return false;
+        if(abilityID == null || abilityID.checkNull()) return false;
+
+        // get ability
         SpawnAbility ability = gameData.getAbility(SpawnAbility.class, abilityID);
         if(ability == null) return false;
         GameObjectType prodType = gameData.getType(ability.getProducedType());
         if(prodType == null) return false;
-        if(world.teams.getClientTeam(actor) == null) return false;
-        if(!source.team.equals(world.teams.getClientTeam(actor))) return false;
+        boolean restricted = ability.isRestricted();
+        List<GameObjectTypeID> restrictedTypes = ability.getRestrictedObjects();
+
+        // get team
+        TeamID teamID = world.teams.getClientTeam(actor);
+        if(teamID == null) return false;
+        if(!source.team.equals(teamID)) return false;
+
+        // check objects/tiles placing on top of
+        // TODO: remove copying between here and SpawnAnimator
+        boolean foundRequirement = false;
         for(Vector2i tile : prodType.getRelativeOccupiedTiles()) {
-            if(!world.occupied(targetX + tile.x, targetY + tile.y, gameData).isEmpty()) return false;
+            Collection<GameObjectID> occupying = world.occupied(targetX + tile.x, targetY + tile.y, gameData);
+            for(GameObjectID occID : occupying) {
+                if(!restricted) {
+                    return false;
+                } else {
+                    GameObject occObj = world.gameObjects.get(occID);
+                    if(!restrictedTypes.contains(occObj.type)) {
+                        return false;
+                    } else {
+                        foundRequirement = true;
+                    }
+                }
+            }
             if(world.getPureTileWeight(gameData, targetX + tile.x, targetY + tile.y) == Double.POSITIVE_INFINITY) return false;
         }
-        if(world.getTileWeight(gameData, targetX, targetY) == Double.POSITIVE_INFINITY) return false;
+        if(restricted && !foundRequirement) return false;
+//        if(world.getTileWeight(gameData, targetX, targetY) == Double.POSITIVE_INFINITY) return false;
+
+        // check shapes adjacent
         Set<Vector2i> adjacent = MathUtil.adjacentShapeOrigins(
                 MathUtil.addToAll(gameData.getType(source.type).getRelativeOccupiedTiles(),
                         new Vector2i(source.x, source.y)),
                 prodType.getRelativeOccupiedTiles());
         if(!adjacent.contains(new Vector2i(targetX, targetY))) return false;
+
+        // check can afford
         if(source.speedLeft < ability.getSpeedCost()) return false;
+        if(!Resource.canAfford(world.teams.getTeamResources(teamID), ability.getResourceCost())) return false;
+
         return true;
     }
 
@@ -63,6 +94,12 @@ public class SpawnAction implements Action {
         newGameObject.y = targetY;
         newGameObject.speedLeft = 0;
         newGameObjectResult = newGameObject.uniqueID;
+
+        // subtract resources
+        TeamID teamID = object.team;
+        Map<ResourceID, Integer> subtract = new HashMap<>(world.teams.getTeamResources(teamID));
+        Resource.subtractResources(subtract, ability.getResourceCost());
+        world.teams.setTeamResources(teamID, subtract);
     }
 
     @Override

@@ -6,9 +6,7 @@ import org.json.JSONObject;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.*;
 
 public final class ReflectionJSON {
 
@@ -36,45 +34,54 @@ public final class ReflectionJSON {
         return conv;
     }
 
-    public static void extract(JSONObject source, Object dest, String errorContext) {
+    /**
+     * @return Collection of unextracted optional field names
+     */
+    public static Set<String> extract(JSONObject source, Object dest, String errorContext) {
         Collection<Field> fields = getAllFields(dest.getClass());
+        Set<String> unextracted = new HashSet<>();
         for(Field field : fields) {
-            if(field.getAnnotation(Direct.class) != null) {
+            boolean optional = field.getAnnotation(Direct.Optional.class) != null;
+            if(field.getAnnotation(Direct.class) != null || optional) {
                 try {
-                    field.setAccessible(true);
-                    if(field.getType().isPrimitive()) {
-                        // extract primitive
-                        if(field.getType().equals(Integer.TYPE)) {
-                            field.setInt(dest, source.getInt(field.getName()));
-                        } else if(field.getType().equals(Boolean.TYPE)) {
-                            field.setBoolean(dest, source.getBoolean(field.getName()));
-                        } else if(field.getType().equals(Float.TYPE)) {
-                            field.setFloat(dest, source.getFloat(field.getName()));
-                        } else if(field.getType().equals(Double.TYPE)) {
-                            field.setDouble(dest, source.getDouble(field.getName()));
-                        } else if(field.getType().equals(Long.TYPE)) {
-                            field.setLong(dest, source.getLong(field.getName()));
-                        } else if(field.getType().equals(Byte.TYPE)) {
-                            field.setByte(dest, intToByte(source.getInt(field.getName())));
-                        } else if(field.getType().equals(Short.TYPE)) {
-                            field.setShort(dest, intToShort(source.getInt(field.getName())));
-                        } else if(field.getType().equals(Character.TYPE)) {
-                            field.setInt(dest, intToChar(source.getInt(field.getName())));
+                    if(!optional || source.has(field.getName())) {
+                        field.setAccessible(true);
+                        if(field.getType().isPrimitive()) {
+                            // extract primitive
+                            if(field.getType().equals(Integer.TYPE)) {
+                                field.setInt(dest, source.getInt(field.getName()));
+                            } else if(field.getType().equals(Boolean.TYPE)) {
+                                field.setBoolean(dest, source.getBoolean(field.getName()));
+                            } else if(field.getType().equals(Float.TYPE)) {
+                                field.setFloat(dest, source.getFloat(field.getName()));
+                            } else if(field.getType().equals(Double.TYPE)) {
+                                field.setDouble(dest, source.getDouble(field.getName()));
+                            } else if(field.getType().equals(Long.TYPE)) {
+                                field.setLong(dest, source.getLong(field.getName()));
+                            } else if(field.getType().equals(Byte.TYPE)) {
+                                field.setByte(dest, intToByte(source.getInt(field.getName())));
+                            } else if(field.getType().equals(Short.TYPE)) {
+                                field.setShort(dest, intToShort(source.getInt(field.getName())));
+                            } else if(field.getType().equals(Character.TYPE)) {
+                                field.setInt(dest, intToChar(source.getInt(field.getName())));
+                            } else {
+                                throw new Error("Field (" + field.getName() + ") marked @Direct was of unsupported primitive type: " + field.getType());
+                            }
                         } else {
-                            throw new Error("Field (" + field.getName() + ") marked @Direct was of unsupported primitive type: " + field.getType());
+                            if(field.getType().equals(String.class)) {
+                                field.set(dest, source.getString(field.getName()));
+                            } else if(field.getType().equals(BigDecimal.class)) {
+                                field.set(dest, source.getBigDecimal(field.getName()));
+                            } else if(field.getType().equals(BigInteger.class)) {
+                                field.set(dest, source.getBigInteger(field.getName()));
+                            } else if(field.getType().equals(Number.class)) {
+                                field.set(dest, source.getNumber(field.getName()));
+                            } else {
+                                field.set(dest, CustomConversionJSON.createFieldFromJSON(field.getType(), field.getName(), source));
+                            }
                         }
                     } else {
-                        if(field.getType().equals(String.class)) {
-                            field.set(dest, source.getString(field.getName()));
-                        } else if(field.getType().equals(BigDecimal.class)) {
-                            field.set(dest, source.getBigDecimal(field.getName()));
-                        } else if(field.getType().equals(BigInteger.class)) {
-                            field.set(dest, source.getBigInteger(field.getName()));
-                        } else if(field.getType().equals(Number.class)) {
-                            field.set(dest, source.getNumber(field.getName()));
-                        } else {
-                            field.set(dest, CustomConversionJSON.createFieldFromJSON(field.getType(), field.getName(), source));
-                        }
+                        unextracted.add(field.getName());
                     }
                 } catch(IllegalAccessException e) {
                     throw new Error("Field (" + field.getName() + ") marked @Direct was inaccessible for extraction");
@@ -83,13 +90,15 @@ public final class ReflectionJSON {
                 }
             }
         }
+        return unextracted;
     }
 
     public static JSONObject makeJSON(Object source) {
         JSONObject dest = new JSONObject();
         Collection<Field> fields = getAllFields(source.getClass());
         for(Field field : fields) {
-            if(field.getAnnotation(Direct.class) != null) {
+            // TODO: use default values of optionals to selectively add to the JSON file
+            if(field.getAnnotation(Direct.class) != null || field.getAnnotation(Direct.Optional.class) != null) {
                 field.setAccessible(true);
                 try {
                     if(field.getType().isPrimitive()) {

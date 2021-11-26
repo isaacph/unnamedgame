@@ -1,5 +1,6 @@
 package model;
 
+import model.abilities.AbilityComponent;
 import model.grid.ByteGrid;
 import org.joml.Vector2i;
 import org.json.JSONArray;
@@ -90,25 +91,25 @@ public class World implements Serializable {
         return weight;
     }
 
-    public double getTileWeight(GameData data, int x, int y) {
-        byte tile = grid.getTile(x, y);
-        double weight = tile == 1 ? 1 : Double.POSITIVE_INFINITY;
-        for(GameObjectID id : gameObjects.keySet()) {
-            GameObject object = gameObjects.get(id);
-            if(object.alive) {
-                Set<Vector2i> occTiles = data.getType(object.type).getRelativeOccupiedTiles();
-                for(Vector2i occ : occTiles) {
-                    int ox = object.x + occ.x;
-                    int oy = object.y + occ.y;
-                    if(ox == x && oy == y) {
-                        weight = Double.POSITIVE_INFINITY;
-                        return weight;
-                    }
-                }
-            }
-        }
-        return weight;
-    }
+//    public double getTileWeight(GameData data, int x, int y) {
+//        byte tile = grid.getTile(x, y);
+//        double weight = tile == 1 ? 1 : Double.POSITIVE_INFINITY;
+//        for(GameObjectID id : gameObjects.keySet()) {
+//            GameObject object = gameObjects.get(id);
+//            if(object.alive) {
+//                Set<Vector2i> occTiles = data.getType(object.type).getRelativeOccupiedTiles();
+//                for(Vector2i occ : occTiles) {
+//                    int ox = object.x + occ.x;
+//                    int oy = object.y + occ.y;
+//                    if(ox == x && oy == y) {
+//                        weight = Double.POSITIVE_INFINITY;
+//                        return weight;
+//                    }
+//                }
+//            }
+//        }
+//        return weight;
+//    }
 
     public double getShapeWeightOnTiles(GameData data, int x, int y, Collection<Vector2i> shape) {
         double weight = Double.MIN_VALUE;
@@ -176,5 +177,18 @@ public class World implements Serializable {
         for(GameObjectID key : chooseNewTeams.keySet()) {
             gameObjects.get(key).team = chooseNewTeams.get(key);
         }
+    }
+
+    public static List<GameObjectID> getTeamPassives(TeamID team, World world, GameData gameData) {
+        List<GameObjectID> ids = new ArrayList<>();
+        for(GameObject obj : world.gameObjects.values()) {
+            if(obj.team.equals(team)) {
+                GameObjectType type = gameData.getType(obj.type);
+                if(!type.getPassives().isEmpty()) {
+                    ids.add(obj.uniqueID);
+                }
+            }
+        }
+        return ids;
     }
 }

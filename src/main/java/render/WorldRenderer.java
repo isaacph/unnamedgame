@@ -87,12 +87,16 @@ public class WorldRenderer {
         tileGridRenderer.drawSelect(camera.getProjView(), camera.getScaleFactor());
 
         Collections.sort(gameObjectRenderer);
+        List<RenderComponent.OrderedDrawCall> draws = new ArrayList<>();
         for(RenderComponent renderer : gameObjectRenderer) {
             renderer.drawGround(this, camera.getProjView());
+            draws.addAll(renderer.draw(this, camera.getProjView()));
         }
 
-        for(RenderComponent renderer : gameObjectRenderer) {
-            renderer.draw(this, camera.getProjView());
+        draws.sort((o1, o2) -> Float.compare((o1).getScreenPositionY(), (o2).getScreenPositionY()));
+
+        for(RenderComponent.OrderedDrawCall draw : draws) {
+            draw.draw();
         }
     }
 

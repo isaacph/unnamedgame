@@ -1,5 +1,8 @@
-package game;
+package game.animators;
 
+import game.ActionArranger;
+import game.Animator;
+import game.Game;
 import model.AbilityID;
 import model.Action;
 import model.GameObject;

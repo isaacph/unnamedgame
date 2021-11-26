@@ -58,7 +58,7 @@ public class GameData {
     public <T extends AbilityComponent> T getAbility(Class<T> tClass, AbilityID abilityID) {
         GameObjectType type = getType(abilityID.gameObjectTypeID);
         if(type == null) return null;
-        AbilityComponent comp = type.getAbility(abilityID.slot);
+        AbilityComponent comp = type.getAbility(abilityID);
         if(comp == null) return null;
         if(!comp.getClass().equals(tClass)) return null;
         return (T) comp;

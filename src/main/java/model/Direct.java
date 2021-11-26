@@ -5,4 +5,9 @@ import java.lang.annotation.RetentionPolicy;
 
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Direct {
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface Optional {
+
+    }
 }

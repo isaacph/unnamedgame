@@ -16,8 +16,12 @@ public class GameObjectType implements Serializable {
     private Shape shape;
     private List<AbilityComponent> abilities;
     private Map<Integer, AbilityComponent> slotAbility;
+    private Set<AbilityComponent> passives = new HashSet<>();
+    private Map<AbilityID, AbilityComponent> abilityMap;
     private boolean neutral;
     private TypeCollider collider;
+    private boolean targetable;
+    private Map<ResourceID, Integer> resources;
 
     public GameObjectType(JSONObject obj, GameObjectTypeFactory factory) {
         uniqueID = new GameObjectTypeID(obj.getString("name"));
@@ -26,16 +30,32 @@ public class GameObjectType implements Serializable {
         if(obj.has("neutral")) {
             neutral = obj.getBoolean("neutral");
         } else neutral = false;
+        abilities = new ArrayList<>();
+        slotAbility = new HashMap<>();
+        abilityMap = new HashMap<>();
+        health = obj.getFloat("health");
+        speed = obj.getFloat("speed");
+        if(obj.has("targetable")) targetable = obj.getBoolean("targetable");
+        else targetable = true;
         if(!neutral) {
-            speed = obj.getFloat("speed");
-            health = obj.getFloat("health");
-            abilities = new ArrayList<>();
-            slotAbility = new HashMap<>();
             JSONArray arr = new JSONArray(obj.getJSONArray("abilities"));
             for(int i = 0; i < arr.length(); ++i) {
                 AbilityComponent ability = factory.makeAbility(arr.getJSONObject(i), uniqueID);
                 abilities.add(ability);
-                slotAbility.put(ability.getSlot(), ability);
+                if(ability.getSlot() != AbilityComponent.NO_SLOT) {
+                    slotAbility.put(ability.getSlot(), ability);
+                }
+                if(ability.isPassive()) {
+                    passives.add(ability);
+                }
+                abilityMap.put(ability.getID(), ability);
+            }
+        }
+        resources = new HashMap<>();
+        if(obj.has("resources")) {
+            JSONObject resObj = obj.getJSONObject("resources");
+            for(String key : resObj.keySet()) {
+                resources.put(new ResourceID(key), resObj.getInt(key));
             }
         }
     }
@@ -59,8 +79,17 @@ public class GameObjectType implements Serializable {
         return slotAbility.get(slot);
     }
 
+    public AbilityComponent getAbility(AbilityID id) {
+        if(!abilityMap.containsKey(id)) return null;
+        return abilityMap.get(id);
+    }
+
     public boolean isNeutral() {
         return neutral;
+    }
+
+    public boolean isTargetable() {
+        return targetable;
     }
 
     public Collider getCollider() {
@@ -93,6 +122,10 @@ public class GameObjectType implements Serializable {
         return null;
     }
 
+    public Set<AbilityComponent> getPassives() {
+        return Collections.unmodifiableSet(this.passives);
+    }
+
     @Override
     public String toString() {
         return uniqueID.toString();
@@ -121,10 +154,22 @@ public class GameObjectType implements Serializable {
         }
         obj.put("abilities", abArray);
 
+        if(!resources.isEmpty()) {
+            JSONObject res = new JSONObject();
+            for(ResourceID resourceID : resources.keySet()) {
+                res.put(resourceID.getName(), resources.get(resourceID));
+            }
+            obj.put("resources", res);
+        }
+
         return obj;
     }
 
     public Set<Vector2i> getRelativeOccupiedTiles() {
         return shape.getRelativeOccupiedTiles();
+    }
+
+    public Map<ResourceID, Integer> getResources() {
+        return Collections.unmodifiableMap(resources);
     }
 }
