@@ -36,7 +36,7 @@
       "name": "basic",
       "display": {
         "type": "simple",
-        "texture": "kid.png",
+        "texture": "art/Orc.png",
         "size": 1.0,
         "offsetX": 0.0,
         "offsetY": 0.0,
@@ -48,9 +48,9 @@
       },
       "clickbox": {
         "type": "aabb",
-        "sizeX": 1.0,
+        "sizeX": 0.7,
         "sizeY": 1.0,
-        "offsetX": 0.0,
+        "offsetX": -0.1,
         "offsetY": 0.0,
         "depthOffset": 0.0
       }
@@ -76,75 +76,6 @@
         "offsetX": 0.0,
         "offsetY": 0.0,
         "depthOffset": 0.0
-      }
-    },
-    {
-      "name": "builderkid",
-      "display": {
-        "type": "simple",
-        "texture": "builderkid.png",
-        "size": 1.0,
-        "offsetX": 0.0,
-        "offsetY": 0.0,
-        "circleSize": 1.0,
-        "circleOffsetX": 0.0,
-        "circleOffsetY": 0.0,
-        "centerOffsetX": 0.0,
-        "centerOffsetY": 0.0
-      },
-      "clickbox": {
-        "type": "aabb",
-        "sizeX": 1.0,
-        "sizeY": 1.0,
-        "offsetX": 0.0,
-        "offsetY": 0.0,
-        "depthOffset": 0.0
-      }
-    },
-    {
-      "name": "wall",
-      "display": {
-        "type": "simple",
-        "texture": "cube.png",
-        "size": 4.0,
-        "offsetX": 0.0,
-        "offsetY": -0.3,
-        "circleSize": 1.5,
-        "circleOffsetX": 0.5,
-        "circleOffsetY": 0.5,
-        "centerOffsetX": 0.5,
-        "centerOffsetY": 0.5
-      },
-      "clickbox": {
-        "type": "aabb",
-        "sizeX": 1.4,
-        "sizeY": 2.0,
-        "offsetX": 0.0,
-        "offsetY": 0.0,
-        "depthOffset": 0.0
-      }
-    },
-    {
-      "name": "rock",
-      "display": {
-        "type": "simple",
-        "texture": "rock.png",
-        "size": 2.0,
-        "offsetX": 0.0,
-        "offsetY": 0.4,
-        "circleSize": 1.5,
-        "circleOffsetX": 0.5,
-        "circleOffsetY": 0.5,
-        "centerOffsetX": 0.5,
-        "centerOffsetY": 0.5
-      },
-      "clickbox": {
-        "type": "aabb",
-        "sizeX": 0,
-        "sizeY": 0,
-        "offsetX": 0,
-        "offsetY": 0,
-        "depthOffset": 0
       }
     },
     {
@@ -186,10 +117,10 @@
       "name": "drill",
       "display": {
         "type": "simple",
-        "texture": "rocket1.png",
-        "size": 1.0,
+        "texture": "art/Tower.png",
+        "size": 1.2,
         "offsetX": 0.0,
-        "offsetY": 0.2,
+        "offsetY": 0.1,
         "circleSize": 1.0,
         "circleOffsetX": 0.0,
         "circleOffsetY": 0.0,
@@ -200,7 +131,7 @@
         "type": "aabb",
         "sizeX": 1,
         "sizeY": 1,
-        "offsetX": 0,
+        "offsetX": 0.0,
         "offsetY": 0,
         "depthOffset": 0
       }
