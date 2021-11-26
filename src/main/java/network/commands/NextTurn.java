@@ -20,6 +20,8 @@ public class NextTurn implements ServerPayload, ClientPayload {
         executeNextTurn(server.world, server.gameData,
                 s -> server.broadcast(new ChatMessage(s)),
                 s -> server.send(client, new ChatMessage(s)));
+        server.broadcast(new SetWorld(server.world));
+        server.broadcast(this);
         List<GameObjectID> passivers = World.getTeamPassives(server.world.teams.getTurn(), server.world, server.gameData);
         for(GameObjectID id : passivers) {
             Set<AbilityComponent> passives = server.gameData.getType(server.world.gameObjects.get(id).type).getPassives();
@@ -32,8 +34,6 @@ public class NextTurn implements ServerPayload, ClientPayload {
                 }
             }
         }
-        //server.broadcast(new SetWorld(server.world));
-        server.broadcast(this);
     }
 
     public static void executeNextTurn(World world, GameData gameData, Consumer<String> outputMessage, Consumer<String> outputError) {
@@ -62,7 +62,6 @@ public class NextTurn implements ServerPayload, ClientPayload {
 
     @Override
     public void execute(Game gameResources) {
-        executeNextTurn(gameResources.world, gameResources.gameData, s -> gameResources.chatbox.println(s), s -> gameResources.chatbox.println(s));
         gameResources.animatePassives(gameResources.world.teams.getTurn());
     }
 }

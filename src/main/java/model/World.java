@@ -7,7 +7,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import util.MathUtil;
 
-import java.io.Serializable;
+import java.io.*;
 import java.util.*;
 
 public class World implements Serializable {
@@ -190,5 +190,22 @@ public class World implements Serializable {
             }
         }
         return ids;
+    }
+
+    public World deepCopy()
+    {
+        try {
+            //Serialization of object
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            ObjectOutputStream out = new ObjectOutputStream(bos);
+            out.writeObject(this);
+
+            //De-serialization of object
+            ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+            ObjectInputStream in = new ObjectInputStream(bis);
+            return (World) in.readObject();
+        } catch(Exception e) {
+            throw new RuntimeException("Should never happen:" + e.getMessage(), e.getCause());
+        }
     }
 }

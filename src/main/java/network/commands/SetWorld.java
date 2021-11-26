@@ -13,7 +13,7 @@ public class SetWorld implements ClientPayload, ServerPayload {
     public World world;
 
     public SetWorld(World world) {
-        this.world = world;
+        this.world = world.deepCopy();
     }
 
     @Override

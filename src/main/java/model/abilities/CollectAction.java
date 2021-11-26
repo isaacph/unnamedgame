@@ -63,7 +63,7 @@ public class CollectAction implements Action {
         for(Vector2i tile : occupyingTiles) {
             Collection<GameObjectID> objsOnTile = world.occupied(tile.x, tile.y, gameData);
             for(GameObjectID objID : objsOnTile) {
-                if(objID != objectID) {
+                if(!objID.equals(objectID)) {
                     GameObject obj = world.gameObjects.get(objID);
                     GameObjectType objType = gameData.getType(obj.type);
                     Map<ResourceID, Integer> addAmount = objType.getResources();

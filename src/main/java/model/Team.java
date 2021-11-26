@@ -3,13 +3,14 @@ package model;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
 
+import java.io.Serializable;
 import java.util.*;
 
 /** Contains current team status info
  *  I honestly have no clue why we have getters and setters here
  *  Just go with it I guess
  */
-public class Team {
+public class Team implements Serializable {
 
     private final TeamID teamID;
     private String name;
