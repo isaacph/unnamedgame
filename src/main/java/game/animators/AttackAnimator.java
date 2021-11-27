@@ -45,7 +45,10 @@ public class AttackAnimator implements Animator {
                 AttackAbility ability = game.gameData.getAbility(AttackAbility.class, abilityID);
                 if(ability == null) return false;
                 if(obj.speedLeft < ability.getSpeedCost()) return false;
-                Set<Vector2i> options = MathUtil.adjacentTiles(MathUtil.addToAll(game.gameData.getType(obj.type).getRelativeOccupiedTiles(), new Vector2i(obj.x, obj.y)));
+                Set<Vector2i> options = MathUtil.adjacentTilesDistance(
+                        MathUtil.addToAll(game.gameData.getType(obj.type).getRelativeOccupiedTiles(), new Vector2i(obj.x, obj.y)),
+                        ability.getRange()
+                );
                 List<Vector2i> newOptions = new ArrayList<>();
                 for(Vector2i tile : options) {
                     Collection<GameObjectID> victimIDs = game.world.occupied(tile.x, tile.y, game.gameData);

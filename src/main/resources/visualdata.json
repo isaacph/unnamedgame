@@ -33,10 +33,33 @@
   ],
   "types": [
     {
-      "name": "basic",
+      "name": "orc",
       "display": {
         "type": "simple",
         "texture": "art/Orc.png",
+        "size": 1.0,
+        "offsetX": 0.0,
+        "offsetY": 0.0,
+        "circleSize": 1.0,
+        "circleOffsetX": 0.0,
+        "circleOffsetY": 0.0,
+        "centerOffsetX": 0.0,
+        "centerOffsetY": 0.0
+      },
+      "clickbox": {
+        "type": "aabb",
+        "sizeX": 0.7,
+        "sizeY": 1.0,
+        "offsetX": -0.1,
+        "offsetY": 0.0,
+        "depthOffset": 0.0
+      }
+    },
+    {
+      "name": "elf",
+      "display": {
+        "type": "simple",
+        "texture": "art/Elf.png",
         "size": 1.0,
         "offsetX": 0.0,
         "offsetY": 0.0,

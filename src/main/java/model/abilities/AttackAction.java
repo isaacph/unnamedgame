@@ -29,7 +29,12 @@ public class AttackAction implements Action {
         GameObjectType attackerType = gameData.getType(attacker.type);
         GameObjectType victimType = gameData.getType(victim.type);
         if(attackerType == null || victimType == null) return false;
-        Set<Vector2i> attackOptions = MathUtil.adjacentTiles(MathUtil.addToAll(victimType.getRelativeOccupiedTiles(), new Vector2i(victim.x, victim.y)));
+        AttackAbility ability = gameData.getAbility(AttackAbility.class, abilityID);
+        if(ability == null) return false;
+        Set<Vector2i> attackOptions = MathUtil.adjacentTilesDistance(
+                MathUtil.addToAll(victimType.getRelativeOccupiedTiles(), new Vector2i(victim.x, victim.y)),
+                ability.getRange()
+        );
         boolean canAttack = false;
         for(Vector2i attackerShapeOffset : attackerType.getRelativeOccupiedTiles()) {
             Vector2i pos = new Vector2i(attackerShapeOffset).add(attacker.x, attacker.y);
@@ -39,8 +44,6 @@ public class AttackAction implements Action {
             }
         }
         if(!canAttack) return false;
-        AttackAbility ability = gameData.getAbility(AttackAbility.class, abilityID);
-        if(ability == null) return false;
         if(attacker.speedLeft < ability.getSpeedCost()) return false;
         if(ability.getDamage() <= 0) return false;
         return true;

@@ -12,7 +12,7 @@
   ],
   "types": [
     {
-      "name": "basic",
+      "name": "orc",
       "speed": 4.0,
       "health": 1.0,
       "shape": {
@@ -31,7 +31,8 @@
           "cost": {
             "speed": 4
           },
-          "damage": 1.0
+          "damage": 1.0,
+          "range": 1
         },
         {
           "type": "grow",
@@ -45,6 +46,46 @@
           },
           "requiredCount": 4,
           "into": "building"
+        },
+        {
+          "type": "spawn",
+          "slot": 4,
+          "cost": {
+            "speed": 0,
+            "resources": {
+              "gems": 10
+            }
+          },
+          "produce": "drill",
+          "restrict": true,
+          "restrictObjects": [
+            "gem_rock"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "elf",
+      "speed": 4.0,
+      "health": 1.0,
+      "shape": {
+        "type": "square",
+        "size": 1
+      },
+      "collider": {"type": "block"},
+      "abilities": [
+        {
+          "type": "move",
+          "slot": 0
+        },
+        {
+          "type": "attack",
+          "slot": 2,
+          "cost": {
+            "speed": 4
+          },
+          "damage": 1.0,
+          "range": 4
         },
         {
           "type": "spawn",

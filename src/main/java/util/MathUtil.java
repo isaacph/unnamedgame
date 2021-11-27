@@ -116,6 +116,17 @@ public class MathUtil {
         return adjacent;
     }
 
+    /**
+     * Jank solution to ranged attacks
+     */
+    public static Set<Vector2i> adjacentTilesDistance(Set<Vector2i> collection, int distance) {
+        Set<Vector2i> current = new HashSet<>(collection);
+        for(int i = 0; i < distance; ++i) {
+            current.addAll(adjacentTiles(current));
+        }
+        return current;
+    }
+
     public static Set<Vector2i> adjacentShapeOrigins(Set<Vector2i> collection, Collection<Vector2i> adjacentShape) {
         Set<Vector2i> adjacent = new HashSet<>();
         for(Vector2i tile : collection) {
