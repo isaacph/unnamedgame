@@ -23,6 +23,7 @@ public class CollectAction implements Action {
 
         GameObject gameObject = world.gameObjects.get(objectID);
         if(gameObject == null) return false;
+        if(!gameObject.alive) return false;
         GameObjectType type = gameData.getType(gameObject.type);
         TeamID team = gameObject.team;
         if(team == null) return false;
@@ -38,7 +39,7 @@ public class CollectAction implements Action {
         for(Vector2i tile : occupyingTiles) {
             Collection<GameObjectID> objsOnTile = world.occupied(tile.x, tile.y, gameData);
             for(GameObjectID objID : objsOnTile) {
-                if(objID != objectID) {
+                if(!objID.equals(objectID)) {
                     GameObject obj = world.gameObjects.get(objID);
                     if(collectFrom.contains(obj.type)) {
                         hasCollectTarget = true;
