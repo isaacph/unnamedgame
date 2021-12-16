@@ -1,7 +1,9 @@
 package model;
 
+import game.AbilityOrganizer;
 import model.abilities.AbilityComponent;
 import model.grid.ByteGrid;
+import network.commands.GetWorld;
 import org.joml.Vector2i;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -119,10 +121,34 @@ public class World implements Serializable {
         return weight;
     }
 
-    public void resetGameObjectSpeeds(GameData gameData) {
+    public void startTurn(GameData gameData, TeamID teamID) {
         for(GameObject gameObject : gameObjects.values()) {
-            GameObjectType type = gameData.getType(gameObject.type);
-            gameObject.speedLeft = type.getSpeed();
+            if (gameObject.team.equals(teamID)) {
+                GameObjectType type = gameData.getType(gameObject.type);
+                gameObject.speedLeft = type.getSpeed();
+                for (AbilityComponent ability : type.getActiveAbilities()) {
+                    AbilityID id = ability.getID();
+                    int cooldown = gameObject.cooldown.get(id);
+                    if (cooldown > 0) {
+                        gameObject.cooldown.put(id, cooldown - 1);
+                    } else {
+                        gameObject.cooldown.put(id, 0);
+                        gameObject.usagesLeft.put(id, ability.getUsages());
+                    }
+                }
+                for (AbilityComponent ability : type.getPassives()) {
+                    AbilityID id = ability.getID();
+                    Action action = AbilityOrganizer.abilityPassiveCreator.get(ability.getTypeID()).create(ability.getID(), id);
+                    if(action.validate(null, this, gameData)) {
+                        runAction(action);
+                    } else {
+                        chatbox.println("Error: could not validate passive action: " + passive.getID().toString());
+                        if(connection.isConnected()) {
+                            connection.queueSend(new GetWorld());
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -182,7 +208,7 @@ public class World implements Serializable {
     public static List<GameObjectID> getTeamPassives(TeamID team, World world, GameData gameData) {
         List<GameObjectID> ids = new ArrayList<>();
         for(GameObject obj : world.gameObjects.values()) {
-            if(obj.team.equals(team)) {
+            if(obj.team.equals(team) && obj.alive) {
                 GameObjectType type = gameData.getType(obj.type);
                 if(!type.getPassives().isEmpty()) {
                     ids.add(obj.uniqueID);

@@ -3,6 +3,8 @@ package model;
 import org.json.JSONObject;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 public class GameObject implements Serializable {
 
@@ -11,9 +13,11 @@ public class GameObject implements Serializable {
     public int x, y;
     public TeamID team;
     public float health;
-    public double speedLeft;
     public boolean alive;
     public boolean targetable;
+    public double speedLeft;
+    public final Map<AbilityID, Integer> usagesLeft = new HashMap<>();
+    public final Map<AbilityID, Integer> cooldown = new HashMap<>();
 
     public GameObject(GameObjectID uniqueID, GameObjectTypeID type, TeamID team) {
         this.uniqueID = uniqueID;
@@ -35,6 +39,13 @@ public class GameObject implements Serializable {
         this.speedLeft = initObj.getDouble("speedLeft");
         this.alive = initObj.getBoolean("alive");
         this.targetable = initObj.getBoolean("targetable");
+        JSONObject abilitiesData = initObj.getJSONObject("abilities");
+        for (String key : abilitiesData.keySet()) {
+            JSONObject abilityData = initObj.getJSONObject(key);
+            AbilityID ability = new AbilityID(key);
+            usagesLeft.put(ability, abilityData.getInt("usagesLeft"));
+            cooldown.put(ability, abilityData.getInt("cooldown"));
+        }
     }
 
     public JSONObject toInitJSON() {
@@ -48,6 +59,15 @@ public class GameObject implements Serializable {
         obj.put("speedLeft", speedLeft);
         obj.put("alive", alive);
         obj.put("targetable", targetable);
+        JSONObject abilitiesData = new JSONObject();
+        for (AbilityID abilityID : usagesLeft.keySet()) {
+            assert cooldown.containsKey(abilityID);
+            JSONObject abilityData = new JSONObject();
+            abilityData.put("usagesLeft", usagesLeft.get(abilityID));
+            abilityData.put("cooldown", cooldown.get(abilityID));
+            abilitiesData.put(abilityID.toString(), abilityData);
+        }
+        obj.put("abilities", abilitiesData);
         return obj;
     }
 

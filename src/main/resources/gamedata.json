@@ -12,6 +12,58 @@
   ],
   "types": [
     {
+      "name": "builder",
+      "speed": 4.0,
+      "health": 1.0,
+      "shape": {
+        "type": "square",
+        "size": 1
+      },
+      "collider": {
+        "type": "block"
+      },
+      "abilities": [
+        {
+          "type": "move",
+          "slot": 0
+        },
+        {
+          "type": "spawn",
+          "slot": 1,
+          "produce": "orc",
+          "cost": {
+            "resources": {
+              "gems": 100
+            }
+          }
+        },
+        {
+          "type": "spawn",
+          "slot": 2,
+          "produce": "elf",
+          "cost": {
+            "resources": {
+              "gems": 200
+            }
+          }
+        },
+        {
+          "type": "spawn",
+          "slot": 3,
+          "produce": "drill",
+          "cost":{
+            "resources": {
+              "gems": 100
+            }
+          },
+          "restrict": true,
+          "restrictObjects": [
+            "gem_rock"
+          ]
+        }
+      ]
+    },
+    {
       "name": "orc",
       "speed": 4.0,
       "health": 1.0,
@@ -105,27 +157,6 @@
       ]
     },
     {
-      "name": "building",
-      "speed": 0,
-      "health": 1,
-      "shape": {
-        "type": "square",
-        "size": 2
-      },
-      "collider": {"type": "block"},
-      "abilities": [
-        {
-          "type": "dismiss",
-          "slot": 0
-        },
-        {
-          "type": "spawn",
-          "slot": 1,
-          "produce": "basic"
-        }
-      ]
-    },
-    {
       "name": "gem_rock",
       "speed": 0,
       "health": 1,
@@ -136,9 +167,9 @@
       "collider": {"type": "none"},
       "abilities": [],
       "neutral": true,
+      "targetable": false,
       "resources": {
-        "gems": 100,
-        "carpet": 10
+        "gems": 100
       }
     },
     {
@@ -161,6 +192,16 @@
             "gem_rock"
           ],
           "slot": -1
+        },
+        {
+          "type": "spawn",
+          "slot": 1,
+          "produce": "builder",
+          "cost": {
+            "resources": {
+              "gems": 500
+            }
+          }
         }
       ]
     }

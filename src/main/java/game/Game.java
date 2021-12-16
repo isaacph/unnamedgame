@@ -193,6 +193,7 @@ public class Game {
         this.connection.setOnConnectHandler(socketAddress -> {
             connection.queueSend(new GetWorld());
             connection.queueSend(new GetClientID());
+            connection.queueSend(new SetGameData.Get());
         });
         this.connection.connect(new InetSocketAddress("24.247.145.133", Server.PORT));
         this.connection.queueSend(new EchoPayload("Connection succeeded"));

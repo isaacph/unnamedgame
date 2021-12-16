@@ -17,4 +17,7 @@ public interface AbilityComponent {
      * @return True if this is a passive ability that should be casted at the beginning of every turn
      */
     boolean isPassive();
+
+    int getUsages();
+    int getCooldown();
 }

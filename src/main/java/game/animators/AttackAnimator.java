@@ -40,7 +40,7 @@ public class AttackAnimator implements Animator {
         @Override
         public boolean arrange(Game game, int slot) {
             GameObject obj = game.world.gameObjects.get(game.clickBoxManager.selectedID);
-            if(obj != null && obj.speedLeft > 0 && !game.animationManager.isObjectOccupied(game.clickBoxManager.selectedID) && obj.alive && obj.team != null) {
+            if(obj != null && !game.animationManager.isObjectOccupied(game.clickBoxManager.selectedID) && obj.alive && obj.team != null) {
                 abilityID = new AbilityID(obj.type, AttackAbility.ID, slot);
                 AttackAbility ability = game.gameData.getAbility(AttackAbility.class, abilityID);
                 if(ability == null) return false;
