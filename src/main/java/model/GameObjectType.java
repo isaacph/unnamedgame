@@ -17,6 +17,7 @@ public class GameObjectType implements Serializable {
     private List<AbilityComponent> abilities;
     private Map<Integer, AbilityComponent> slotAbility;
     private Set<AbilityComponent> passives = new HashSet<>();
+    private Set<AbilityComponent> activeAbilities = new HashSet<>();
     private Map<AbilityID, AbilityComponent> abilityMap;
     private boolean neutral;
     private TypeCollider collider;
@@ -47,6 +48,8 @@ public class GameObjectType implements Serializable {
                 }
                 if(ability.isPassive()) {
                     passives.add(ability);
+                } else {
+                    activeAbilities.add(ability);
                 }
                 abilityMap.put(ability.getID(), ability);
             }
@@ -126,6 +129,10 @@ public class GameObjectType implements Serializable {
         return Collections.unmodifiableSet(this.passives);
     }
 
+    public Set<AbilityComponent> getActiveAbilities() {
+        return Collections.unmodifiableSet(this.activeAbilities);
+    }
+
     @Override
     public String toString() {
         return uniqueID.toString();
@@ -161,6 +168,8 @@ public class GameObjectType implements Serializable {
             }
             obj.put("resources", res);
         }
+
+        if(!targetable) obj.put("targetable", false);
 
         return obj;
     }

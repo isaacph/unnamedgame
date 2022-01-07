@@ -18,6 +18,13 @@ public class AbilityID implements Serializable {
         if(abilityTypeID == null) throw new RuntimeException("Cannot make ability ID from null ability type ID");
     }
 
+    public AbilityID(String source) {
+        String[] split = source.split(":");
+        this.gameObjectTypeID = new GameObjectTypeID(split[0]);
+        this.abilityTypeID = new AbilityTypeID(split[1]);
+        this.slot = Integer.parseInt(split[2]);
+    }
+
     public AbilityID(AbilityID other) {
         this(other.gameObjectTypeID, other.abilityTypeID, other.slot);
     }
@@ -28,7 +35,7 @@ public class AbilityID implements Serializable {
 
     @Override
     public String toString() {
-        return gameObjectTypeID.getName() + ":" + abilityTypeID.getName() + slot;
+        return gameObjectTypeID.getName() + ":" + abilityTypeID.getName() + ":" + slot;
     }
 
     @Override

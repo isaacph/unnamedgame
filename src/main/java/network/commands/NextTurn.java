@@ -55,7 +55,7 @@ public class NextTurn implements ServerPayload, ClientPayload {
             currentTeam = world.teams.getTurn();
         }
         world.teams.resetClientTurnEnd();
-        world.resetGameObjectSpeeds(gameData);
+        world.startTurn(gameData);
         world.nextVersion();
         outputMessage.accept("New turn for team " + world.teams.getTeamName(currentTeam));
         return true;

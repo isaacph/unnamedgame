@@ -1,8 +1,6 @@
 package model.abilities;
 
 import model.*;
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.*;
@@ -15,6 +13,8 @@ public abstract class AbilityImpl implements AbilityComponent {
     private GameObjectTypeID parentType;
     private Map<ResourceID, Integer> resourceCost;
     private double speedCost;
+    private int usages;
+    private int cooldown;
 
     public AbilityImpl(JSONObject obj, AbilityTypeID abilityTypeID, GameObjectTypeID parentType) {
         GameObjectType.assertString(obj.getString("type"), abilityTypeID.getName());
@@ -56,6 +56,14 @@ public abstract class AbilityImpl implements AbilityComponent {
     @Override
     public JSONObject toJSON() {
         return ReflectionJSON.makeJSON(this);
+    }
+
+    public int getUsages() {
+        return this.usages;
+    }
+
+    public int getCooldown() {
+        return this.cooldown;
     }
 
     @Override

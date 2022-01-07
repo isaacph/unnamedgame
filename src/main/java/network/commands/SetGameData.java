@@ -26,6 +26,14 @@ public class SetGameData implements ServerPayload {
         }
     }
 
+    public static class Get implements ServerPayload {
+
+        @Override
+        public void execute(Server server, ClientData client) {
+            server.send(client, new SetGameData.Client(server.gameData));
+        }
+    }
+
     public static class Client implements ClientPayload {
 
         public String gameDataString;
