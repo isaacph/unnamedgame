@@ -3,7 +3,6 @@ package model;
 import game.AbilityOrganizer;
 import model.abilities.AbilityComponent;
 import model.grid.ByteGrid;
-import network.commands.GetWorld;
 import org.joml.Vector2i;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -122,6 +121,10 @@ public class World implements Serializable {
     }
 
     public void startTurn(GameData gameData, TeamID teamID) {
+        startTurn(gameData, teamID, action -> action.execute(this, gameData));
+    }
+
+    public void startTurn(GameData gameData, TeamID teamID, PassiveActivator passiveCallback) {
         for(GameObject gameObject : gameObjects.values()) {
             if (gameObject.team.equals(teamID)) {
                 GameObjectType type = gameData.getType(gameObject.type);
@@ -137,15 +140,9 @@ public class World implements Serializable {
                     }
                 }
                 for (AbilityComponent ability : type.getPassives()) {
-                    AbilityID id = ability.getID();
-                    Action action = AbilityOrganizer.abilityPassiveCreator.get(ability.getTypeID()).create(ability.getID(), id);
+                    Action action = AbilityOrganizer.abilityPassiveCreator.get(ability.getTypeID()).create(ability.getID(), gameObject.uniqueID);
                     if(action.validate(null, this, gameData)) {
-                        runAction(action);
-                    } else {
-                        chatbox.println("Error: could not validate passive action: " + passive.getID().toString());
-                        if(connection.isConnected()) {
-                            connection.queueSend(new GetWorld());
-                        }
+                        passiveCallback.doPassive(action);
                     }
                 }
             }
