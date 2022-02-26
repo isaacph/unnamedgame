@@ -22,18 +22,11 @@ public class NextTurn implements ServerPayload, ClientPayload {
                 s -> server.send(client, new ChatMessage(s)))) return;
         server.broadcast(new SetWorld(server.world));
         server.broadcast(this);
-        List<GameObjectID> passivers = World.getTeamPassives(server.world.teams.getTurn(), server.world, server.gameData);
-        for(GameObjectID id : passivers) {
-            Set<AbilityComponent> passives = server.gameData.getType(server.world.gameObjects.get(id).type).getPassives();
-            for(AbilityComponent passive : passives) {
-                Action action = AbilityOrganizer.abilityPassiveCreator.get(passive.getTypeID()).create(passive.getID(), id);
-                if(action.validate(null, server.world, server.gameData)) {
-                    action.execute(server.world, server.gameData);
-                } else {
-                    System.err.println("Failed to execute passive ability: " + passive.getID());
-                }
-            }
-        }
+        World.animatePassives(server.world, server.gameData, server.world.teams.getTurn(), (action) -> {
+            action.execute(server.world, server.gameData);
+        }, (msg) -> {
+            System.err.println(msg);
+        });
     }
 
     public static boolean executeNextTurn(World world, GameData gameData, Consumer<String> outputMessage, Consumer<String> outputError) {

@@ -4,11 +4,14 @@ import model.abilities.AbilityComponent;
 import model.grid.ByteGrid;
 import org.joml.Vector2i;
 import org.json.JSONArray;
-import org.json.JSONObject;
+import org.json.JSONObject;
+
+import game.AbilityOrganizer;
 import util.MathUtil;
 
 import java.io.*;
 import java.util.*;
+import java.util.function.Consumer;
 
 public class World implements Serializable {
 
@@ -85,6 +88,7 @@ public class World implements Serializable {
         gameObjectFactory = other.gameObjectFactory;
     }
 
+    // Tile weight, agnostic of what occupies it
     public double getPureTileWeight(GameData data, int x, int y) {
         byte tile = grid.getTile(x, y);
         double weight = tile == 1 ? 1 : Double.POSITIVE_INFINITY;
@@ -206,6 +210,21 @@ public class World implements Serializable {
             return (World) in.readObject();
         } catch(Exception e) {
             throw new RuntimeException("Should never happen:" + e.getMessage(), e.getCause());
+        }
+    }
+
+    public static void animatePassives(World world, GameData gameData, TeamID teamID, Consumer<Action> runAction, Consumer<String> onFail) {
+        List<GameObjectID> passivers = World.getTeamPassives(teamID, world, gameData);
+        for(GameObjectID id : passivers) {
+            Set<AbilityComponent> passives = gameData.getType(world.gameObjects.get(id).type).getPassives();
+            for(AbilityComponent passive : passives) {
+                Action action = AbilityOrganizer.abilityPassiveCreator.get(passive.getTypeID()).create(passive.getID(), id);
+                if(action.validate(null, world, gameData)) {
+                    runAction.accept(action);
+                } else {
+                    onFail.accept("Error: could not validate passive action: " + passive.getID().toString());
+                }
+            }
         }
     }
 }
