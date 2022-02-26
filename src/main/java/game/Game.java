@@ -279,8 +279,10 @@ public class Game {
             }
         } else {
             if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-                currentCommand.clearArrangement(this);
-                currentCommand = null;
+                if(currentCommand != null) {
+                    currentCommand.clearArrangement(this);
+                    currentCommand = null;
+                }
             }
             if(key == GLFW_KEY_ENTER && action == GLFW_PRESS) {
                 chatbox.enable();
