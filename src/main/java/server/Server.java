@@ -81,6 +81,8 @@ public class Server {
                 e.printStackTrace();
             }
             world = new World();
+
+            System.out.println("Server running");
             while(running) {
                 long time = System.currentTimeMillis();
 

@@ -279,8 +279,10 @@ public class Game {
             }
         } else {
             if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-                currentCommand.clearArrangement(this);
-                currentCommand = null;
+                if(currentCommand != null) {
+                    currentCommand.clearArrangement(this);
+                    currentCommand = null;
+                }
             }
             if(key == GLFW_KEY_ENTER && action == GLFW_PRESS) {
                 chatbox.enable();
@@ -760,21 +762,13 @@ public class Game {
     }
 
     public void animatePassives(TeamID teamID) {
-        List<GameObjectID> passivers = World.getTeamPassives(teamID, world, gameData);
-        for(GameObjectID id : passivers) {
-            Set<AbilityComponent> passives = gameData.getType(world.gameObjects.get(id).type).getPassives();
-            for(AbilityComponent passive : passives) {
-                Action action = AbilityOrganizer.abilityPassiveCreator.get(passive.getTypeID()).create(passive.getID(), id);
-                if(action.validate(null, world, gameData)) {
-                    runAction(action);
-                } else {
-                    chatbox.println("Error: could not validate passive action: " + passive.getID().toString());
-                    if(connection.isConnected()) {
-                        connection.queueSend(new GetWorld());
-                    }
-                }
+        World.animatePassives(world, gameData, teamID, (action) -> runAction(action), (msg) -> {
+            // On Fail
+            chatbox.println(msg);
+            if(connection.isConnected()) {
+                connection.queueSend(new GetWorld());
             }
-        }
+        });
     }
 
     public static void main(String[] args) throws Exception {
