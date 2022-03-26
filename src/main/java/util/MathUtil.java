@@ -1,6 +1,8 @@
 package util;
 
 import org.joml.*;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.*;
 import java.lang.Math;
@@ -211,5 +213,27 @@ public class MathUtil {
 
     public static Matrix4f getDisplayMatrix(float sizeMultiplier, Vector2fc offset, Vector2ic imageSize) {
         return new Matrix4f().translate(offset.x() * imageSize.x(), offset.y() * imageSize.y(), 0).scale(sizeMultiplier);
+    }
+
+    public static JSONArray tileSetToJSON(Set<Vector2i> set) {
+        if (set == null || set.isEmpty()) return new JSONArray();
+        JSONArray array = new JSONArray();
+        for (Vector2i v : set) {
+            JSONObject obj = new JSONObject();
+            obj.put("x", v.x);
+            obj.put("y", v.y);
+            array.put(obj);
+        }
+        return array;
+    }
+
+    public static Set<Vector2i> jsonToTileSet(JSONArray array) {
+        if (array == null || array.isEmpty()) return Collections.emptySet();
+        Set<Vector2i> set = new HashSet<>();
+        for (int i = 0; i < array.length(); ++i) {
+            JSONObject obj = array.getJSONObject(i);
+            set.add(new Vector2i(obj.getInt("x"), obj.getInt("y")));
+        }
+        return set;
     }
 }
